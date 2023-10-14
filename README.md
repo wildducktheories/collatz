@@ -1,9 +1,9 @@
-![abstract](versions/paper-01/current/abstract.png)
+![abstract](versions/paper-01/20231014T114301Z/abstract-01-20231014T114301Z.png)
 
 _* whatever the importance of this contribution, the title is technically not wrong - these adjectives also describe paths that fail to reach their final objective_
 
 # paper
-The paper is currently available  [here](versions/paper-01/current/paper-01.pdf).
+The paper is currently available  here [(PDF)](versions/paper-01/20231014T114301Z/paper-01-20231014T114301Z.decrypted.pdf) and [(Jupyter Notebook)](versions/paper-01/20231014T114301Z/paper.ipynb)
 
 # discussion
 
