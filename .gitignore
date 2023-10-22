@@ -1,3 +1,4 @@
 **/*.decrypted.*
-**/versions/*.ipynb
+**/*.ipynb
 **/.DS_Store
+tmp/*
