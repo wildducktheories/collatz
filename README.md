@@ -38,6 +38,15 @@ Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for 
 
 ## Apps
 
+### Collatz FSM
+[Launch](apps/collatz-fsm/index.html) | [Source](apps/collatz-fsm/)
+
+Interactive 3D visualisation of the mod-8 finite state machine underlying the odd Collatz map.
+Nodes sit on a sphere with great-circle arc edges; a pulse token traces each step coloured by
+mod-24 residue; edge brightness accumulates to leave a visual record of the full orbit.
+
+---
+
 ### Collatz Force Graph
 [Launch](apps/collatz-graph/index.html)
 
