@@ -5,10 +5,8 @@ import { MOD8_COLOR, MOD24_COLOR } from './collatz.js';
 const R = 2.5;   // sphere/circle radius
 const NODE_R = 0.18;
 
-// Node positions — init/final/1/5/7 all on sphere of radius R; 3 at origin
+// Node positions — 1/5/7 on sphere of radius R; 3 at origin
 export const POSITIONS = {
-  init:  new THREE.Vector3(0, 0,  R),
-  final: new THREE.Vector3(0, 0, -R),
   1: new THREE.Vector3(R * Math.cos(Math.PI/3),  R * Math.sin(Math.PI/3),  0),
   3: new THREE.Vector3(0, 0, 0),
   5: new THREE.Vector3(R * Math.cos(-Math.PI/3), R * Math.sin(-Math.PI/3), 0),
@@ -16,25 +14,19 @@ export const POSITIONS = {
 };
 
 // Nodes on the sphere surface (great-circle arcs between these)
-const ON_SPHERE = new Set(['init', 'final', 1, 5, 7]);
+const ON_SPHERE = new Set([1, 5, 7]);
 
-const STATE_COLOR = {
-  ...MOD8_COLOR,
-  init:  '#ffffff',
-  final: '#ffffff',
-};
+const STATE_COLOR = { ...MOD8_COLOR };
 
 // All directed edges of the FSM
 const EDGES = [
-  // forward chain
-  { from: 'init', to: 7 },
   { from: 7, to: 3 },
   { from: 3, to: 1 },
   { from: 3, to: 5 },
-  // bidirectional (drawn as two arrows)
+  // bidirectional
   { from: 1, to: 5 },
   { from: 5, to: 1 },
-  // back-links in plane
+  // back-links
   { from: 1, to: 7 },
   { from: 5, to: 7 },
   { from: 1, to: 3 },
@@ -43,12 +35,6 @@ const EDGES = [
   { from: 7, to: 7 },
   { from: 1, to: 1 },
   { from: 5, to: 5 },
-  // circuit back to init
-  { from: 1, to: 'init' },
-  { from: 5, to: 'init' },
-  // terminal
-  { from: 1, to: 'final' },
-  { from: 5, to: 'final' },
 ];
 
 function edgeKey(from, to) { return `${from}->${to}`; }
@@ -96,9 +82,7 @@ export function buildScene(canvas) {
     scene.add(ring);
     nodeGlow[key] = ring;
 
-    // Label (sprite) — abbreviate init/final to single chars
-    const labelText = key === 'init' ? 'i' : key === 'final' ? 'f' : String(key);
-    const label = makeLabel(labelText);
+    const label = makeLabel(String(key));
     label.position.copy(pos).add(new THREE.Vector3(0, 0, NODE_R + 0.15));
     scene.add(label);
   }

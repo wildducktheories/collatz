@@ -75,9 +75,7 @@ export function buildSteps(a) {
       o += 1;
       e += v;
     }
-    const isLast = i === path.length - 1;
-    const state = (n === 1 && isLast) ? 'final' : mod8;
-    steps.push({ value: n, mod8, mod24: n % 24, o, e, beta: e - o, state });
+    steps.push({ value: n, mod8, mod24: n % 24, o, e, beta: e - o, state: mod8 });
   }
   return steps;
 }

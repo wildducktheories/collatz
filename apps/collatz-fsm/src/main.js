@@ -75,6 +75,8 @@ function showStep(i) {
     const prevState = fsmState(steps[cur - 1]);
     animatePulse(prevState, state, steps[cur - 1].mod24, steps[cur].mod24);
   }
+
+  if (playing) updatePlayButton();
 }
 
 function animatePulse(from, to, fromMod24, toMod24) {
@@ -93,9 +95,17 @@ function animatePulse(from, to, fromMod24, toMod24) {
   }, 16);
 }
 
+const lastStep = steps.length - 1;
+
+function atFixed() { return cur === lastStep; }  // stuck at 1
+
 function stepForward() {
-  if (cur < steps.length - 1) showStep(cur + 1);
-  else stopPlay();
+  if (cur < lastStep) {
+    showStep(cur + 1);
+  } else {
+    // Loop the 1->1 self-loop
+    animatePulse(1, 1, steps[cur].mod24, steps[cur].mod24);
+  }
 }
 
 function stepBack() {
@@ -103,20 +113,24 @@ function stepBack() {
 }
 
 function startPlay() {
-  if (cur >= steps.length - 1) showStep(0);
+  if (cur >= lastStep) showStep(0);
   playing = true;
-  document.getElementById('btn-play').textContent = '⏸ pause';
+  updatePlayButton();
   const ms = parseInt(document.getElementById('speed').value);
-  playTimer = setInterval(() => {
-    if (cur >= steps.length - 1) { stopPlay(); return; }
-    stepForward();
-  }, ms);
+  playTimer = setInterval(() => { stepForward(); }, ms);
 }
 
 function stopPlay() {
   playing = false;
   clearInterval(playTimer);
-  document.getElementById('btn-play').textContent = '▶ play';
+  updatePlayButton();
+}
+
+function updatePlayButton() {
+  const btn = document.getElementById('btn-play');
+  if (playing && atFixed()) btn.textContent = '⏹ stop';
+  else if (playing)          btn.textContent = '⏸ pause';
+  else                       btn.textContent = '▶ play';
 }
 
 document.getElementById('btn-play').addEventListener('click', () => {
