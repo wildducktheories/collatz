@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collatz FSM</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #111; color: #eee; font-family: monospace; overflow: hidden; }
+      #canvas { display: block; }
+      #hud {
+        position: fixed; top: 16px; left: 16px;
+        background: rgba(0,0,0,0.7); border: 1px solid #444;
+        padding: 12px 16px; border-radius: 6px; min-width: 220px;
+        font-size: 13px; line-height: 1.8;
+      }
+      #hud .label { color: #888; }
+      #hud .val   { color: #eee; font-weight: bold; }
+      #controls {
+        position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 10px;
+      }
+      button {
+        background: #222; color: #eee; border: 1px solid #555;
+        padding: 6px 16px; border-radius: 4px; cursor: pointer;
+        font-family: monospace; font-size: 13px;
+      }
+      button:hover { background: #333; }
+      #speed {
+        background: #222; color: #eee; border: 1px solid #555;
+        padding: 6px 8px; border-radius: 4px; font-family: monospace; font-size: 13px;
+      }
+      #navbar {
+        position: fixed; top: 16px; right: 16px;
+        font-size: 12px;
+      }
+      #navbar a { color: #aaa; text-decoration: none; }
+      #navbar a:hover { color: #eee; }
+    </style>
+    <script type="module" crossorigin src="/collatz/apps/collatz-fsm/dist/assets/index-C-w1zIX5.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">
+      <div><span class="label">a₀ = </span><span class="val" id="h-a0">—</span></div>
+      <div><span class="label">step = </span><span class="val" id="h-step">—</span></div>
+      <div><span class="label">aₙ = </span><span class="val" id="h-an">—</span></div>
+      <div><span class="label">mod 8 = </span><span class="val" id="h-mod8">—</span></div>
+      <div><span class="label">o = </span><span class="val" id="h-o">—</span></div>
+      <div><span class="label">e = </span><span class="val" id="h-e">—</span></div>
+      <div><span class="label">β = e−o = </span><span class="val" id="h-beta">—</span></div>
+    </div>
+    <div id="controls">
+      <button id="btn-prev">&#9664; prev</button>
+      <button id="btn-play">&#9654; play</button>
+      <button id="btn-next">next &#9654;</button>
+      <select id="speed">
+        <option value="800">slow</option>
+        <option value="400" selected>medium</option>
+        <option value="150">fast</option>
+      </select>
+    </div>
+    <div id="navbar">
+      <a href="https://github.com/wildducktheories/collatz" target="_blank">Collatz</a>
+    </div>
+  </body>
+</html>
