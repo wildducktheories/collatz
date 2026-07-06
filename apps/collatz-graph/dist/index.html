@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collatz Graph</title>
+    <script type="module" crossorigin src="/collatz/apps/collatz-graph/assets/index-CCWnZAGS.js"></script>
+    <link rel="stylesheet" crossorigin href="/collatz/apps/collatz-graph/assets/index-B6p57QLq.css">
+  </head>
+  <body>
+    <div id="graph"></div>
+    <div id="legend">
+      <b>Collatz G<sub>T</sub> &mdash; mod 8</b><br><br>
+      <span class="swatch" style="background:#ffffff"></span> 1 (root)<br>
+      <span class="swatch" style="background:#4caf50"></span> 1 mod 8<br>
+      <span class="swatch" style="background:#2196f3"></span> 3 mod 8<br>
+      <span class="swatch" style="background:#f44336;outline:1px solid #ff6666"></span> 5 mod 8 (hubs)<br>
+      <span class="swatch" style="background:#ff9800"></span> 7 mod 8<br>
+      <br>
+      <span class="swatch-lg" style="background:#aaaaaa"></span> 0 mod 3 (leaves, larger)<br>
+      <br>
+      <small>drag = rotate &nbsp;|&nbsp; scroll = zoom</small><br>
+      <small>click node to grow walk</small>
+    </div>
+    <div id="navbar">
+      <a href="../../papers/27-5mod8-regex/27-5mon8-regex.pdf" target="_blank">Paper 27</a>
+      &nbsp;&mdash;&nbsp;
+      <a href="../../README.md" target="_blank">Collatz</a>
+    </div>
+  </body>
+</html>
