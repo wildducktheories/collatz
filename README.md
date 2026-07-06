@@ -24,6 +24,11 @@ characterising odd Collatz paths. *Superseded by the four-paper campaign
 
 ---
 
+### Paper 14 — UV Polynomial
+[PDF](papers/14-uv-polynomial/uv-polynomial.pdf)
+
+---
+
 ### Paper 1 (2023) — A Terminating, Non-Cyclic Path Towards the Collatz Conjecture
 [PDF](papers/01-terminating-non-cyclic/paper.pdf) | [Notebook](papers/01-terminating-non-cyclic/paper.ipynb)
 
