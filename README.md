@@ -1,44 +1,46 @@
-# A terminating, non-cyclic* path towards the Collatz conjecture
+# Collatz
 
-Jon Seymour \<a_beautiful_k\@wildducktheories.com\>
+Jon Seymour \<a\_beautiful\_k\@wildducktheories.com\>
 
-14 October 2023 (updated: 22 October 2023)
+Research notes and papers on the Collatz conjecture.
 
-## Abstract
+> *"Mathematics is not yet ready for such problems."* — Paul Erdős
 
-_"Mathematics may not be ready for such problems"_ - Paul Erdős on the Collatz conjecture.
+---
 
-It has long been known that the following identity applies to all paths of the Collatz sequence.
+## Papers
 
-$2^{e}x_{n} - 3^{o}x_{0} = k$
+### Paper 27 — A Regular-Language and Tree Representation of Odd Collatz Dynamics
+[PDF](papers/27-5mod8-regex/27-5mon8-regex.pdf)
 
-where $x_{0}$ is the initial term and $x_{n}$ is the final term and $e$, $o$ and $k$ are path dependent parameters.
+Introduces the mod-8 step taxonomy and the regular expression `((7*3)?(1|5))*`
+characterising odd Collatz paths. *Superseded by the four-paper campaign
+(Papers 1, 5, 8, 0 — in preparation). Retained for reference.*
 
-This paper derives a formula for k derived from 3 parameter sequences $m_{n}, o_{n}, e_{n}$.
+---
 
-$m_n = x_n\pmod{2}$
+### Paper 21 — Extract Parameters
+[PDF](papers/21-extract-parameters/extract-parameters.pdf)
 
-$o_{n} = \sum_{k=0}^{k=n}{m_k}$
+---
 
-$e_{n} = n+1 - o_{n}$
+### Paper 1 (2023) — A Terminating, Non-Cyclic Path Towards the Collatz Conjecture
+[PDF](papers/01-terminating-non-cyclic/paper.pdf) | [Notebook](papers/01-terminating-non-cyclic/paper.ipynb)
 
-$k_{n} = 2^{e_{n-1}}x_{n}-3^{o_{n-1}}x_0=\sum_{i=0}^{i=n-1}{{2^{e_{i}}3^{o_{n-1}-o_i}m_{i}}}$
+Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for $k$.
 
-The resultant identity is not novel, for example see \[1\], but perhaps the technique by which it was derived may be interesting to some.
+---
 
-We also derive a recurrence relation that expresses each $k_{n}$ in terms of $k_{n-1}$
+## Apps
 
-$k_n = 3^{m_{n-1}}k_{n-1}+2^{e_{n-1}}m_{n-1}$
+### Collatz Force Graph
+[Launch](apps/collatz-graph/index.html)
 
-and show that $k_{0} = 0$
+Interactive force-directed visualisation of the Collatz graph.
 
+---
 
-\[1\] [First odd term of the sequence lower odd number $n$ related to the $3\cdot n+1$](https://mathoverflow.net/questions/448397/first-odd-term-of-the-sequence-lower-odd-number-n-related-to-the-3-cdot-n1?_gl=1*wy9ddp*_ga*MTAyNzkyMTgxNy4xNjYyNzY2MzQw*_ga_S812YQPLT2*MTY5NzI4NDUzNi40NS4xLjE2OTcyODUyMTMuMC4wLjA.) on [Maths Overflow Net](https://mathoverflow.net/)
+## Contact
 
-# full text
-
-[Notebook](papers/01-terminating-non-cyclic/paper.ipynb), [PDF](papers/01-terminating-non-cyclic/paper.pdf)
-
-# discussion
-
-Please message [@a_beautiful_k](https://twitter.com/a_beautiful_k) on Twitter/X if you would like to comment upon or ask questions about this paper. Other correspondence should be directed by email to authors c/- a_beautiful_k@wildducktheories.com.
+Please message [@a\_beautiful\_k](https://twitter.com/a\_beautiful\_k) on Twitter/X
+or email a\_beautiful\_k@wildducktheories.com.
