@@ -103,6 +103,7 @@ function stepBack() {
 }
 
 function startPlay() {
+  if (cur >= steps.length - 1) showStep(0);
   playing = true;
   document.getElementById('btn-play').textContent = '⏸ pause';
   const ms = parseInt(document.getElementById('speed').value);
