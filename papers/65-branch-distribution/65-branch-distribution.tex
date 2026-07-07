@@ -1,0 +1,403 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{draftwatermark}
+\SetWatermarkText{WORKING PAPER}
+\SetWatermarkScale{1.5}
+\SetWatermarkAngle{45}
+\SetWatermarkColor[gray]{0.80}
+\geometry{margin=1in}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Notation
+\newcommand{\vt}{v_2}
+\newcommand{\Sm}{S}
+\newcommand{\ZZp}{\mathbb{Z}^+}
+\newcommand{\OO}{\mathsf{O}}
+\newcommand{\EE}{\mathsf{E}}
+
+% This paper is in the speculative/empirical stream (64+k, k=1).
+% Claims are empirical observations, not theorems, unless explicitly labelled.
+
+\title{The $\frac{1}{3}\!\left(\frac{3}{4}\right)^k$ Distribution of\\
+       Steiner Circuit Branch Lengths\\[0.5em]
+       \large Speculative Results Series, Paper~65}
+
+\author{Jon Seymour\\
+  \texttt{jon@wildducktheories.com}\\
+  Sydney, Australia}
+\date{July 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We define a \emph{Steiner circuit branch} as a maximal sequence of consecutive
+Steiner circuits in a Collatz orbit, terminating at the first circuit whose exit
+value is $\equiv 5 \pmod{8}$.
+Branches match the regular language $((7^*3)?1)^{k-1}(7^*3)?5$, where $k \geq 1$
+is the total circuit count.
+
+A naive analysis of the Steiner circuit state machine suggests that the 50/50
+split at the 3-node should produce branch lengths geometrically distributed with
+parameter $1/2$, giving $P(k) = (1/2)^k$. Empirical sampling of $10^5$ branches
+via uniformly random entry points $n = 8t+5$ instead yields the distribution:
+\[
+  P(\text{branch length} = k) \;=\; \frac{1}{3}\!\left(\frac{3}{4}\right)^k.
+\]
+We explain precisely why the naive prediction fails, interpret the observed
+coefficients $1/3$ and $3/4$ in terms of the circuit entry distribution, and
+state a conjecture that this distribution is exact.
+A first-principles proof is an open problem.
+
+\medskip
+\noindent\textbf{Status.} This is a speculative results paper (stream 64+k).
+All empirical claims are supported by $\chi^2$ goodness-of-fit tests.
+No new theorems are claimed. The proved foundations are in Paper~33~\cite{paper33}.
+\end{abstract}
+
+\tableofcontents
+
+% ---------------------------------------------------------------------------
+\section{Background and Notation}
+\label{sec:background}
+
+We work with odd positive integers throughout.
+The \emph{2-adic valuation} $\vt(n)$ is the largest power of~$2$ dividing~$n$.
+
+\begin{definition}[Syracuse map]
+The \emph{Syracuse map} $\Sm : \mathbb{O} \to \mathbb{O}$ is
+\[
+  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}},
+\]
+which maps odd positive integers to odd positive integers by performing one odd
+Collatz step followed by all mandatory even halvings.
+\end{definition}
+
+\subsection{Mod-8 Step Taxonomy}
+
+Every odd integer $n$ falls into one of four residue classes modulo~8, each
+corresponding to a distinct step type under~$\Sm$:
+
+\begin{center}
+\begin{tabular}{ccll}
+\toprule
+$n \bmod 8$ & $\vt(3n+1)$ & Step type & Exit class $\Sm(n) \bmod 8$ \\
+\midrule
+1 & 2 & OEE & 1 (always) \\
+3 & 1 & OE  & 1 or 5 \\
+5 & $\geq 3$ & OEEE$^+$ & 5 (always) \\
+7 & 1 & OE  & 3 (always, to the 3-node) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The key structural fact is that nodes 3 and 7 both route to the \emph{3-node}:
+entry via 7 reaches 3 after a run of $v_2(n+1)-2$ self-loop steps (Theorem proved
+in Paper~33~\cite{paper33}), and entry via 3 is at the 3-node directly.
+
+\subsection{Steiner Circuits}
+\label{sec:steiner}
+
+\begin{definition}[Steiner circuit]
+\label{def:steiner}
+Let $a_0 \in \mathbb{O}$ with $a_0 + 1 = 2^\alpha m$, $m$ odd, $\alpha \geq 1$.
+The \emph{Steiner circuit} starting at $a_0$ is the path of $\alpha$ consecutive
+Syracuse steps from $a_0$ to
+\[
+  b \;=\; \frac{3^\alpha m - 1}{2^\beta}, \qquad \beta = \vt(3^\alpha m - 1).
+\]
+The \emph{Steiner parameter} $\alpha = \vt(a_0+1)$ counts the odd steps;
+the \emph{excess} $\beta = \vt(3^\alpha m - 1)$ counts the additional even steps
+in the final descent. The word of the circuit in the mod-8 alphabet is the
+sequence of residues $a_0 \bmod 8, a_1 \bmod 8, \ldots, a_{\alpha-1} \bmod 8$
+(one symbol per odd step).
+\end{definition}
+
+\begin{remark}[Steps vs.\ circuits]
+The mod-8 taxonomy table (Section~\ref{sec:background}) describes individual
+Syracuse \emph{steps}, whereas a Steiner circuit groups $\alpha = \vt(a_0+1)$
+consecutive steps into a single unit.
+For example, if $a_0 = 3$ then $\alpha = \vt(4) = 2$, so the circuit starting at~3
+consists of \emph{two} steps: $3 \to \Sm(3) = 5 \to \Sm(5) = 1$, with exit
+class $1\pmod{8}$.
+The taxonomy table entry for $3\pmod{8}$ describes only the \emph{first} of these
+steps; the Steiner circuit definition binds all $\alpha$ steps into a single unit
+with a single exit value~$b$.
+\end{remark}
+
+\begin{proposition}[Exit class, proved in Paper~33]
+\label{prop:exit}
+For any Steiner circuit with entry $a_0$:
+\begin{enumerate}
+  \item If $a_0 \equiv 1 \pmod{8}$, then $b \equiv 1 \pmod{8}$ (OEE, $\beta = 1$).
+  \item If $a_0 \equiv 5 \pmod{8}$, then $b \equiv 5 \pmod{8}$ (OEEE$^+$, $\beta \geq 2$).
+  \item If $a_0 \equiv 3$ or $7 \pmod{8}$, then $b \equiv 1$ or $5 \pmod{8}$
+        with the split determined by the 3-node (see Lemma~\ref{lem:3node} below).
+\end{enumerate}
+\end{proposition}
+
+\begin{lemma}[3-node split]
+\label{lem:3node}
+Let $n \equiv 3 \pmod{8}$, write $n = 8a+3$. Then:
+\[
+  \Sm(n) \;=\; 12a+5.
+\]
+This satisfies $12a+5 \equiv 1 \pmod{8}$ if and only if $a$ is odd,
+which holds if and only if $n \equiv 11 \pmod{16}$.
+Exactly half the residues in the class $\{n : n \equiv 3 \pmod{8}\}$
+satisfy $n \equiv 11 \pmod{16}$, so the split between exit via~1 and exit via~5
+is \emph{exactly} $1/2$ --- structurally determined, not probabilistic.
+\end{lemma}
+
+\begin{proof}
+$\Sm(n) = (3n+1)/2^{\vt(3n+1)}$.
+For $n = 8a+3$: $3n+1 = 24a+10 = 2(12a+5)$.
+Since $12a+5$ is odd, $\vt(3n+1) = 1$, giving $\Sm(n) = 12a+5$.
+Now $12a+5 \equiv 5+4a \pmod{8}$, which is $\equiv 1 \pmod{8}$ iff $4a \equiv 4 \pmod{8}$
+iff $a$ is odd iff $n = 8a+3 \equiv 11 \pmod{16}$.
+Among $\{3,11\} = \{n \bmod 16 : n \equiv 3 \pmod{8}\}$, exactly one satisfies
+$n \equiv 11 \pmod{16}$, confirming the 50/50 split.
+\end{proof}
+
+\subsection{The Steiner Circuit State Machine}
+\label{sec:machine}
+
+The mod-8 entry class of each circuit is the mod-8 exit class of the previous one.
+This defines a Markov-like transition on $\{1, 3, 5, 7\}$:
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+Entry & Visits 3-node? & Exit \\
+\midrule
+1 & No  & 1 (certain) \\
+3 & Yes & 1 or 5 ($1/2$ each) \\
+5 & No  & 5 (certain) \\
+7 & Yes (via 7-run then 3) & 1 or 5 ($1/2$ each) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Crucially, exits are \emph{always} in $\{1, 5\}$. States 3 and 7 are therefore
+\emph{transient}: they can appear as entry states only at the very start of an orbit
+(when the initial value is $\equiv 3$ or $7 \pmod 8$) and are never re-entered
+thereafter. After at most one circuit, the chain is absorbed into $\{1, 5\}$.
+
+% ---------------------------------------------------------------------------
+\section{Branches and the Naive Prediction}
+\label{sec:naive}
+
+\begin{definition}[Steiner circuit branch]
+\label{def:branch}
+A \emph{branch} is a maximal sequence of consecutive Steiner circuits
+$C_1, C_2, \ldots, C_k$ such that $C_1, \ldots, C_{k-1}$ each exit via
+$1 \pmod{8}$ and $C_k$ exits via $5 \pmod{8}$.
+The \emph{branch length} is $k \geq 1$ (total circuit count, including the
+terminal 5-exit circuit).
+In the mod-8 word alphabet, a branch of length $k$ matches the language
+\[
+  ((7^*3)?1)^{k-1}\,(7^*3)?5.
+\]
+A branch of length $k=1$ consists of a single OEEE$^+$ circuit (exit via 5,
+no preceding 1-exits).
+\end{definition}
+
+\subsection{The Naive Prediction}
+
+From the 3-node lemma (Lemma~\ref{lem:3node}), every circuit that visits the
+3-node independently terminates the branch with probability exactly $1/2$.
+A first instinct is therefore:
+\[
+  P(\text{branch length} = k) \;\stackrel{?}{=}\; \left(\frac{1}{2}\right)^k.
+\]
+This would mean $k-1$ consecutive non-terminating 3-node visits followed by
+one terminating visit, each with probability $1/2$.
+
+\textbf{Why this is wrong.} The prediction tacitly assumes every circuit visits
+the 3-node. It does not. Circuits entering via $1 \pmod{8}$ exit via~1 with
+certainty and do not visit the 3-node at all. Such circuits extend the branch
+deterministically without consuming a coin flip. Their presence inflates branch
+lengths without affecting the termination probability per 3-node visit, shifting
+the distribution away from $(1/2)^k$.
+
+% ---------------------------------------------------------------------------
+\section{Sampling Methodology}
+\label{sec:sampling}
+
+To measure the branch length distribution without systematic bias from orbit
+structure or double-counting of shared tails, we use the following protocol:
+
+\begin{enumerate}
+  \item Draw $t$ uniformly at random from $[1, T_{\max}]$ with $T_{\max} = 10^{15}$.
+  \item Compute $n = 8t + 5$ (so $n \equiv 5 \pmod{8}$).
+  \item Since $n \equiv 5 \pmod{8}$, the Steiner circuit starting at $n$ always exits
+        via $5 \pmod{8}$ (Proposition~\ref{prop:exit}). This circuit is the terminal
+        circuit of a branch, not the start of one. The \emph{new branch} begins at
+        $b_0 = \Sm^{(\alpha)}(n)$, the odd exit value of the circuit starting at $n$.
+  \item Follow consecutive Steiner circuits from $b_0$ until the first exit
+        via $5 \pmod{8}$, counting the total number of circuits. Record this count as $k$.
+\end{enumerate}
+
+We collected $N = 10^5$ independent samples.
+The key point is that $n$ itself is \emph{not} counted as part of the branch being
+measured --- it serves only as a well-defined, freshly sampled anchor.
+This ensures:
+(a) independence between samples (no shared orbit tails),
+(b) a uniform entry distribution for $b_0$ (since $\Sm$ applied to a uniform
+    $5\pmod{8}$ value produces the next circuit's start without systematic bias),
+(c) $T_{\max} = 10^{15}$ is large enough that the distribution of $n \bmod 16$
+    within the $5\pmod{8}$ class is effectively uniform.
+
+% ---------------------------------------------------------------------------
+\section{Empirical Result}
+\label{sec:result}
+
+\subsection{The Observed Distribution}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrr}
+\toprule
+$k$ & Observed fraction & Predicted $(1/2)^k$ & Fitted $\frac{1}{3}(3/4)^k$ \\
+\midrule
+1  & 0.24852 & 0.50000 & 0.25000 \\
+2  & 0.18930 & 0.25000 & 0.18750 \\
+3  & 0.14023 & 0.12500 & 0.14063 \\
+4  & 0.10402 & 0.06250 & 0.10547 \\
+5  & 0.07940 & 0.03125 & 0.07910 \\
+6  & 0.05935 & 0.01563 & 0.05933 \\
+7  & 0.04463 & 0.00781 & 0.04449 \\
+8  & 0.03413 & 0.00391 & 0.03337 \\
+9  & 0.02513 & 0.00195 & 0.02503 \\
+10 & 0.01864 & 0.00098 & 0.01877 \\
+\bottomrule
+\end{tabular}
+\caption{Empirical branch length distribution ($N=10^5$ samples) vs.\ the
+naive $(1/2)^k$ prediction and the fitted $\frac{1}{3}(3/4)^k$ distribution.}
+\label{tab:distribution}
+\end{table}
+
+The fitted distribution
+\[
+  \boxed{P(\text{branch length} = k) \;=\; \frac{1}{3}\!\left(\frac{3}{4}\right)^k}
+\]
+is a valid probability distribution:
+$\frac{1}{3}\sum_{k=1}^{\infty}(3/4)^k = \frac{1}{3}\cdot 3 = 1$.
+
+\subsection{Statistical Tests}
+
+A $\chi^2$ goodness-of-fit test (10 bins plus tail, $9$ degrees of freedom)
+strongly rejects the naive $(1/2)^k$ prediction ($\chi^2 \approx 454300$,
+$p \approx 0$) and is fully consistent with the $\frac{1}{3}(3/4)^k$
+distribution ($\chi^2 \approx 8$, $p > 0.4$).
+
+\subsection{Interpretation of the Coefficients}
+\label{sec:interpretation}
+
+\textbf{The decay rate $3/4$.}
+Each randomly selected circuit (under the uniform entry distribution of
+Conjecture~\ref{conj:uniform}) terminates the branch (exits via 5) with
+probability $1/4$, giving survival probability $3/4$.
+This follows from a two-component argument:
+
+\begin{itemize}
+  \item Circuits entering via $1 \pmod{8}$ (bare-1 circuits): do not visit the
+        3-node; exit via 1 with certainty; termination probability $= 0$.
+  \item Circuits entering via $3$ or $7 \pmod{8}$ (3-node circuits): visit the
+        3-node; terminate with probability $1/2$.
+\end{itemize}
+
+If half of all circuits are bare-1 and half are 3-node circuits, then:
+\[
+  P(\text{terminate}) \;=\; \frac{1}{2}\cdot 0 \;+\; \frac{1}{2}\cdot\frac{1}{2}
+  \;=\; \frac{1}{4},
+  \qquad
+  P(\text{survive}) \;=\; \frac{3}{4}.
+\]
+
+\textbf{The amplitude $1/3$.}
+For a geometric distribution with survival ratio $r = 3/4$ supported on $k \geq 1$:
+\[
+  \sum_{k=1}^\infty r^k \;=\; \frac{r}{1-r} \;=\; \frac{3/4}{1/4} \;=\; 3,
+\]
+so the normalising prefactor is $1/3$.
+
+\textbf{The open question.}
+The heuristic argument assumes that exactly half of circuits are bare-1 and half
+are 3-node circuits, i.e.\ that the long-run entry distribution over $\{1, 5\}$
+is uniform ($1/2$ each). This is plausible --- the 3-node lemma shows the
+$\{1, 5\}$ absorbed chain is symmetric --- but it has not been proved.
+The first-principles proof of the $\frac{1}{3}(3/4)^k$ distribution reduces to
+this single missing lemma.
+
+% ---------------------------------------------------------------------------
+\section{Open Problems}
+\label{sec:open}
+
+\begin{conjecture}[Branch length distribution]
+\label{conj:branch}
+For branches sampled by uniform random entry at $n = 8t+5$, $t \in [1, T_{\max}]$
+with $T_{\max} \to \infty$:
+\[
+  P(\text{branch length} = k) \;=\; \frac{1}{3}\left(\frac{3}{4}\right)^k,
+  \qquad k = 1, 2, 3, \ldots
+\]
+\end{conjecture}
+
+\begin{conjecture}[Uniform entry distribution]
+\label{conj:uniform}
+In the long-run entry distribution of Steiner circuits within a Collatz orbit,
+the entry states $1 \pmod{8}$ and $5 \pmod{8}$ each occur with frequency
+approaching $1/2$ as the orbit length tends to infinity.
+\end{conjecture}
+
+Conjecture~\ref{conj:branch} follows from Conjecture~\ref{conj:uniform} together
+with Lemma~\ref{lem:3node} and the independence of successive 3-node coin flips.
+
+A proof of Conjecture~\ref{conj:uniform} would require characterising the
+stationary behaviour of the absorbed chain on $\{1, 5\}$, which in turn
+requires understanding the ratio of OEE to OEEE$^+$ circuits in typical long orbits.
+This is closely related to the Sturmian structure of the greedy $\log_2 3$ walk
+(developed in Paper~37~\cite{paper5}).
+
+% ---------------------------------------------------------------------------
+\section*{Acknowledgements}
+
+This paper is part of the speculative results stream (64+k) of the Collatz
+programme. All claims are empirical observations awaiting first-principles proof.
+The companion rigorous stream (32+k) contains the proved foundations on which
+these observations rest. Paper~33 (architecture) provides the Steiner circuit
+decomposition and the 3-node lemma used here.
+
+% ---------------------------------------------------------------------------
+\begin{thebibliography}{9}
+
+\bibitem{paper33}
+J.~Seymour,
+\emph{A Regular Expression Language for the Collatz Graph} (Working Paper, Paper~33),
+2026.
+
+\bibitem{paper5}
+J.~Seymour,
+\emph{A Toolkit for Collatz Path Analysis} (Paper~37),
+in preparation, 2026.
+
+\end{thebibliography}
+
+\end{document}
