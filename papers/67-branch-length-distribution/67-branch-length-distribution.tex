@@ -698,82 +698,20 @@ The sentence length distribution $P(\text{length} = k) = 3^{k-1}/4^k$ is the
 main result of this paper (Theorem~\ref{thm:main}).
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection*{Steiner Volumes}
+\subsection*{Higher-Level Structures}
 
-A \emph{Steiner Volume} is defined recursively as an ordered pair
-\[
-  V \;=\; (\sigma,\; V'),
-\]
-where $\sigma$ is a Steiner sentence and $V'$ is a Steiner Volume.
-Every Volume has a \emph{root node} $r \equiv 5 \pmod{8}$.
-The sentence $\sigma$ is an OEEE-free path beginning at a node $l$ and ending
-at $r$: no word in $\sigma$ has entry letter~$5$, so no node that serves as
-the starting node of any word in $\sigma$ is $\equiv 5 \pmod{8}$.
-(The terminal node $r \equiv 5 \pmod{8}$ is the endpoint of $\sigma$, not the
-entry of any word within it.)
-The sub-Volume $V'$ is rooted at the node $r'$ satisfying
-\[
-  S(r') \;=\; r, \qquad r' \equiv 5 \pmod{8},
-\]
-i.e.\ $r'$ is the unique $5 \pmod{8}$ predecessor of $r$ under $S$
-($v_2(3r'+1) \geq 3$).
-Thus the recursive structure of a Volume follows the \emph{inverse} of the
-Syracuse map: the root $r$ of $V$ is the forward image of the root $r'$ of $V'$.
-
-\begin{postulate}[Left-sentence origin]
-\label{post:halt}
-For every Steiner Volume with root $r \equiv 5 \pmod{8}$, the OEEE-free
-sentence $\sigma$ begins at a node $l \equiv 0 \pmod{3}$.
-\end{postulate}
-
-This postulate is supported by extensive computation but has not been proved.
-\begin{remark}
-This property was first isolated in early unpublished structural drafts (2025)
-and is adopted here axiomatically as an operational postulate native to this
-paper.
-\end{remark}
-Note that $r \equiv 5 \pmod{8}$ and $r \equiv 0 \pmod{3}$ are compatible
-($r \equiv 21 \pmod{24}$); every third Volume root satisfies both congruences
-simultaneously.
-For all other roots the postulate asserts that $\sigma$ begins at a
-distinct node $l \equiv 0 \pmod{3}$ whose forward path under $S$ ends at $r$.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection*{Steiner Libraries}
-
-A \emph{Steiner Library} is a collection of Steiner Volumes sharing a common
-root node $b$.
-The known library has root $b = 1$ and contains the Volumes rooted at
-\[
-  5,\; 21,\; 85,\; 341,\; \ldots \qquad (a_0 = 5,\; a_{n+1} = 4a_n + 1),
-\]
-each of which maps to~$1$ under a single application of~$S$
-($S(5) = 1$, $S(21) = 1$, $S(85) = 1$, \ldots).
-
-The Steiner Library is the natural object at which to state the Collatz
-conjecture:
-
-\begin{conjecture}[Library Equivalence]
-\label{conj:library}
-The global Collatz conjecture is equivalent to the structural assertion that
-there exists exactly one Steiner Library — rooted at $b = 1$ — to which every
-odd positive integer belongs.
-\end{conjecture}
-
-The two directions of Conjecture~\ref{conj:library} correspond to the only
-two ways the conjecture can fail:
-\begin{itemize}
-  \item A counterexample forming a \emph{cycle} would give rise to a second
-        Library whose Volumes circulate among themselves without reaching~$1$.
-  \item A counterexample \emph{escaping to infinity} would give rise to a
-        Library with no finite root.
-\end{itemize}
+The hierarchy does not end at sentences.
+Future work in this programme will use the terms \emph{paragraph}, \emph{page},
+\emph{chapter}, \emph{volume}, and \emph{library} to name successively larger
+graph-theoretic structures built from sentences, each relevant to the analysis
+of Collatz orbits at a different scale.
+Their precise definitions are deferred to companion paper~\cite{paper33},
+where the full graph-theoretic infrastructure is developed.
 
 The sentence length distribution proved in this paper (Theorem~\ref{thm:main})
-is a property of \emph{all} Steiner Libraries, unconditionally: the proof rests
-on arithmetic facts about $v_2(3n+1)$ that hold for every odd positive integer,
-regardless of which Library it belongs to or whether the Collatz conjecture is
-true.
+is unconditional: the proof rests on arithmetic facts about $v_2(3n+1)$ that
+hold for every odd positive integer, and does not depend on the Collatz
+conjecture or on the structure of any higher-level objects.
 
 % ---------------------------------------------------------------------------
 \section{Empirical Validation}
