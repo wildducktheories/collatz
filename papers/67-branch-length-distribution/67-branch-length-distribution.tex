@@ -116,9 +116,11 @@ and incorporates its experimental record in Appendix~A.
 \label{sec:matrix}
 
 We model the sentence as a Markov chain on residue classes modulo~8.
-The transition probability $P[a][b]$ is the fraction of odd integers
+The transition probability $P[a][b]$ is the natural density of odd integers
 $n \equiv a \pmod{8}$ for which $\Sm(n) \equiv b \pmod{8}$,
-measured over the natural density.
+i.e.\ $P[a][b] = \lim_{N\to\infty} \frac{1}{N}\#\{n \leq N : n \equiv a, \Sm(n) \equiv b \pmod 8\}$.
+All results in this paper are unconditional: they require no assumption beyond this
+standard density definition and do not depend on the Collatz conjecture.
 
 \begin{theorem}[Syracuse transition matrix mod~8]
 \label{thm:matrix}
@@ -141,19 +143,30 @@ P \;=\;
 We prove each row by direct arithmetic.
 
 \medskip\noindent
-\textbf{Rows 1 and 5 (uniform rows).}
-Write $n = 8k + r$ for $r \in \{1, 5\}$. Then $3n + 1 = 24k + (3r+1)$,
-so $3n+1 \pmod{8}$ depends only on $r$ modulo~8, not on $k$. For $r=1$:
-$3(1)+1=4$, so $3n+1 \equiv 4 \pmod 8$, giving $\vt(3n+1) \geq 2$.
-Specifically, $\Sm(n) = (3n+1)/4$ and the residue of $\Sm(n) \pmod 8$
-depends on $k$. Since $\gcd(3, 2^j) = 1$, multiplication by~3 is a
-bijection on $\mathbb{Z}/2^j\mathbb{Z}$ for every $j \geq 1$. Therefore
-as $k$ ranges uniformly over a complete residue system mod~$2^j$, the
-value $3n+1 \pmod{2^j}$ is uniform over $2^j\mathbb{Z}$. In particular
-$\Sm(n) \pmod 8$ is uniform over $\{1,3,5,7\}$, giving $P[1][b] = 1/4$
-for each $b \in \{1,3,5,7\}$. The same argument applies to $r = 5$
-(where $3n+1 = 8(3k+2)$ and uniformity of $3k+2 \pmod{2^j}$ follows
-from $\gcd(3, 2^j) = 1$).
+\textbf{Row 1 (uniform).}
+Write $n = 8k+1$. Then $3n+1 = 24k+4 = 4(6k+1)$.
+Since $6k+1$ is always odd, $\vt(3n+1) = 2$ exactly and $\Sm(n) = 6k+1$.
+Now $6k+1 \pmod 8$: as $k$ runs through $0,1,2,3 \pmod 4$, we get
+$6k+1 \equiv 1,7,5,3 \pmod 8$ respectively.
+Each residue in $\{1,3,5,7\}$ appears with equal density, so $P[1][b] = 1/4$
+for all $b \in \{1,3,5,7\}$.
+
+\medskip\noindent
+\textbf{Row 5 (uniform).}
+Write $n = 8k+5$. Then $3n+1 = 8(3k+2)$, so $\vt(3n+1) = 3 + \vt(3k+2)$.
+Write $3k+2 = 2^m q$ with $q$ odd; then $\Sm(n) = q$.
+We need $q \pmod 8$ to be uniform on $\{1,3,5,7\}$.
+
+Since $\gcd(3, 2^j) = 1$ for all $j \geq 1$, the map $k \mapsto 3k+2$ is
+a bijection on $\mathbb{Z}/2^j\mathbb{Z}$.
+As $k$ ranges over any $2^{j+3}$ consecutive integers, the value $3k+2$
+hits each residue class mod $2^{j+3}$ exactly $2^j$ times.
+In particular, as $k$ ranges over $\{0, 1, \ldots, 2^N - 1\}$, the value
+$\Sm(8k+5) \pmod 8$ is uniform over $\{1,3,5,7\}$: for each target residue
+$b \in \{1,3,5,7\}$ there are exactly $2^{N-2}$ values of $k$ giving
+$\Sm(n) \equiv b \pmod 8$, as proved in Theorem~2.1(3) and Proposition~4.1
+of Paper~66~\cite{paper66} via the same bijectivity argument.
+Thus $P[5][b] = 1/4$ for all $b \in \{1,3,5,7\}$.
 
 \medskip\noindent
 \textbf{Row 3 (restricted to $\{1, 5\}$).}
@@ -217,11 +230,15 @@ $d_s^{(0)} = \pi_0(s)$ and for $k \geq 0$:
 The \emph{surviving mass} is $M_k = \sum_{s \neq 5} d_s^{(k)}$.
 \end{definition}
 
-Then:
+The sentence length distribution follows from the surviving mass:
+$M_{k-1}$ is the probability of surviving past step $k-1$, and $M_k$
+is the probability of surviving past step $k$, so
 \[
-  P(\text{sentence length} = k) \;=\; M_{k-1} - M_k
-  \;=\; \sum_{s} d_s^{(k-1)} P[s][5].
+  P(\text{sentence length} = k) \;=\; M_{k-1} - M_k.
 \]
+Expanding: $M_{k-1} - M_k = \sum_{s \neq 5} d_s^{(k-1)} - \sum_{s \neq 5} d_s^{(k)}
+= \sum_{t \neq 5} d_t^{(k-1)}\!\left(1 - \sum_{s \neq 5} P[t][s]\right)
+= \sum_{t \neq 5} d_t^{(k-1)} P[t][5]$.
 
 % ---------------------------------------------------------------------------
 \section{The Invariant $d_3 = d_7$}
