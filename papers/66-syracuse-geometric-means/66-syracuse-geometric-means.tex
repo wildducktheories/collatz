@@ -49,8 +49,8 @@ Writing $c_r = E[\vt(3n+1) \mid n \equiv r \pmod{8}]$, the four expected
 valuations sum to $c_1 + c_3 + c_5 + c_7 = 2 + 1 + 4 + 1 = 8$, so their
 geometric mean satisfies $(3^4/2^8)^{1/4} = 3/4$.
 This is the geometric mean asymptotic contraction rate of the Syracuse map
-across all four letter types, and is the arithmetic origin of the $3/4$
-decay appearing in the Steiner sentence length distribution
+across all four letter types~\cite{terras,lagarias}, and is the arithmetic
+origin of the $3/4$ decay appearing in the Steiner sentence length distribution
 $P(\text{length} = k) = 3^{k-1}/4^k$ proved in the companion paper~\cite{paper67}.
 
 We also prove the full distribution of $\vt(3n+1)$ for $n \equiv 5 \pmod{8}$:
@@ -83,7 +83,7 @@ question of this paper is: what is $\vt(3n+1)$, and how does it depend on
 $n \bmod 8$?
 
 A \emph{Steiner sentence} of length $k$ is a string of $k$ consecutive
-Steiner words (maximal path segments whose compressed mod-8 form matches
+Steiner words (path segments whose compressed mod-8 form matches
 $(7^*3)?(1\mid 5)$) in which the first $k-1$ words terminate at letter~$1$ and the final word
 terminates at letter~$5$.
 The sentence length distribution $P(\text{length}=k) = 3^{k-1}/4^k$ is proved
@@ -278,8 +278,8 @@ argument.
 The two papers are thus complementary: this paper characterises the hard case
 (class~5, unbounded valuation); Paper~67 sidesteps it by choosing the right scale.
 
-The Steiner language hierarchy — alphabet, letters, words, and sentences — is
-defined in full in Appendix~A of Paper~67~\cite{paper67}.
+(See §\ref{sec:background} and Appendix~A of Paper~67~\cite{paper67} for the
+full Steiner language hierarchy.)
 
 % ---------------------------------------------------------------------------
 \section{Further Results}
@@ -352,6 +352,11 @@ J.~Seymour,
 \emph{First-Principles Derivation of the Steiner Sentence Length Distribution}
 (companion paper, submitted simultaneously),
 2026.
+
+\bibitem{terras}
+R.~Terras,
+A stopping time problem on the positive integers,
+\emph{Acta Arithmetica} \textbf{30} (1976), no.~3, 241--252.
 
 \bibitem{lagarias}
 J.~C. Lagarias (ed.),

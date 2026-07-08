@@ -103,6 +103,9 @@ Steiner words in a Collatz orbit such that the first $k-1$ words terminate at
 letter~$1$ and the final word terminates at letter~$5$.
 \end{definition}
 
+The full Steiner language hierarchy (alphabet, letters, words, sentences, and
+higher-level structures) is developed in Appendix~\ref{app:hierarchy}.
+
 \begin{remark}
 A sentence of length~$k$ corresponds to a path of $k$ edges in the overlay tree
 whose nodes are odd integers $\equiv 5 \pmod{8}$ and whose edges are individual
@@ -544,6 +547,15 @@ infinite series for its expectation), while the present paper shows that by
 choosing Steiner sentences as the unit of analysis, the class~5 boundary
 need never be crossed from the inside — it only needs to be \emph{entered}.
 
+The value $3/4$ also appears in the classical Collatz heuristic~\cite{terras,lagarias}
+as the mean multiplicative contraction per odd step: $3/2^2 = 3/4$ for the
+dominant class~1.
+Paper~66 shows this is the geometric mean contraction across all four letter types.
+The $3/4$ in Theorem~\ref{thm:main} is distinct: it is the \emph{per-word survival
+probability} of the sentence chain.
+The two quantities are numerically equal but arise from different computations; the
+connection is explained in Paper~66 §4.
+
 More precisely, the $3/4$ decay rate follows from three facts, each drawing
 on the same underlying arithmetic:
 \begin{itemize}
@@ -882,6 +894,11 @@ J.~Seymour,
 of the Syracuse Map}
 (companion paper, submitted simultaneously),
 2026.
+
+\bibitem{terras}
+R.~Terras,
+A stopping time problem on the positive integers,
+\emph{Acta Arithmetica} \textbf{30} (1976), no.~3, 241--252.
 
 \bibitem{lagarias}
 J.~C. Lagarias (ed.),
