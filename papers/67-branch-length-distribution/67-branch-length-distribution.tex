@@ -189,19 +189,44 @@ Write $3k+2 = 2^m q$ with $q$ odd; then $\Sm(n) = q$.
 We need $q \pmod 8$ to be uniform on $\{1,3,5,7\}$.
 
 Since $\gcd(3, 2^j) = 1$ for all $j \geq 1$, the map $k \mapsto 3k+2$ is
-a bijection on $\mathbb{Z}/2^j\mathbb{Z}$, so $3k+2$ hits each residue class
-mod $2^{j+3}$ with equal asymptotic density as $k$ ranges over positive integers.
-Taking odd parts, $P[5][b] = 1/4$ for all $b \in \{1,3,5,7\}$, as proved in
-Theorem~2.1(3) and Proposition~4.1 of Paper~66~\cite{paper66}.
+a bijection on $\mathbb{Z}/2^j\mathbb{Z}$.
+As $k$ ranges over any $2^{j+3}$ consecutive integers, the value $3k+2$
+hits each residue class mod $2^{j+3}$ exactly $2^j$ times.
+% ---------------------------------------------------------------------------
+% CORRECTION (Aristotle review, Ticket 4): the following claim asserted an
+% EXACT finite count of $2^{N-2}$ for row 5, which is FALSE.  The Lean theorem
+% Paper67.row5_count_not_exact verifies by native_decide that at $N=6$, $b=1$
+% the count is $17 \neq 16 = 2^{N-2}$.  Row 5 is a natural-density statement
+% only, not an exact finite count.  The original (incorrect) sentence is
+% preserved below in comments; the corrected statement follows.
+%
+% In particular, as $k$ ranges over $\{0, 1, \ldots, 2^N - 1\}$, the value
+% $\Sm(8k+5) \pmod 8$ is uniform over $\{1,3,5,7\}$: for each target residue
+% $b \in \{1,3,5,7\}$ there are exactly $2^{N-2}$ values of $k$ giving
+% $\Sm(n) \equiv b \pmod 8$, as proved in Theorem~2.1(3) and Proposition~4.1
+% of Paper~66~\cite{paper66} via the same bijectivity argument.
+% ---------------------------------------------------------------------------
+Consequently the value $\Sm(8k+5) \pmod 8$ is equidistributed over
+$\{1,3,5,7\}$ \emph{in natural density}: the arithmetic core is that, as $k$
+ranges over $\{0,1,\ldots,2^N-1\}$, exactly $2^{\,N-j}$ values satisfy
+$2^j \mid (3k+2)$ (Paper~66~\cite{paper66}, \texttt{uniformity\_count};
+formalised here as \texttt{row5\_uniform\_dvd}), from which each target residue
+$b \in \{1,3,5,7\}$ receives limiting density $1/4$.
+Thus $P[5][b] = 1/4$ for all $b \in \{1,3,5,7\}$.
 
-\emph{Note.} Unlike rows~1, 3, and~7 — where the transition targets are
-determined by $k \bmod 2$ or $k \bmod 4$ and every finite count is exactly
-equal — row~5 is genuinely a natural-density limit.
-The finite count $\#\{k < 2^N : \Sm(8k+5) \equiv b \pmod 8\}$ fluctuates
-around $2^{N-2}$ without being exactly $2^{N-2}$ at every~$N$:
-for example, at $N=6$ and $b \equiv 1$ the count is~17, not~16.
-This was verified by the companion Lean file
-(\texttt{row5\_count\_not\_exact}).
+\begin{remark}[Row 5 is a density, not an exact finite count]
+Unlike rows~1, 3 and~7 --- whose per-residue counts over $\{0,\ldots,2^N-1\}$
+are \emph{exactly} $2^{N-2}$ or $2^{N-1}$ (formalised as \texttt{count\_row1},
+\texttt{count\_row3\_*}, \texttt{count\_row7\_*}) --- row~5 holds only as a
+natural-density limit.  The finite count
+$\#\{k < 2^N : \Sm(8k+5) \equiv b \pmod 8\}$ is \emph{not} equal to $2^{N-2}$
+in general: at $N=6$, $b=1$ the count is $17$, not $16 = 2^{6-2}$.  This is
+machine-verified in the companion Lean development by
+\texttt{row5\_count\_not\_exact} (via \texttt{native\_decide}).  The extra,
+variable number of halvings $\vt(3n+1) = 3 + \vt(3k+2)$ from class~5 is exactly
+what prevents an exact finite count while still forcing uniform limiting
+density.
+\end{remark}
 
 \medskip\noindent
 \textbf{Row 3 (restricted to $\{1, 5\}$).}
