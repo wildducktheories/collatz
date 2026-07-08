@@ -104,6 +104,37 @@ The sentence start $b_0 = \Sm(n)$ is the node immediately following a $5 \pmod 8
 node in the orbit, and the sentence ends at the next $5 \pmod 8$ node.
 \end{remark}
 
+\begin{remark}[Why Steiner sentences are the right scale]
+\label{rem:scale}
+The Steiner sentence decomposition is chosen precisely so that class~$5 \pmod 8$
+is \emph{always a sink and never a source} within a sentence.
+This has a crucial arithmetic consequence.
+
+For $n \equiv 1, 3, 7 \pmod 8$, the 2-adic valuation $\vt(3n+1)$ is a
+\emph{constant} determined entirely by $n \bmod 8$: it equals~2, 1, and~1
+respectively (Paper~66~\cite{paper66}, Theorem~2.1).
+The Syracuse image $\Sm(n) \bmod 8$ is therefore completely determined by
+$n \bmod 8$ alone, with exact rational transition probabilities.
+
+For $n \equiv 5 \pmod 8$, by contrast, $\vt(3n+1) = 3 + \vt(3k+2)$ where
+$n = 8k+5$, and $\vt(3k+2)$ is an unbounded random variable whose
+expectation requires summing a geometric series (Paper~66).
+The transition probabilities out of class~5 are still exactly $1/4$ each,
+but they arise from a distribution over infinitely many valuation values,
+not a single fixed shift.
+
+By restricting to the \emph{interior} of a sentence —
+the steps from $b_0 \not\equiv 5$ to the terminal word —
+class~5 never appears as a source.
+The surviving chain operates entirely on $\{1,3,7\}$, where every
+valuation is a constant and every transition probability is an exact rational.
+The variable-valuation complexity of class~5 is absorbed at the sentence
+boundary and plays no role in the counting argument.
+This is why the sentence length distribution $3^{k-1}/4^k$ admits a
+clean closed-form proof: at the scale of Steiner sentences, the arithmetic
+is exact.
+\end{remark}
+
 Paper~65~\cite{paper65} was the first attempt at this subject.
 It observed empirically that
 $P(\text{sentence length} = k) = \frac{1}{3}(3/4)^k$,
@@ -194,6 +225,28 @@ The zero entries in $P$ — transitions $3 \to 3$, $3 \to 7$, $7 \to 1$,
 $7 \to 5$ — are \emph{structurally forbidden} for all $n$, not just on
 average. Classes~3 and~7 each map into a strict subset of $\{1,3,5,7\}$.
 This structural restriction is the engine of the proof.
+\end{remark}
+
+\begin{remark}[The surviving chain has exact arithmetic]
+\label{rem:exact}
+Row~5 of~$P$ is never used in the proof of Theorem~\ref{thm:main}.
+Within a sentence, class~5 is a sink: once the chain reaches~5
+the sentence ends, and class~5 never acts as a source for subsequent steps.
+The surviving distribution (Definition~\ref{def:surviving}) propagates
+mass only through rows~1, 3, and~7 of~$P$.
+
+For these three rows, all transition probabilities are \emph{exact rational
+constants} that follow directly from $n \bmod 8$ alone:
+$\vt(3n+1) = 2$ always for class~1, and $\vt(3n+1) = 1$ always for
+classes~3 and~7.
+No geometric series, no expectation, no appeal to the distribution of
+$\vt(3n+1)$ for class~5 is ever needed.
+The variable-valuation behaviour of class~5 — which requires an
+infinite geometric series to characterise (Paper~66~\cite{paper66}) —
+is invisible to the surviving chain.
+This exactness is what makes the sentence decomposition the right scale
+for counting, and what makes the proof of Theorem~\ref{thm:main} purely
+algebraic.
 \end{remark}
 
 % ---------------------------------------------------------------------------
@@ -422,19 +475,31 @@ at every step, regardless of the current value of $d_1$.
 
 Paper~66~\cite{paper66} proves that $E[\vt(3n+1) \mid n \equiv r \pmod 8]$
 equals exactly 2, 1, 4, 1 for $r = 1,3,5,7$ respectively.
-The present paper shows that the $3/4$ decay rate of sentences is a direct
-consequence of the same arithmetic:
+The two papers are complementary: Paper~66 establishes what happens \emph{at}
+the class~5 boundary (a geometrically distributed valuation requiring an
+infinite series for its expectation), while the present paper shows that by
+choosing Steiner sentences as the unit of analysis, the class~5 boundary
+need never be crossed from the inside — it only needs to be \emph{entered}.
+
+More precisely, the $3/4$ decay rate follows from three facts, each drawing
+on the same underlying arithmetic:
 \begin{itemize}
-  \item The $1/4$ probability of immediate termination ($b_0 \equiv 5$) comes from
-        the uniform output of class~5 (Paper~66, class~5 is the unique class with
-        $c_r \geq 3$, causing its output to be uniform over all four classes).
+  \item The $1/4$ probability of immediate termination ($b_0 \equiv 5$)
+        uses row~5 of~$P$ exactly once — at the sentence start.
+        Class~5 is the unique class with $c_r \geq 3$ (Paper~66), forcing
+        the extra halvings that make its output uniform.
+        This is the only point where the geometric-series character of
+        class~5 is relevant.
   \item The $1/2$ termination probability from class~3 comes from the mod-16
-        split proved in Theorem~\ref{thm:matrix}: exactly half of class~3 nodes
-        map to class~5.
-  \item The invariant $d_3 = d_7$ — and hence the geometric decay — follows
-        from the structural symmetry between the forbidden transitions of
-        classes~3 and~7.
+        split of Theorem~\ref{thm:matrix}: $\vt(3n+1) = 1$ exactly for all
+        $n \equiv 3 \pmod 8$, so $\Sm(n) \bmod 8$ is determined by $n \bmod 16$
+        alone, with no random valuation.
+  \item The invariant $d_3 = d_7$ — and hence the $3/4$ decay — involves
+        classes~1, 3, and~7 only, all of which have constant valuations.
+        The proof is purely algebraic: no expectation, no series.
 \end{itemize}
+Paper~66 handles the hard case (class~5, variable valuation).
+Paper~67 sidesteps it by construction.
 
 \subsection{Why $3^{k-1}/4^k$ rather than $(1/2)^k$}
 

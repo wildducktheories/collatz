@@ -275,8 +275,23 @@ The balance identity $c_1 + c_3 + c_5 + c_7 = 4 c_1$ is the exact integer
 expression of the $3/4$ decay rate: the neutral class~1 (which governs
 within-sentence dynamics after conditioning on non-termination) has valuation
 exactly $c_1 = 2$, giving asymptotic ratio $3/4$. The first-principles proof
-that the within-sentence dynamics produce this exact rate is given in
-Paper~67~\cite{paper67}.
+is given in Paper~67~\cite{paper67}.
+
+A key insight of Paper~67 is that Steiner sentences are the \emph{right scale}
+for this analysis precisely because they make class~5 a sink rather than a source.
+Within a sentence, the chain visits only classes~1, 3, and~7 until it terminates
+at class~5. For these three classes, the 2-adic valuation $\vt(3n+1)$ is a
+\emph{constant} (2, 1, 1 respectively — Theorem~\ref{thm:v2}), so the transition
+probabilities are exact rationals with no averaging required.
+The variable-valuation behaviour of class~5 — the central subject of this paper,
+requiring the geometric series argument of Theorem~\ref{thm:v2}(3) — never appears
+in the interior of a sentence. It enters only at the sentence boundary (the
+uniform output of class~5 that starts each new sentence) and as the termination
+condition (class~5 is the absorbing state). In both roles, only row~5 of the
+transition matrix matters, and that row is uniform by the same $\gcd(3,2^j)=1$
+argument.
+The two papers are thus complementary: this paper characterises the hard case
+(class~5, unbounded valuation); Paper~67 sidesteps it by choosing the right scale.
 
 % ---------------------------------------------------------------------------
 \section{Further Results}
