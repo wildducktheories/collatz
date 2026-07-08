@@ -86,9 +86,9 @@ where $\vt(m)$ denotes the 2-adic valuation of $m$.
 
 \begin{definition}[Steiner word]
 \label{def:word}
-A \emph{Steiner word} (or \emph{Steiner circuit}~\cite{steiner,paper33}) is a
+A \emph{Steiner word} (or \emph{Steiner circuit}~\cite{steiner}) is a
 path segment of an odd Collatz orbit whose compressed mod-8 form matches the
-regular expression $(7^*\,3)?(1\mid 5)$~\cite{paper33}: a sequence of
+regular expression $(7^*\,3)?(1\mid 5)$: a sequence of
 Syracuse-map applications whose successive input residues mod~8 spell a string
 over the alphabet $\{1,3,5,7\}$ of that form, terminating when the input
 residue is $1$ or $5$ (the two \emph{terminal letters}).
@@ -106,12 +106,12 @@ letter~$1$ and the final word terminates at letter~$5$.
 \begin{remark}
 A sentence of length~$k$ corresponds to a path of $k$ edges in the overlay tree
 whose nodes are odd integers $\equiv 5 \pmod{8}$ and whose edges are individual
-Steiner words~\cite{paper33}: consecutive words in the sentence that terminate at
+Steiner words: consecutive words in the sentence that terminate at
 letter~$1$ extend the current edge, while the word terminating at letter~$5$
 completes it.
-This paper is self-contained; Paper~33~\cite{paper33} (in preparation) develops
-the Steiner circuit decomposition, the regular-expression characterisation, and
-the overlay tree in full generality, but is not required here.
+This paper is self-contained; the Steiner circuit decomposition, the
+regular-expression characterisation, and the overlay tree will be developed in
+full generality in future work, but are not required here.
 \end{remark}
 
 \begin{remark}[Why Steiner sentences are the right scale]
@@ -618,7 +618,7 @@ Collatz orbits.
 This appendix defines the hierarchy from the bottom up and connects it to the
 Collatz conjecture.
 The terminology is specific to this body of work; the foundational combinatorial
-infrastructure is developed in Paper~33~\cite{paper33}.
+infrastructure will be developed in full in future work.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection*{The Steiner Alphabet and Letters}
@@ -652,7 +652,7 @@ which a Steiner word can end.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection*{Steiner Words}
 
-A \emph{Steiner word} (or \emph{Steiner circuit}~\cite{steiner,paper33}) is a
+A \emph{Steiner word} (or \emph{Steiner circuit}~\cite{steiner}) is a
 path segment of an odd Collatz orbit whose sequence of input residues mod~8
 matches the regular expression
 \[
@@ -667,14 +667,14 @@ The \emph{entry letter} of a word is its first letter (the residue mod~8 of
 its starting node); the \emph{terminal letter} is its last letter ($1$ or~$5$).
 
 Every Collatz orbit decomposes uniquely into a sequence of Steiner words
-(Proposition~2.1 of Paper~33~\cite{paper33}).
+(proved in future work; see also~\cite{steiner}).
 
 \begin{remark}[Word vs.\ circuit]
 Steiner~\cite{steiner} introduced the term \emph{circuit} for these path
 segments, and that term remains standard in the Collatz literature.
 We prefer \emph{word} here because the present framework embeds circuits into
-a richer linguistic hierarchy: words compose into sentences, sentences into
-volumes, and volumes into libraries.
+a richer linguistic hierarchy: words compose into sentences, and sentences into
+higher-level structures to be defined in future work.
 Within this hierarchy, \emph{word} is the natural term — it carries the right
 connotations of a discrete unit that can be concatenated and counted, and it
 aligns with standard formal-language usage where words are strings over an
@@ -693,7 +693,7 @@ OEEE$^+$-terminal (terminal letter~$5$).
 
 Equivalently, a sentence is a path of $k$ edges in the \emph{$5 \pmod{8}$
 overlay tree}: the directed graph whose nodes are odd integers $\equiv 5
-\pmod{8}$ and whose edges are individual Steiner words~\cite{paper33}.
+\pmod{8}$ and whose edges are individual Steiner words.
 The sentence length distribution $P(\text{length} = k) = 3^{k-1}/4^k$ is the
 main result of this paper (Theorem~\ref{thm:main}).
 
@@ -705,8 +705,8 @@ Future work in this programme will use the terms \emph{paragraph}, \emph{page},
 \emph{chapter}, \emph{volume}, and \emph{library} to name successively larger
 graph-theoretic structures built from sentences, each relevant to the analysis
 of Collatz orbits at a different scale.
-Their precise definitions are deferred to companion paper~\cite{paper33},
-where the full graph-theoretic infrastructure is developed.
+Their precise definitions are deferred to future work,
+where the full graph-theoretic infrastructure will be developed.
 
 The sentence length distribution proved in this paper (Theorem~\ref{thm:main})
 is unconditional: the proof rests on arithmetic facts about $v_2(3n+1)$ that
@@ -869,11 +869,6 @@ R.~P. Steiner,
 A theorem on the Syracuse problem,
 \emph{Proceedings of the 7th Manitoba Conference on Numerical Mathematics
 and Computing}, Winnipeg, 1977, pp.~553--559.
-
-\bibitem{paper33}
-J.~Seymour,
-\emph{A Regular Expression Language for the Collatz Graph},
-in preparation, 2026.
 
 \bibitem{paper65}
 J.~Seymour,
