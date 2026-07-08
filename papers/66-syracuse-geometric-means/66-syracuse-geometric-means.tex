@@ -5,11 +5,6 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
-\usepackage{draftwatermark}
-\SetWatermarkText{WORKING PAPER}
-\SetWatermarkScale{1.5}
-\SetWatermarkAngle{45}
-\SetWatermarkColor[gray]{0.80}
 \geometry{margin=1in}
 
 % Theorem environments
@@ -28,8 +23,8 @@
 \newcommand{\Sm}{S}
 \newcommand{\ZZp}{\mathbb{Z}^+}
 
-\title{2-adic Valuations of $3n+1$ by Residue Class mod~8\\[0.5em]
-       \large Speculative Results Series, Paper~66}
+\title{Exact 2-adic Valuations of $3n+1$ and the Geometric Mean\\
+       Contraction Rate of the Syracuse Map}
 
 \author{Jon Seymour\\
   \texttt{jon@wildducktheories.com}\\
@@ -41,48 +36,27 @@
 \maketitle
 
 \begin{abstract}
-We prove that the 2-adic valuation $\vt(3n+1)$ under the Syracuse map
-$\Sm(n) = (3n+1)/2^{\vt(3n+1)}$ is exactly determined — or has an exactly
-determined expectation — by the residue class of $n$ modulo~8.
-Specifically, writing $c_r = E[\vt(3n+1) \mid n \equiv r \pmod{8}]$:
-
-\begin{center}
-\begin{tabular}{ccc}
-\toprule
-$r$ & $c_r$ & Status \\
-\midrule
-1 & $2$ & exact constant \\
-3 & $1$ & exact constant \\
-5 & $4$ & exact expectation \\
-7 & $1$ & exact constant \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-For $r \in \{1,3,7\}$ the valuation is \emph{constant} on the entire residue
-class — a direct consequence of the arithmetic of $3n+1$ modulo~8.
-For $r = 5$ the valuation varies, but its expectation is exactly~4:
-writing $n = 8k+5$ gives $\vt(3n+1) = 3 + \vt(3k+2)$, and
-$E[\vt(3k+2)] = 1$ follows from $\gcd(3, 2^j) = 1$, which makes $3k+2$
+We prove exact results on the 2-adic valuation $\vt(3n+1)$ under the Syracuse
+map $\Sm(n) = (3n+1)/2^{\vt(3n+1)}$, classified by the residue of $n$ modulo~8.
+For $n \equiv 1, 3, 7 \pmod{8}$ the valuation is a \emph{pointwise constant}:
+$\vt(3n+1) = 2, 1, 1$ respectively, for every $n$ in the class.
+For $n \equiv 5 \pmod{8}$, the valuation varies but has \emph{exact expectation}~4
+under natural density: writing $n = 8k+5$ gives $\vt(3n+1) = 3 + \vt(3k+2)$,
+and $E[\vt(3k+2)] = 1$ follows from $\gcd(3, 2^j) = 1$, which makes $3k+2$
 uniformly distributed modulo~$2^j$ for every $j \geq 1$.
 
-The sum of the four expected valuations is $c_1 + c_3 + c_5 + c_7 = 8 = 4 \times 2$,
-so the mean valuation across all four classes equals~$2$, the same as the
-constant valuation of class~1. Equivalently, $3^4/2^8 = 81/256 = (3/4)^4$:
-the product $\prod_r 3/2^{c_r}$ of the four asymptotic contraction ratios
-equals $(3/4)^4$, whose fourth root is exactly $3/4$.
+Writing $c_r = E[\vt(3n+1) \mid n \equiv r \pmod{8}]$, the four expected
+valuations sum to $c_1 + c_3 + c_5 + c_7 = 2 + 1 + 4 + 1 = 8$, so their
+geometric mean satisfies $(3^4/2^8)^{1/4} = 3/4$.
+This is the geometric mean asymptotic contraction rate of the Syracuse map
+across all four residue classes, and is the arithmetic origin of the $3/4$
+decay appearing in the Steiner sentence length distribution
+$P(\text{length} = k) = 3^{k-1}/4^k$ proved in the companion paper~\cite{paper67}.
 
-This result provides the exact integer-exponent foundation for understanding
-the asymptotic contraction rates of the Syracuse map by residue class, and
-in particular why the $5\pmod{8}$ class — with $c_5 = 4$, giving asymptotic
-ratio $3/2^4 = 3/16$ — acts as a dynamical sink that drives orbits toward~1
-with exceptional efficiency.
-
-\medskip
-\noindent\textbf{Status.} This paper contains proved theorems. The main results
-(Theorem~\ref{thm:v2} and Corollary~\ref{cor:balance}) are unconditional.
-The dynamical interpretation (Section~\ref{sec:dynamics}) is stated as
-observation and conjecture.
+We also prove the full distribution of $\vt(3n+1)$ for $n \equiv 5 \pmod{8}$:
+$P(\vt(3n+1) = j \mid n \equiv 5 \pmod{8}) = 1/2^{j-2}$ for $j \geq 3$.
+All results are proved unconditionally (no appeal to the Collatz conjecture)
+and have been machine-verified in Lean~4/Mathlib with no \texttt{sorry}.
 \end{abstract}
 
 \tableofcontents
@@ -96,10 +70,9 @@ $\vt(n)$ denotes the exponent of the largest power of~$2$ dividing~$n$.
 
 \begin{definition}[Syracuse map]
 \label{def:syracuse}
-The \emph{Syracuse map} $\Sm : \mathbb{O} \to \mathbb{O}$ on odd positive
-integers is
+The \emph{Syracuse map} on odd positive integers is
 \[
-  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}}.
+  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}}, \qquad n \text{ an odd positive integer}.
 \]
 \end{definition}
 
@@ -174,10 +147,13 @@ exactly uniform.
 \end{remark}
 
 \begin{remark}
-Theorem~\ref{thm:v2} explains the mod-8 step taxonomy of~\cite{paper33}:
-classes 1, 3, 7 each have a fixed valuation (step types OEE, OE, OE respectively),
-while class~5 has a variable valuation $\geq 3$ (step type OEEE$^+$, at least
-three even steps).
+Theorem~\ref{thm:v2} explains the mod-8 structure of the Syracuse map:
+for $n \equiv 1 \pmod{8}$, every step removes exactly two factors of~2;
+for $n \equiv 3$ or $7 \pmod{8}$, exactly one factor of~2 is removed;
+for $n \equiv 5 \pmod{8}$, at least three factors of~2 are removed (exactly
+three when $3k+2$ is odd, more otherwise).
+The detailed step taxonomy and its connection to Collatz path structure
+are developed in~\cite{paper33}.
 \end{remark}
 
 % ---------------------------------------------------------------------------
@@ -258,12 +234,11 @@ inverse of classes 3 and 7 ($3/2^1 = 3/2$).
 
 \subsection{Connection to 5-Dominance in Collatz Paths}
 
-It is empirically observed that of the first million Collatz sequences, 93.8\%
-pass through the integer~5 on the way to~1, with only 6.2\% passing through~32
-instead~\cite{reddit-observation}. Theorem~\ref{thm:v2} gives the structural
+It is empirically observed that the vast majority of Collatz orbits pass through
+the integer~5 on the way to~1. Theorem~\ref{thm:v2} gives the structural
 foundation: any orbit entering the $5\pmod{8}$ class experiences a valuation
 of~4 in expectation, driving it toward~1 far more rapidly than any other class.
-The complementary probability 6.2\% $\approx 1/16$ corresponds to the mod-32
+The small complementary fraction $\approx 1/16$ corresponds to the mod-32
 edge density of $5\to5$ transitions in the Syracuse graph (see Paper~65
 \cite{paper65}).
 
@@ -315,7 +290,7 @@ this follows from $P(\vt(3k+2) \geq m) = P(2^m \mid 3k+2) = 1/2^m$
 (by the uniformity argument of Theorem~\ref{thm:v2}(3)) via
 $P(\vt = m) = P(\vt \geq m) - P(\vt \geq m+1) = 1/2^m - 1/2^{m+1} = 1/2^{m+1}$.
 Setting $j = 3 + m$ gives $P(\vt(3n+1) = j) = 1/2^{(j-3)+1} = 1/2^{j-2}$.
-Normalisation: $\sum_{j \geq 3} 1/2^{j-2} = \sum_{i \geq 1} 1/2^i = 1$. \qed
+Normalisation: $\sum_{j \geq 3} 1/2^{j-2} = \sum_{i \geq 1} 1/2^i = 1$.
 \end{proof}
 
 \begin{remark}
@@ -325,49 +300,53 @@ proof assistant (July 2026); see \texttt{ARISTOTLE-REVIEW-66.md} and
 \texttt{Paper66.lean} in the paper directory.
 \end{remark}
 
+\subsection*{Open problems}
+
 \begin{enumerate}
   \item \textbf{Higher moduli.} The argument for class~5 uses $\gcd(3,2^j)=1$
         to establish uniform distribution of $3k+2 \pmod{2^j}$. Do analogous
         exact valuation results hold for finer residue classes modulo~16, 32,
         and beyond? The mod-32 structure of $5\to5$ edges in the Syracuse
         graph suggests a rich mod-32 refinement.
-
-  \item \textbf{First-principles sentence length distribution.}
-        The bridge from Theorem~\ref{thm:v2} to a proof of
-        $P(\text{sentence length} = k) = \frac{1}{3}(3/4)^k$ is given
-        in Paper~67~\cite{paper67}.
 \end{enumerate}
+
+The bridge from Theorem~\ref{thm:v2} to a proof of
+$P(\text{sentence length} = k) = 3^{k-1}/4^k$ is given in the companion
+Paper~67~\cite{paper67}.
 
 % ---------------------------------------------------------------------------
 \section*{Acknowledgements}
 
-This paper is part of the speculative results stream (64+k) of the Collatz
-programme. Paper~33~\cite{paper33} provides the Steiner circuit framework.
-Paper~65~\cite{paper65} provides the empirical motivation.
+This paper is part of the Speculative Results Series, a programme of incremental
+research on the Collatz conjecture. Paper~33~\cite{paper33} (in preparation)
+provides the Steiner circuit framework. Paper~65~\cite{paper65} provides the
+empirical motivation. All main results have been machine-verified in Lean~4/Mathlib;
+the Lean source file \texttt{Paper66.lean} is included in the arXiv submission.
 
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{9}
 
 \bibitem{paper33}
 J.~Seymour,
-\emph{A Regular Expression Language for the Collatz Graph} (Working Paper, Paper~33),
-2026.
+\emph{A Regular Expression Language for the Collatz Graph},
+in preparation, 2026.
 
 \bibitem{paper65}
 J.~Seymour,
 \emph{The $3^{k-1}/4^k$ Distribution of Steiner Sentence Lengths}
-(Working Paper, Paper~65),
+(superseded by~\cite{paper67}),
 2026.
 
 \bibitem{paper67}
 J.~Seymour,
 \emph{First-Principles Derivation of the Steiner Sentence Length Distribution}
-(Working Paper, Paper~67),
+(companion paper, submitted simultaneously),
 2026.
 
-\bibitem{reddit-observation}
-Reddit post (r/Collatz),
-\emph{Why does 5 dominate Collatz paths to 1?}, 2026.
+\bibitem{lagarias}
+J.~C. Lagarias (ed.),
+\emph{The Ultimate Challenge: The $3x+1$ Problem},
+American Mathematical Society, Providence, RI, 2010.
 
 \end{thebibliography}
 

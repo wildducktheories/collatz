@@ -5,11 +5,6 @@
 \usepackage{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
-\usepackage{draftwatermark}
-\SetWatermarkText{WORKING PAPER}
-\SetWatermarkScale{1.5}
-\SetWatermarkAngle{45}
-\SetWatermarkColor[gray]{0.80}
 \geometry{margin=1in}
 
 % Theorem environments
@@ -26,8 +21,7 @@
 \newcommand{\vt}{v_2}
 \newcommand{\Sm}{S}
 
-\title{First-Principles Derivation of the Steiner Sentence Length Distribution\\[0.5em]
-       \large Speculative Results Series, Paper~67}
+\title{First-Principles Derivation of the Steiner Sentence Length Distribution}
 
 \author{Jon Seymour\\
   \texttt{jon@wildducktheories.com}\\
@@ -39,36 +33,31 @@
 \maketitle
 
 \begin{abstract}
-We prove that Steiner sentences in the Syracuse graph have length
-distribution $P(\text{sentence length} = k) = 3^{k-1}/4^k$ for all $k \geq 1$.
-The proof proceeds in three steps.
-First, we establish the exact Syracuse transition matrix on residue
-classes modulo~8 from arithmetic alone: the mod-8 map is uniform from
-classes~1 and~5, while classes~3 and~7 have restricted (forbidden) transitions
-determined by mod-16 arithmetic.
-Second, we identify the invariant $d_3 = d_7$ — equal weight on classes~3
-and~7 in the surviving (non-terminated) distribution — and show it is
-preserved by the transition matrix unconditionally, for any value of $d_1$.
-Third, we show that the invariant $d_3 = d_7$ is precisely the algebraic
-condition under which the surviving mass decays by exactly~$3/4$ per step,
-giving $P(k) = 3^{k-1}/4^k$.
+A \emph{Steiner sentence} is a maximal block of consecutive Syracuse-map
+applications between two consecutive nodes congruent to~$5 \pmod{8}$ in a
+Collatz orbit; its length~$k$ is the number of applications.
+We prove that the sentence length distribution is
+$P(\text{length} = k) = 3^{k-1}/4^k$ for all $k \geq 1$.
+
+The proof models sentences as first-passage times of a Markov chain on
+$\{1,3,5,7\} \pmod{8}$, whose transition matrix is computed row by row from
+elementary arithmetic.
+The key structural fact is an invariant $d_3 = d_7$ — equal weight on
+residue classes~3 and~7 in the non-terminated distribution — which holds
+unconditionally and forces the surviving mass to decay by exactly~$3/4$
+per step.
 
 The proof requires no ergodic theory and no appeal to the Collatz conjecture.
-It is a direct consequence of two classical arithmetic facts: that
-$3n+1 \equiv 2 \pmod{4}$ for $n \equiv 3$ or $7 \pmod 8$ (mod-8 forbidden
-transitions), and that multiplication by~3 is a bijection on
-$\mathbb{Z}/2^j\mathbb{Z}$ (uniform distribution from classes~1 and~5).
+It rests on two arithmetic facts: that $v_2(3n+1)$ is a pointwise constant
+for $n \equiv 1, 3, 7 \pmod{8}$ (giving exact rational transition probabilities),
+and that $\gcd(3, 2^j) = 1$ (giving uniform output from $n \equiv 5 \pmod{8}$,
+proved in the companion paper~\cite{paper66}).
+All results have been machine-verified in Lean~4/Mathlib with no \texttt{sorry}.
 
 Appendix~A provides a complete empirical validation: $10^5$ sentences sampled
-uniformly over $[1, 10^{15}]$, the sentence-start distribution, the within-sentence
-word entry distribution, the sentence length table comparing the naive $(1/2)^k$
-prediction and the theoretical $3^{k-1}/4^k$, and $\chi^2$ goodness-of-fit tests.
-The naive prediction is rejected with $\chi^2 \approx 10^6$; the theoretical formula
-is consistent ($p \approx 0.61$).
-
-\medskip
-\noindent\textbf{Status.} This paper contains proved theorems and complete empirical
-validation. All theoretical results are unconditional.
+uniformly over $[1, 10^{15}]$, with $\chi^2$ goodness-of-fit tests.
+The naive $(1/2)^k$ prediction is rejected with $\chi^2 \approx 10^6$;
+the formula $3^{k-1}/4^k$ is consistent ($p \approx 0.61$).
 \end{abstract}
 
 \tableofcontents
@@ -81,10 +70,9 @@ We work throughout with odd positive integers.
 
 \begin{definition}[Syracuse map]
 \label{def:syracuse}
-The \emph{Syracuse map} $\Sm : \mathbb{O} \to \mathbb{O}$ on odd positive
-integers is
+The \emph{Syracuse map} on odd positive integers is
 \[
-  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}},
+  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}}, \qquad n \text{ an odd positive integer},
 \]
 where $\vt(m)$ denotes the 2-adic valuation of $m$.
 \end{definition}
@@ -98,10 +86,14 @@ of steps~$k$.
 \end{definition}
 
 \begin{remark}
-Steiner sentences are the fundamental composite building blocks of Collatz paths; see
-Paper~33~\cite{paper33} for the full Steiner circuit framework.
-The sentence start $b_0 = \Sm(n)$ is the node immediately following a $5 \pmod 8$
-node in the orbit, and the sentence ends at the next $5 \pmod 8$ node.
+A single application of $\Sm$ together with its output node is called a
+\emph{Steiner word} (or \emph{Steiner circuit}); a Steiner sentence is then
+a maximal sequence of Steiner words between two consecutive $5 \pmod 8$ nodes.
+The sentence start $b_0 = \Sm(n)$ is the node immediately following a $5\pmod 8$
+node in the orbit, and the sentence ends at the next $5\pmod 8$ node.
+This paper is self-contained; Paper~33~\cite{paper33} (in preparation) develops
+the broader Steiner circuit framework and the regular-expression characterisation
+of Collatz paths, but is not required here.
 \end{remark}
 
 \begin{remark}[Why Steiner sentences are the right scale]
@@ -192,20 +184,6 @@ Since $\gcd(3, 2^j) = 1$ for all $j \geq 1$, the map $k \mapsto 3k+2$ is
 a bijection on $\mathbb{Z}/2^j\mathbb{Z}$.
 As $k$ ranges over any $2^{j+3}$ consecutive integers, the value $3k+2$
 hits each residue class mod $2^{j+3}$ exactly $2^j$ times.
-% ---------------------------------------------------------------------------
-% CORRECTION (Aristotle review, Ticket 4): the following claim asserted an
-% EXACT finite count of $2^{N-2}$ for row 5, which is FALSE.  The Lean theorem
-% Paper67.row5_count_not_exact verifies by native_decide that at $N=6$, $b=1$
-% the count is $17 \neq 16 = 2^{N-2}$.  Row 5 is a natural-density statement
-% only, not an exact finite count.  The original (incorrect) sentence is
-% preserved below in comments; the corrected statement follows.
-%
-% In particular, as $k$ ranges over $\{0, 1, \ldots, 2^N - 1\}$, the value
-% $\Sm(8k+5) \pmod 8$ is uniform over $\{1,3,5,7\}$: for each target residue
-% $b \in \{1,3,5,7\}$ there are exactly $2^{N-2}$ values of $k$ giving
-% $\Sm(n) \equiv b \pmod 8$, as proved in Theorem~2.1(3) and Proposition~4.1
-% of Paper~66~\cite{paper66} via the same bijectivity argument.
-% ---------------------------------------------------------------------------
 Consequently the value $\Sm(8k+5) \pmod 8$ is equidistributed over
 $\{1,3,5,7\}$ \emph{in natural density}: the arithmetic core is that, as $k$
 ranges over $\{0,1,\ldots,2^N-1\}$, exactly $2^{\,N-j}$ values satisfy
@@ -540,7 +518,8 @@ on the same underlying arithmetic:
 \begin{itemize}
   \item The $1/4$ probability of immediate termination ($b_0 \equiv 5$)
         uses row~5 of~$P$ exactly once — at the sentence start.
-        Class~5 is the unique class with $c_r \geq 3$ (Paper~66), forcing
+        Class~5 is the unique class for which $\vt(3n+1) \geq 3$ always
+        (Theorem~2.1(3) of Paper~66~\cite{paper66}), forcing
         the extra halvings that make its output uniform.
         This is the only point where the geometric-series character of
         class~5 is relevant.
@@ -557,20 +536,19 @@ Paper~67 sidesteps it by construction.
 
 \subsection{Why $3^{k-1}/4^k$ rather than $(1/2)^k$}
 
-The naive prediction $(1/2)^k$ arises from the ``3-node coin flip'' model:
-treat each word in the sentence as independently terminating whenever
-it visits the 3-node, with the 3-node split giving probability~$1/2$.
-Under this model only classes~3 and~7 can terminate, and if the
-within-sentence distribution were uniform over $\{1,3,5,7\}$, the
+The naive prediction $(1/2)^k$ arises from treating each step as an
+independent trial that terminates whenever the current word is in class~3
+(with probability~$1/2$, since $P[3][5] = 1/2$) or class~7 (also $1/2$
+by this model).
+If the within-sentence distribution were uniform over $\{1,3,5,7\}$, the
 effective per-step termination probability would be:
 \[
   \tfrac{1}{4}\cdot 0 \;+\; \tfrac{1}{4}\cdot\tfrac{1}{2}
   \;+\; \tfrac{1}{4}\cdot 1 \;+\; \tfrac{1}{4}\cdot\tfrac{1}{2}
   \;=\; \tfrac{1}{2},
 \]
-where the terms correspond to classes~1 (never terminates via 3-node),
-3 (terminates with prob~$1/2$), 5 (terminal by definition), and 7
-(terminates with prob~$1/2$).
+where the terms correspond to classes~1 (termination probability~0 in this model),
+3 ($1/2$), 5 (terminal, probability~1), and 7 ($1/2$).
 This model is wrong in two ways.
 First, class~1 \emph{can} reach class~5 directly: $P[1][5] = 1/4$,
 so the naive assignment of~0 to class~1 understates termination from class~1.
@@ -588,9 +566,11 @@ $1/4$, independent of $d_1$.
 % ---------------------------------------------------------------------------
 \section*{Acknowledgements}
 
-This paper is part of the speculative results stream (64+k) of the Collatz
-programme. The proof structure was found through numerical exploration in
-\texttt{notebooks/steiner-branch-model.ipynb}.
+This paper is part of the Speculative Results Series, a programme of incremental
+research on the Collatz conjecture. The proof structure was found through
+numerical exploration in \texttt{notebooks/steiner-branch-model.ipynb}.
+All main results have been machine-verified in Lean~4/Mathlib; the Lean source
+file \texttt{Paper67.lean} is included in the arXiv submission.
 
 % ---------------------------------------------------------------------------
 \appendix
@@ -650,12 +630,12 @@ empirically.
 \centering
 \begin{tabular}{rrrll}
 \toprule
-Entry $\bmod 8$ & Count & Fraction & Visits 3-node? & Term.\ prob. \\
+Entry $\bmod 8$ & Count & Fraction & Can reach class~5 directly? & Term.\ prob. \\
 \midrule
-1 & 125450 & 0.31333 & no  & 0 \\
-3 & 125119 & 0.31250 & yes & 1/2 \\
-5 &  24852 & 0.06207 & no  & 1 (terminal only) \\
-7 & 124955 & 0.31209 & yes & 1/2 \\
+1 & 125450 & 0.31333 & yes ($P_{15}=1/4$)  & $1/4$ \\
+3 & 125119 & 0.31250 & yes ($P_{35}=1/2$)  & $1/2$ \\
+5 &  24852 & 0.06207 & --- (terminal only) & $1$ \\
+7 & 124955 & 0.31209 & no  ($P_{75}=0$)    & $0$ \\
 \midrule
 Total & 400376 & & & \\
 \bottomrule
@@ -663,16 +643,18 @@ Total & 400376 & & & \\
 \caption{Within-sentence Steiner word entry distribution across all $10^5$
 sentences (400376 total words). Class~5 appears only as the terminal word,
 giving frequency ${\approx}6.2\%$ rather than the uniform $25\%$.
-The 3-node fraction (classes 3+7) is $62.46\%$; the implied effective per-word
-termination probability is $0.6246/2 \approx 0.312$.
-The theoretical value is $1/4$ (Theorem~\ref{thm:main});
-Lemma~\ref{lem:invariant} proves $d_3 = d_7$ which makes the exact rate $1/4$.}
+The last column gives the probability of reaching class~5 in one step
+($P_{15}=1/4$, $P_{35}=1/2$, $P_{75}=0$) — these are the exact entries
+of column~5 of the transition matrix $P$ (Theorem~\ref{thm:matrix}).
+The invariant $d_3 = d_7$ (Lemma~\ref{lem:invariant}) makes the
+effective per-word termination probability exactly~$1/4$
+(Theorem~\ref{thm:main}).}
 \label{tab:entry}
 \end{table}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{../65-branch-distribution/entry-distributions.png}
+  \includegraphics[width=\textwidth]{entry-distributions.png}
   \caption{Left: sentence-start distribution ($b_0 \bmod 8$) against the
   uniform $1/4$ baseline — confirmed uniform (Table~\ref{tab:start}).
   Right: within-sentence Steiner word entry distribution against the uniform
@@ -711,7 +693,7 @@ factor of~2 and decays far too fast for $k \geq 3$.}
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{../65-branch-distribution/branch-length-distribution.png}
+  \includegraphics[width=\textwidth]{branch-length-distribution.png}
   \caption{Steiner sentence length distribution ($N=10^5$, $T_{\max}=10^{15}$):
   empirical (blue bars / circles) vs.\ naive $(1/2)^k$ (red) and theoretical
   $3^{k-1}/4^k$ (green), on linear scale (left) and log scale (right).
@@ -745,20 +727,26 @@ $3^{k-1}/4^k$ is consistent with the data at all tested lengths.
 
 \bibitem{paper33}
 J.~Seymour,
-\emph{A Regular Expression Language for the Collatz Graph} (Working Paper, Paper~33),
-2026.
+\emph{A Regular Expression Language for the Collatz Graph},
+in preparation, 2026.
 
 \bibitem{paper65}
 J.~Seymour,
 \emph{The $\frac{1}{3}(\frac{3}{4})^k$ Distribution of Steiner Sentence Lengths}
-(Working Paper, Paper~65),
+(superseded by the present paper),
 2026.
 
 \bibitem{paper66}
 J.~Seymour,
-\emph{2-adic Valuations of $3n+1$ by Residue Class mod~8}
-(Working Paper, Paper~66),
+\emph{Exact 2-adic Valuations of $3n+1$ and the Geometric Mean Contraction Rate
+of the Syracuse Map}
+(companion paper, submitted simultaneously),
 2026.
+
+\bibitem{lagarias}
+J.~C. Lagarias (ed.),
+\emph{The Ultimate Challenge: The $3x+1$ Problem},
+American Mathematical Society, Providence, RI, 2010.
 
 \end{thebibliography}
 
