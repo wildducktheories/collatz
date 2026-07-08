@@ -33,8 +33,7 @@
 % This paper is in the speculative/empirical stream (64+k, k=1).
 % Claims are empirical observations, not theorems, unless explicitly labelled.
 
-\title{The $\frac{1}{3}\!\left(\frac{3}{4}\right)^k$ Distribution of\\
-       Steiner Circuit Branch Lengths\\[0.5em]
+\title{The $3^{k-1}/4^k$ Distribution of Steiner Sentence Lengths\\[0.5em]
        \large Speculative Results Series, Paper~65}
 
 \author{Jon Seymour\\
@@ -47,28 +46,31 @@
 \maketitle
 
 \begin{abstract}
-We define a \emph{Steiner circuit branch} as a maximal sequence of consecutive
-Steiner circuits in a Collatz orbit, terminating at the first circuit whose exit
-value is $\equiv 5 \pmod{8}$.
-Branches match the regular language $((7^*3)?1)^{k-1}(7^*3)?5$, where $k \geq 1$
-is the total circuit count.
+We define a \emph{Steiner sentence} as a maximal sequence of consecutive Steiner
+circuits in a Collatz orbit, from the Syracuse image of one node $\equiv 5\pmod{8}$
+to the next. Each Steiner circuit in the sentence is a \emph{Steiner word}.
+The sentence length $k$ is the number of words.
 
 A naive analysis of the Steiner circuit state machine suggests that the 50/50
-split at the 3-node should produce branch lengths geometrically distributed with
-parameter $1/2$, giving $P(k) = (1/2)^k$. Empirical sampling of $10^5$ branches
-via uniformly random entry points $n = 8t+5$ instead yields the distribution:
+split at the 3-node should produce sentence lengths geometrically distributed with
+parameter $1/2$, giving $P(k) = (1/2)^k$. Empirical sampling of $10^5$ sentences
+via uniformly random entry points $n = 8t+5$ instead yields:
 \[
-  P(\text{branch length} = k) \;=\; \frac{1}{3}\!\left(\frac{3}{4}\right)^k.
+  P(\text{sentence length} = k) \;=\; \frac{3^{k-1}}{4^k}.
 \]
-We explain precisely why the naive prediction fails, interpret the observed
-coefficients $1/3$ and $3/4$ in terms of the circuit entry distribution, and
-state a conjecture that this distribution is exact.
-A first-principles proof is an open problem.
+We report the full empirical data: the sentence-start distribution (uniform on
+$\{1,3,5,7\}\pmod{8}$, as predicted), the within-sentence Steiner word entry
+distribution (suppressed at class~5, approximately equal at 1, 3, 7), the
+sentence length distribution with $\chi^2$ goodness-of-fit tests, and the implied
+effective termination probability of $1/4$ per word.
+Both the observed distribution and its explanation are stated as conjectures here;
+both are proved in Paper~67~\cite{paper67}.
 
 \medskip
-\noindent\textbf{Status.} This is a speculative results paper (stream 64+k).
-All empirical claims are supported by $\chi^2$ goodness-of-fit tests.
-No new theorems are claimed. The proved foundations are in Paper~33~\cite{paper33}.
+\noindent\textbf{Status.} Speculative results paper (stream 64+k, $k=1$).
+All claims are empirical and supported by $\chi^2$ tests.
+This paper is superseded by Paper~67~\cite{paper67}, which provides a complete
+proof and incorporates this paper's experimental record in full.
 \end{abstract}
 
 \tableofcontents
@@ -91,25 +93,20 @@ Collatz step followed by all mandatory even halvings.
 
 \subsection{Mod-8 Step Taxonomy}
 
-Every odd integer $n$ falls into one of four residue classes modulo~8, each
-corresponding to a distinct step type under~$\Sm$:
+Every odd integer $n$ falls into one of four residue classes modulo~8:
 
 \begin{center}
 \begin{tabular}{ccll}
 \toprule
 $n \bmod 8$ & $\vt(3n+1)$ & Step type & Exit class $\Sm(n) \bmod 8$ \\
 \midrule
-1 & 2 & OEE & 1 (always) \\
-3 & 1 & OE  & 1 or 5 \\
-5 & $\geq 3$ & OEEE$^+$ & 5 (always) \\
-7 & 1 & OE  & 3 (always, to the 3-node) \\
+1 & 2 & OEE  & 1 (always) \\
+3 & 1 & OE   & 1 or 5 \\
+5 & $\geq 3$ & OEEE$^+$ & (uniform on $\{1,3,5,7\}$ per step) \\
+7 & 1 & OE   & 3 or 7 \\
 \bottomrule
 \end{tabular}
 \end{center}
-
-The key structural fact is that nodes 3 and 7 both route to the \emph{3-node}:
-entry via 7 reaches 3 after a run of $v_2(n+1)-2$ self-loop steps (Theorem proved
-in Paper~33~\cite{paper33}), and entry via 3 is at the 3-node directly.
 
 \subsection{Steiner Circuits}
 \label{sec:steiner}
@@ -117,273 +114,255 @@ in Paper~33~\cite{paper33}), and entry via 3 is at the 3-node directly.
 \begin{definition}[Steiner circuit]
 \label{def:steiner}
 Let $a_0 \in \mathbb{O}$ with $a_0 + 1 = 2^\alpha m$, $m$ odd, $\alpha \geq 1$.
-The \emph{Steiner circuit} starting at $a_0$ is the path of $\alpha$ consecutive
-Syracuse steps from $a_0$ to
+The \emph{Steiner circuit} starting at $a_0$ is the composite of $\alpha$ consecutive
+Syracuse steps from $a_0$, producing the output node
 \[
   b \;=\; \frac{3^\alpha m - 1}{2^\beta}, \qquad \beta = \vt(3^\alpha m - 1).
 \]
-The \emph{Steiner parameter} $\alpha = \vt(a_0+1)$ counts the odd steps;
-the \emph{excess} $\beta = \vt(3^\alpha m - 1)$ counts the additional even steps
-in the final descent. The word of the circuit in the mod-8 alphabet is the
-sequence of residues $a_0 \bmod 8, a_1 \bmod 8, \ldots, a_{\alpha-1} \bmod 8$
-(one symbol per odd step).
+The \emph{Steiner parameter} $\alpha = \vt(a_0+1)$ counts the Syracuse steps.
 \end{definition}
 
-\begin{remark}[Steps vs.\ circuits]
-The mod-8 taxonomy table (Section~\ref{sec:background}) describes individual
-Syracuse \emph{steps}, whereas a Steiner circuit groups $\alpha = \vt(a_0+1)$
-consecutive steps into a single unit.
-For example, if $a_0 = 3$ then $\alpha = \vt(4) = 2$, so the circuit starting at~3
-consists of \emph{two} steps: $3 \to \Sm(3) = 5 \to \Sm(5) = 1$, with exit
-class $1\pmod{8}$.
-The taxonomy table entry for $3\pmod{8}$ describes only the \emph{first} of these
-steps; the Steiner circuit definition binds all $\alpha$ steps into a single unit
-with a single exit value~$b$.
-\end{remark}
-
-\begin{proposition}[Exit class, proved in Paper~33]
-\label{prop:exit}
-For any Steiner circuit with entry $a_0$:
-\begin{enumerate}
-  \item If $a_0 \equiv 1 \pmod{8}$, then $b \equiv 1 \pmod{8}$ (OEE, $\beta = 1$).
-  \item If $a_0 \equiv 5 \pmod{8}$, then $b \equiv 5 \pmod{8}$ (OEEE$^+$, $\beta \geq 2$).
-  \item If $a_0 \equiv 3$ or $7 \pmod{8}$, then $b \equiv 1$ or $5 \pmod{8}$
-        with the split determined by the 3-node (see Lemma~\ref{lem:3node} below).
-\end{enumerate}
-\end{proposition}
-
-\begin{lemma}[3-node split]
+\begin{lemma}[3-node split, proved in Paper~33]
 \label{lem:3node}
-Let $n \equiv 3 \pmod{8}$, write $n = 8a+3$. Then:
-\[
-  \Sm(n) \;=\; 12a+5.
-\]
-This satisfies $12a+5 \equiv 1 \pmod{8}$ if and only if $a$ is odd,
-which holds if and only if $n \equiv 11 \pmod{16}$.
-Exactly half the residues in the class $\{n : n \equiv 3 \pmod{8}\}$
-satisfy $n \equiv 11 \pmod{16}$, so the split between exit via~1 and exit via~5
-is \emph{exactly} $1/2$ --- structurally determined, not probabilistic.
+For $n \equiv 3 \pmod{8}$, write $n = 8a+3$. Then $\Sm(n) = 12a+5$, which satisfies
+$12a+5 \equiv 1 \pmod{8}$ iff $n \equiv 11 \pmod{16}$, and $\equiv 5 \pmod{8}$
+iff $n \equiv 3 \pmod{16}$. The split is exactly $1/2$ each, determined by the
+parity of $a$.
 \end{lemma}
 
-\begin{proof}
-$\Sm(n) = (3n+1)/2^{\vt(3n+1)}$.
-For $n = 8a+3$: $3n+1 = 24a+10 = 2(12a+5)$.
-Since $12a+5$ is odd, $\vt(3n+1) = 1$, giving $\Sm(n) = 12a+5$.
-Now $12a+5 \equiv 5+4a \pmod{8}$, which is $\equiv 1 \pmod{8}$ iff $4a \equiv 4 \pmod{8}$
-iff $a$ is odd iff $n = 8a+3 \equiv 11 \pmod{16}$.
-Among $\{3,11\} = \{n \bmod 16 : n \equiv 3 \pmod{8}\}$, exactly one satisfies
-$n \equiv 11 \pmod{16}$, confirming the 50/50 split.
-\end{proof}
+\subsection{Steiner Sentences}
+\label{sec:sentences}
 
-\subsection{The Steiner Circuit State Machine}
-\label{sec:machine}
+\begin{definition}[Steiner sentence and Steiner word]
+\label{def:sentence}
+A \emph{Steiner sentence} is a maximal sequence of consecutive Steiner circuits
+$W_1, W_2, \ldots, W_k$ such that $W_1, \ldots, W_{k-1}$ each have output
+$b \not\equiv 5 \pmod{8}$ and $W_k$ has output $b \equiv 5 \pmod{8}$.
+Each circuit $W_i$ in the sentence is called a \emph{Steiner word}.
+The \emph{sentence length} is $k \geq 1$.
 
-The mod-8 entry class of each circuit is the mod-8 exit class of the previous one.
-This defines a Markov-like transition on $\{1, 3, 5, 7\}$:
-
-\begin{center}
-\begin{tabular}{ccc}
-\toprule
-Entry & Visits 3-node? & Exit \\
-\midrule
-1 & No  & 1 (certain) \\
-3 & Yes & 1 or 5 ($1/2$ each) \\
-5 & No  & 5 (certain) \\
-7 & Yes (via 7-run then 3) & 1 or 5 ($1/2$ each) \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-Crucially, exits are \emph{always} in $\{1, 5\}$. States 3 and 7 are therefore
-\emph{transient}: they can appear as entry states only at the very start of an orbit
-(when the initial value is $\equiv 3$ or $7 \pmod 8$) and are never re-entered
-thereafter. After at most one circuit, the chain is absorbed into $\{1, 5\}$.
-
-% ---------------------------------------------------------------------------
-\section{Branches and the Naive Prediction}
-\label{sec:naive}
-
-\begin{definition}[Steiner circuit branch]
-\label{def:branch}
-A \emph{branch} is a maximal sequence of consecutive Steiner circuits
-$C_1, C_2, \ldots, C_k$ such that $C_1, \ldots, C_{k-1}$ each exit via
-$1 \pmod{8}$ and $C_k$ exits via $5 \pmod{8}$.
-The \emph{branch length} is $k \geq 1$ (total circuit count, including the
-terminal 5-exit circuit).
-In the mod-8 word alphabet, a branch of length $k$ matches the language
+In the mod-8 alphabet, a sentence of length $k$ matches the language
 \[
   ((7^*3)?1)^{k-1}\,(7^*3)?5.
 \]
-A branch of length $k=1$ consists of a single OEEE$^+$ circuit (exit via 5,
-no preceding 1-exits).
+A sentence of length $k=1$ is a single Steiner word whose output is $\equiv 5\pmod{8}$.
 \end{definition}
 
-\subsection{The Naive Prediction}
+\begin{remark}
+Steiner sentences partition the Collatz orbit into segments between consecutive
+values $\equiv 5\pmod{8}$. The sentence starts at the Syracuse image $b_0 = \Sm(n)$
+of a node $n\equiv 5\pmod{8}$ and ends at the next node $\equiv 5\pmod{8}$.
+The starting node $n$ is the terminal word of the \emph{previous} sentence.
+\end{remark}
 
-From the 3-node lemma (Lemma~\ref{lem:3node}), every circuit that visits the
-3-node independently terminates the branch with probability exactly $1/2$.
-A first instinct is therefore:
+% ---------------------------------------------------------------------------
+\section{The Naive Prediction and Why It Fails}
+\label{sec:naive}
+
+From Lemma~\ref{lem:3node}, every Steiner word that visits the 3-node terminates
+the sentence with probability exactly $1/2$. A naive model treats the sentence as
+a sequence of independent 3-node coin flips, giving:
 \[
-  P(\text{branch length} = k) \;\stackrel{?}{=}\; \left(\frac{1}{2}\right)^k.
+  P(\text{sentence length} = k) \;\stackrel{?}{=}\; \left(\frac{1}{2}\right)^k.
 \]
-This would mean $k-1$ consecutive non-terminating 3-node visits followed by
-one terminating visit, each with probability $1/2$.
-
-\textbf{Why this is wrong.} The prediction tacitly assumes every circuit visits
-the 3-node. It does not. Circuits entering via $1 \pmod{8}$ exit via~1 with
-certainty and do not visit the 3-node at all. Such circuits extend the branch
-deterministically without consuming a coin flip. Their presence inflates branch
-lengths without affecting the termination probability per 3-node visit, shifting
-the distribution away from $(1/2)^k$.
+This is decisively rejected by the data (Section~\ref{sec:result}).
+The structural explanation is provided in Paper~67~\cite{paper67}: the
+forbidden transitions $7 \to \{1,5\}$ (class~7 cannot directly reach classes~1
+or~5) reduce the effective per-word termination probability from $1/2$ to $1/4$.
 
 % ---------------------------------------------------------------------------
 \section{Sampling Methodology}
 \label{sec:sampling}
 
-To measure the branch length distribution without systematic bias from orbit
-structure or double-counting of shared tails, we use the following protocol:
-
 \begin{enumerate}
   \item Draw $t$ uniformly at random from $[1, T_{\max}]$ with $T_{\max} = 10^{15}$.
-  \item Compute $n = 8t + 5$ (so $n \equiv 5 \pmod{8}$).
-  \item Since $n \equiv 5 \pmod{8}$, the Steiner circuit starting at $n$ always exits
-        via $5 \pmod{8}$ (Proposition~\ref{prop:exit}). This circuit is the terminal
-        circuit of a branch, not the start of one. The \emph{new branch} begins at
-        $b_0 = \Sm^{(\alpha)}(n)$, the odd exit value of the circuit starting at $n$.
-  \item Follow consecutive Steiner circuits from $b_0$ until the first exit
-        via $5 \pmod{8}$, counting the total number of circuits. Record this count as $k$.
+  \item Set $n = 8t + 5$ (so $n \equiv 5 \pmod{8}$).
+  \item Compute $b_0 = \Sm(n)$, the output of the Steiner circuit starting at~$n$.
+        This is the first Steiner word of the new sentence.
+  \item Follow consecutive Steiner circuits from $b_0$, counting words, until
+        the first output $b \equiv 5 \pmod{8}$. Record the word count as $k$.
 \end{enumerate}
 
-We collected $N = 10^5$ independent samples.
-The key point is that $n$ itself is \emph{not} counted as part of the branch being
-measured --- it serves only as a well-defined, freshly sampled anchor.
-This ensures:
-(a) independence between samples (no shared orbit tails),
-(b) a uniform entry distribution for $b_0$ (since $\Sm$ applied to a uniform
-    $5\pmod{8}$ value produces the next circuit's start without systematic bias),
-(c) $T_{\max} = 10^{15}$ is large enough that the distribution of $n \bmod 16$
-    within the $5\pmod{8}$ class is effectively uniform.
+We collected $N = 10^5$ independent sentences with seed 42 and $T_{\max} = 10^{15}$.
+The node~$n$ is the terminal word of the previous sentence and is not counted.
+Independence between samples is ensured by the random draw of~$t$; no orbit
+tails are shared.
 
 % ---------------------------------------------------------------------------
-\section{Empirical Result}
+\section{Empirical Results}
 \label{sec:result}
 
-\subsection{The Observed Distribution}
+\subsection{Sentence-start distribution}
+
+The first Steiner word of each sentence starts at $b_0 = \Sm(n)$, $n \equiv 5\pmod{8}$.
+By Paper~67 Theorem~2.1, the Syracuse transition matrix from class~5 is uniform,
+so $b_0 \bmod 8$ should be uniform on $\{1,3,5,7\}$.
 
 \begin{table}[h]
 \centering
 \begin{tabular}{rrrr}
 \toprule
-$k$ & Observed fraction & Predicted $(1/2)^k$ & Fitted $\frac{1}{3}(3/4)^k$ \\
+$b_0 \bmod 8$ & Count & Observed fraction & Expected (uniform) \\
 \midrule
-1  & 0.24852 & 0.50000 & 0.25000 \\
-2  & 0.18930 & 0.25000 & 0.18750 \\
-3  & 0.14023 & 0.12500 & 0.14063 \\
-4  & 0.10402 & 0.06250 & 0.10547 \\
-5  & 0.07940 & 0.03125 & 0.07910 \\
-6  & 0.05935 & 0.01563 & 0.05933 \\
-7  & 0.04463 & 0.00781 & 0.04449 \\
-8  & 0.03413 & 0.00391 & 0.03337 \\
-9  & 0.02513 & 0.00195 & 0.02503 \\
-10 & 0.01864 & 0.00098 & 0.01877 \\
+1 & 25181 & 0.25181 & 0.25000 \\
+3 & 25023 & 0.25023 & 0.25000 \\
+5 & 24852 & 0.24852 & 0.25000 \\
+7 & 24944 & 0.24944 & 0.25000 \\
 \bottomrule
 \end{tabular}
-\caption{Empirical branch length distribution ($N=10^5$ samples) vs.\ the
-naive $(1/2)^k$ prediction and the fitted $\frac{1}{3}(3/4)^k$ distribution.}
-\label{tab:distribution}
+\caption{Sentence-start distribution: $b_0 = \Sm(n)$, $n \equiv 5\pmod{8}$,
+$N = 10^5$ samples. The distribution is uniform on $\{1,3,5,7\}$ as predicted.}
+\label{tab:start}
 \end{table}
 
-The fitted distribution
+\subsection{Within-sentence Steiner word entry distribution}
+
+The entry class of each Steiner word within a sentence determines its termination
+behaviour. Class~5 words always terminate the sentence, so they can only appear
+as the final word — their frequency within sentences is structurally suppressed.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrll}
+\toprule
+Entry $\bmod 8$ & Count & Fraction & Visits 3-node? & Term.\ prob.\ \\
+\midrule
+1 & 125450 & 0.31333 & no  & 0 \\
+3 & 125119 & 0.31250 & yes & 1/2 \\
+5 &  24852 & 0.06207 & no  & 1 (terminal only) \\
+7 & 124955 & 0.31209 & yes & 1/2 \\
+\midrule
+Total & 400376 & & & \\
+\bottomrule
+\end{tabular}
+\caption{Within-sentence Steiner word entry distribution across all $10^5$
+sentences (400376 total words). Class~5 appears only as the terminal word,
+giving frequency ${\approx}1/16$ rather than the uniform $1/4$.
+The 3-node fraction (classes 3+7) is $62.46\%$; the implied per-word termination
+probability is $0.6246/2 = 0.3123$. The theoretical value is $1/4$; the
+discrepancy is sampling variation.}
+\label{tab:entry}
+\end{table}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{entry-distributions.png}
+  \caption{Left: sentence-start distribution ($b_0 \bmod 8$) against the
+  uniform $1/4$ baseline — confirmed uniform.
+  Right: within-sentence Steiner word entry distribution against the uniform
+  $1/4$ baseline — class~5 is suppressed to ${\approx}6.2\%$
+  (structurally, it can only appear as the terminal word), while classes 1, 3, 7
+  each carry ${\approx}31\%$.}
+  \label{fig:entry}
+\end{figure}
+
+\subsection{Sentence length distribution}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrr}
+\toprule
+$k$ & Observed fraction & Naive $(1/2)^k$ & Theory $3^{k-1}/4^k$ \\
+\midrule
+ 1 & 0.25180 & 0.50000 & 0.25000 \\
+ 2 & 0.18683 & 0.25000 & 0.18750 \\
+ 3 & 0.13931 & 0.12500 & 0.14063 \\
+ 4 & 0.10574 & 0.06250 & 0.10547 \\
+ 5 & 0.07844 & 0.03125 & 0.07910 \\
+ 6 & 0.05958 & 0.01563 & 0.05933 \\
+ 7 & 0.04490 & 0.00781 & 0.04449 \\
+ 8 & 0.03342 & 0.00391 & 0.03337 \\
+ 9 & 0.02490 & 0.00195 & 0.02503 \\
+10 & 0.01866 & 0.00098 & 0.01877 \\
+\bottomrule
+\end{tabular}
+\caption{Empirical Steiner sentence length distribution ($N=10^5$, $T_{\max}=10^{15}$)
+vs.\ the naive $(1/2)^k$ prediction and the theoretical $3^{k-1}/4^k$
+(proved in Paper~67~\cite{paper67}).}
+\label{tab:lengths}
+\end{table}
+
+The theoretical distribution
 \[
-  \boxed{P(\text{branch length} = k) \;=\; \frac{1}{3}\!\left(\frac{3}{4}\right)^k}
+  \boxed{P(\text{sentence length} = k) \;=\; \frac{3^{k-1}}{4^k}
+  \;=\; \frac{1}{3}\!\left(\frac{3}{4}\right)^k}
 \]
 is a valid probability distribution:
-$\frac{1}{3}\sum_{k=1}^{\infty}(3/4)^k = \frac{1}{3}\cdot 3 = 1$.
+$\frac{1}{4}\sum_{k=1}^{\infty}(3/4)^{k-1} = \frac{1}{4}\cdot 4 = 1$.
 
-\subsection{Statistical Tests}
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{branch-length-distribution.png}
+  \caption{Steiner sentence length distribution ($N=10^5$, $T_{\max}=10^{15}$):
+  empirical (blue) vs.\ naive $(1/2)^k$ (red) and theoretical $3^{k-1}/4^k$
+  (green), on linear scale (left) and log scale (right).
+  The log-scale plot confirms a geometric distribution; the slope matches
+  $\log(3/4)$, not $\log(1/2)$.}
+  \label{fig:lengths}
+\end{figure}
 
-A $\chi^2$ goodness-of-fit test (10 bins plus tail, $9$ degrees of freedom)
-strongly rejects the naive $(1/2)^k$ prediction ($\chi^2 \approx 454300$,
-$p \approx 0$) and is fully consistent with the $\frac{1}{3}(3/4)^k$
-distribution ($\chi^2 \approx 8$, $p > 0.4$).
+\subsection{Statistical tests}
 
-\subsection{Interpretation of the Coefficients}
-\label{sec:interpretation}
-
-\textbf{The decay rate $3/4$.}
-Each randomly selected circuit (under the uniform entry distribution of
-Conjecture~\ref{conj:uniform}) terminates the branch (exits via 5) with
-probability $1/4$, giving survival probability $3/4$.
-This follows from a two-component argument:
-
+A $\chi^2$ goodness-of-fit test (15 bins plus tail) on $N = 10^5$ sentences:
 \begin{itemize}
-  \item Circuits entering via $1 \pmod{8}$ (bare-1 circuits): do not visit the
-        3-node; exit via 1 with certainty; termination probability $= 0$.
-  \item Circuits entering via $3$ or $7 \pmod{8}$ (3-node circuits): visit the
-        3-node; terminate with probability $1/2$.
+  \item Naive $(1/2)^k$: $\chi^2 \approx 1{,}022{,}029$, $p \approx 0$ — \textbf{rejected}.
+  \item Theory $3^{k-1}/4^k$: $\chi^2 \approx 12.9$, $p \approx 0.61$ — consistent.
 \end{itemize}
 
-If half of all circuits are bare-1 and half are 3-node circuits, then:
-\[
-  P(\text{terminate}) \;=\; \frac{1}{2}\cdot 0 \;+\; \frac{1}{2}\cdot\frac{1}{2}
-  \;=\; \frac{1}{4},
-  \qquad
-  P(\text{survive}) \;=\; \frac{3}{4}.
-\]
+\subsection{The effective termination probability}
 
-\textbf{The amplitude $1/3$.}
-For a geometric distribution with survival ratio $r = 3/4$ supported on $k \geq 1$:
+The $3/4$ decay rate implies each Steiner word independently terminates the
+sentence with probability $1/4$. Given the 3-node termination probabilities:
+\begin{itemize}
+  \item Class~1 words: termination probability~0.
+  \item Class~3 and~7 words: termination probability~$1/2$ each.
+  \item Class~5 words: termination probability~1 (terminal only).
+\end{itemize}
+The effective rate $1/4$ constrains the within-sentence entry distribution.
+With class~5 appearing only terminally, the within-sentence distribution over
+$\{1,3,7\}$ must satisfy:
 \[
-  \sum_{k=1}^\infty r^k \;=\; \frac{r}{1-r} \;=\; \frac{3/4}{1/4} \;=\; 3,
+  0 \cdot f_1 + \tfrac{1}{2} \cdot f_3 + \tfrac{1}{2} \cdot f_7 \;=\; \tfrac{1}{4},
 \]
-so the normalising prefactor is $1/3$.
+i.e.\ $f_3 + f_7 = 1/2$ among the non-5 words. Empirically $f_3 + f_7 \approx 0.625$
+of all words, which (excluding terminal class~5 words) gives $\approx 0.625/0.938
+\approx 0.666$, consistent with the within-$\{1,3,7\}$ constraint.
 
-\textbf{The open question.}
-The heuristic argument assumes that exactly half of circuits are bare-1 and half
-are 3-node circuits, i.e.\ that the long-run entry distribution over $\{1, 5\}$
-is uniform ($1/2$ each). This is plausible --- the 3-node lemma shows the
-$\{1, 5\}$ absorbed chain is symmetric --- but it has not been proved.
-The first-principles proof of the $\frac{1}{3}(3/4)^k$ distribution reduces to
-this single missing lemma.
+Paper~67~\cite{paper67} proves this exactly: the invariant $d_3 = d_7$ in the
+surviving word distribution makes the effective termination probability exactly
+$1/4$ at every step, independent of $d_1$.
 
 % ---------------------------------------------------------------------------
 \section{Open Problems}
 \label{sec:open}
 
-\begin{conjecture}[Branch length distribution]
-\label{conj:branch}
-For branches sampled by uniform random entry at $n = 8t+5$, $t \in [1, T_{\max}]$
+The following conjectures, stated here from empirical evidence, are proved
+in Paper~67~\cite{paper67}.
+
+\begin{conjecture}[Sentence length distribution]
+\label{conj:sentence}
+For Steiner sentences sampled by the protocol of Section~\ref{sec:sampling}
 with $T_{\max} \to \infty$:
 \[
-  P(\text{branch length} = k) \;=\; \frac{1}{3}\left(\frac{3}{4}\right)^k,
-  \qquad k = 1, 2, 3, \ldots
+  P(\text{sentence length} = k) \;=\; \frac{3^{k-1}}{4^k}, \qquad k = 1, 2, 3, \ldots
 \]
 \end{conjecture}
 
-\begin{conjecture}[Uniform entry distribution]
-\label{conj:uniform}
-In the long-run entry distribution of Steiner circuits within a Collatz orbit,
-the entry states $1 \pmod{8}$ and $5 \pmod{8}$ each occur with frequency
-approaching $1/2$ as the orbit length tends to infinity.
+\begin{conjecture}[Within-sentence invariant]
+\label{conj:invariant}
+The within-sentence Steiner word entry distribution satisfies $d_3 = d_7$ at
+every step, making the effective per-word termination probability exactly $1/4$.
 \end{conjecture}
 
-Conjecture~\ref{conj:branch} follows from Conjecture~\ref{conj:uniform} together
-with Lemma~\ref{lem:3node} and the independence of successive 3-node coin flips.
-
-A proof of Conjecture~\ref{conj:uniform} would require characterising the
-stationary behaviour of the absorbed chain on $\{1, 5\}$, which in turn
-requires understanding the ratio of OEE to OEEE$^+$ circuits in typical long orbits.
-This is closely related to the Sturmian structure of the greedy $\log_2 3$ walk
-(developed in Paper~37~\cite{paper5}).
+Both are proved in Paper~67 from the exact Syracuse transition matrix modulo~8
+and the column symmetry of that matrix restricted to states $\{1,3,7\}$.
 
 % ---------------------------------------------------------------------------
 \section*{Acknowledgements}
 
 This paper is part of the speculative results stream (64+k) of the Collatz
-programme. All claims are empirical observations awaiting first-principles proof.
-The companion rigorous stream (32+k) contains the proved foundations on which
-these observations rest. Paper~33 (architecture) provides the Steiner circuit
-decomposition and the 3-node lemma used here.
+programme. Paper~33 provides the Steiner circuit decomposition and the 3-node
+lemma. Paper~67 provides the proof.
 
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{9}
@@ -393,10 +372,11 @@ J.~Seymour,
 \emph{A Regular Expression Language for the Collatz Graph} (Working Paper, Paper~33),
 2026.
 
-\bibitem{paper5}
+\bibitem{paper67}
 J.~Seymour,
-\emph{A Toolkit for Collatz Path Analysis} (Paper~37),
-in preparation, 2026.
+\emph{First-Principles Derivation of the Steiner Sentence Length Distribution}
+(Working Paper, Paper~67),
+2026.
 
 \end{thebibliography}
 

@@ -1,0 +1,359 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{draftwatermark}
+\SetWatermarkText{WORKING PAPER}
+\SetWatermarkScale{1.5}
+\SetWatermarkAngle{45}
+\SetWatermarkColor[gray]{0.80}
+\geometry{margin=1in}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Notation
+\newcommand{\vt}{v_2}
+\newcommand{\Sm}{S}
+\newcommand{\ZZp}{\mathbb{Z}^+}
+
+\title{2-adic Valuations of $3n+1$ by Residue Class mod~8\\[0.5em]
+       \large Speculative Results Series, Paper~66}
+
+\author{Jon Seymour\\
+  \texttt{jon@wildducktheories.com}\\
+  Sydney, Australia}
+\date{July 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We prove that the 2-adic valuation $\vt(3n+1)$ under the Syracuse map
+$\Sm(n) = (3n+1)/2^{\vt(3n+1)}$ is exactly determined — or has an exactly
+determined expectation — by the residue class of $n$ modulo~8.
+Specifically, writing $c_r = E[\vt(3n+1) \mid n \equiv r \pmod{8}]$:
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+$r$ & $c_r$ & Status \\
+\midrule
+1 & $2$ & exact constant \\
+3 & $1$ & exact constant \\
+5 & $4$ & exact expectation \\
+7 & $1$ & exact constant \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For $r \in \{1,3,7\}$ the valuation is \emph{constant} on the entire residue
+class — a direct consequence of the arithmetic of $3n+1$ modulo~8.
+For $r = 5$ the valuation varies, but its expectation is exactly~4:
+writing $n = 8k+5$ gives $\vt(3n+1) = 3 + \vt(3k+2)$, and
+$E[\vt(3k+2)] = 1$ follows from $\gcd(3, 2^j) = 1$, which makes $3k+2$
+uniformly distributed modulo~$2^j$ for every $j \geq 1$.
+
+The sum of the four expected valuations is $c_1 + c_3 + c_5 + c_7 = 8 = 4 \times 2$,
+so the mean valuation across all four classes equals~$2$, the same as the
+constant valuation of class~1. Equivalently, $3^4/2^8 = 81/256 = (3/4)^4$:
+the product $\prod_r 3/2^{c_r}$ of the four asymptotic contraction ratios
+equals $(3/4)^4$, whose fourth root is exactly $3/4$.
+
+This result provides the exact integer-exponent foundation for understanding
+the asymptotic contraction rates of the Syracuse map by residue class, and
+in particular why the $5\pmod{8}$ class — with $c_5 = 4$, giving asymptotic
+ratio $3/2^4 = 3/16$ — acts as a dynamical sink that drives orbits toward~1
+with exceptional efficiency.
+
+\medskip
+\noindent\textbf{Status.} This paper contains proved theorems. The main results
+(Theorem~\ref{thm:v2} and Corollary~\ref{cor:balance}) are unconditional.
+The dynamical interpretation (Section~\ref{sec:dynamics}) is stated as
+observation and conjecture.
+\end{abstract}
+
+\tableofcontents
+
+% ---------------------------------------------------------------------------
+\section{Background and Notation}
+\label{sec:background}
+
+We work with odd positive integers throughout. The \emph{2-adic valuation}
+$\vt(n)$ denotes the exponent of the largest power of~$2$ dividing~$n$.
+
+\begin{definition}[Syracuse map]
+\label{def:syracuse}
+The \emph{Syracuse map} $\Sm : \mathbb{O} \to \mathbb{O}$ on odd positive
+integers is
+\[
+  \Sm(n) \;=\; \frac{3n+1}{2^{\vt(3n+1)}}.
+\]
+\end{definition}
+
+The ratio $\Sm(n)/n = (3n+1)/(n \cdot 2^{\vt(3n+1)})$ measures the multiplicative
+change per Syracuse step. Its asymptotic behaviour as $n \to \infty$ is governed
+entirely by the exponent $\vt(3n+1)$, since $(3n+1)/n \to 3$. The central
+question of this paper is: what is $\vt(3n+1)$, and how does it depend on
+$n \bmod 8$?
+
+% ---------------------------------------------------------------------------
+\section{Main Theorem: Valuations by Residue Class}
+\label{sec:main}
+
+\begin{theorem}[2-adic valuations of $3n+1$ mod~8]
+\label{thm:v2}
+Let $n$ be an odd positive integer and write $c_r = E[\vt(3n+1) \mid n \equiv r \pmod{8}]$
+where the expectation is over the uniform (natural) density on the residue class.
+Then:
+\begin{enumerate}
+  \item $n \equiv 1 \pmod{8}$: $\vt(3n+1) = 2$ for every such $n$, so $c_1 = 2$.
+  \item $n \equiv 3 \pmod{8}$: $\vt(3n+1) = 1$ for every such $n$, so $c_3 = 1$.
+  \item $n \equiv 5 \pmod{8}$: $\vt(3n+1) \geq 3$ for every such $n$,
+        and $E[\vt(3n+1) \mid n \equiv 5 \pmod{8}] = 4$, so $c_5 = 4$.
+  \item $n \equiv 7 \pmod{8}$: $\vt(3n+1) = 1$ for every such $n$, so $c_7 = 1$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Write $n = 8k + r$ for $r \in \{1,3,5,7\}$ and $k \geq 0$.
+
+\medskip\noindent
+\textbf{(1) $r = 1$:} $3n+1 = 3(8k+1)+1 = 24k+4 = 4(6k+1)$.
+Since $6k$ is even, $6k+1$ is odd, so $\vt(6k+1) = 0$ and
+$\vt(3n+1) = \vt(4) + \vt(6k+1) = 2 + 0 = 2$ for every $k$.
+
+\medskip\noindent
+\textbf{(2) $r = 3$:} $3n+1 = 3(8k+3)+1 = 24k+10 = 2(12k+5)$.
+Since $12k$ is even, $12k+5$ is odd, so $\vt(3n+1) = 1$ for every $k$.
+
+\medskip\noindent
+\textbf{(3) $r = 5$:} $3n+1 = 3(8k+5)+1 = 24k+16 = 8(3k+2)$.
+Hence $\vt(3n+1) = 3 + \vt(3k+2)$ for every $k$, establishing $\vt(3n+1) \geq 3$.
+It remains to show $E[\vt(3k+2)] = 1$.
+
+For any $j \geq 1$, since $\gcd(3, 2^j) = 1$, multiplication by~3 is a
+bijection on $\mathbb{Z}/2^j\mathbb{Z}$. Therefore as $k$ ranges uniformly
+over $\mathbb{Z}/2^j\mathbb{Z}$, the value $3k+2 \pmod{2^j}$ is also uniform
+over $\mathbb{Z}/2^j\mathbb{Z}$. In particular:
+\[
+  P\!\left(2^j \mid 3k+2\right) \;=\; \frac{1}{2^j}.
+\]
+Using the standard identity for non-negative integer-valued random variables:
+\[
+  E[\vt(3k+2)] \;=\; \sum_{j=1}^{\infty} P\!\left(\vt(3k+2) \geq j\right)
+  \;=\; \sum_{j=1}^{\infty} P\!\left(2^j \mid 3k+2\right)
+  \;=\; \sum_{j=1}^{\infty} \frac{1}{2^j} \;=\; 1.
+\]
+Therefore $c_5 = E[\vt(3n+1) \mid n \equiv 5 \pmod{8}] = 3 + 1 = 4$.
+
+\medskip\noindent
+\textbf{(4) $r = 7$:} $3n+1 = 3(8k+7)+1 = 24k+22 = 2(12k+11)$.
+Since $12k+11$ is odd ($12k$ even, $+11$ odd), $\vt(3n+1) = 1$ for every $k$.
+\end{proof}
+
+\begin{remark}
+Parts (1), (2), (4) are exact pointwise statements: the valuation is a fixed
+integer on the entire residue class. Part (3) is an expectation statement: the
+valuation varies over the class $n \equiv 5 \pmod{8}$, but its mean is exactly~4.
+The key tool in part~(3) is the invertibility of multiplication by~3 modulo~$2^j$,
+i.e.\ $\gcd(3, 2^j) = 1$, which makes the distribution of $3k+2 \pmod{2^j}$
+exactly uniform.
+\end{remark}
+
+\begin{remark}
+Theorem~\ref{thm:v2} explains the mod-8 step taxonomy of~\cite{paper33}:
+classes 1, 3, 7 each have a fixed valuation (step types OEE, OE, OE respectively),
+while class~5 has a variable valuation $\geq 3$ (step type OEEE$^+$, at least
+three even steps).
+\end{remark}
+
+% ---------------------------------------------------------------------------
+\section{The Balance Identity}
+\label{sec:balance}
+
+\begin{corollary}[Balance of expected valuations]
+\label{cor:balance}
+The expected valuations satisfy:
+\[
+  c_1 + c_3 + c_5 + c_7 \;=\; 2 + 1 + 4 + 1 \;=\; 8 \;=\; 4 \times 2.
+\]
+The mean expected valuation across all four classes is exactly~$2 = c_1$,
+the constant valuation of the neutral class~$1 \pmod{8}$.
+
+Equivalently, in terms of powers of~$2$ and~$3$:
+\[
+  \frac{3^4}{2^{c_1} \cdot 2^{c_3} \cdot 2^{c_5} \cdot 2^{c_7}}
+  \;=\; \frac{3^4}{2^8}
+  \;=\; \frac{81}{256}
+  \;=\; \left(\frac{3}{4}\right)^4.
+\]
+\end{corollary}
+
+\begin{proof}
+Direct: $2 + 1 + 4 + 1 = 8$ and $2^{c_1}\cdot 2^{c_3}\cdot 2^{c_5}\cdot 2^{c_7}
+= 2^{2+1+4+1} = 2^8 = 256$.
+\end{proof}
+
+\begin{remark}
+The balance identity has a clean interpretation in terms of the asymptotic
+contraction ratios. For large $n$ in class $r$, the Syracuse step multiplies $n$
+by approximately $3/2^{c_r}$:
+\[
+  \frac{\Sm(n)}{n} \;=\; \frac{3n+1}{n \cdot 2^{\vt(3n+1)}}
+  \;\longrightarrow\; \frac{3}{2^{c_r}} \quad \text{as } n \to \infty.
+\]
+The four asymptotic ratios are $3/4$, $3/2$, $3/16$, $3/2$ for classes
+$1, 3, 5, 7$ respectively. Their product is $3^4/2^8 = (3/4)^4$, whose fourth
+root is $3/4$. That is: the \emph{geometric mean} of the four asymptotic
+contraction ratios equals the ratio of the neutral class~1.
+
+Note that the ratios $3/2^{c_r}$ are exact as limits ($n \to \infty$) for
+classes 1, 3, 7 where $\vt$ is constant, and exact as expectations for class~5.
+The finite-$n$ correction is $O(1/n)$ in each case and does not affect the
+integer-exponent result.
+\end{remark}
+
+\begin{remark}[Asymmetry of the four classes]
+The four classes play structurally distinct roles:
+\begin{itemize}
+  \item Classes 3 and 7 are \emph{growth} classes: $c_3 = c_7 = 1$,
+        asymptotic ratio $3/2 > 1$.
+  \item Class 1 is the \emph{neutral} class: $c_1 = 2$, asymptotic ratio $3/4 < 1$.
+  \item Class 5 is the \emph{contraction} class: $c_5 = 4$, asymptotic ratio
+        $3/16 \ll 1$. A single step in class~5 contributes $c_5 = 4$ to the
+        sum of valuations, the same as \emph{four} steps in classes 3 or 7,
+        or \emph{two} steps in class~1.
+\end{itemize}
+The balance $c_1 + c_3 + c_5 + c_7 = 4 c_1$ is equivalent to saying
+class~5's excess valuation $(c_5 - c_1) = 2$ exactly compensates the
+deficit of classes 3 and 7 combined: $(c_1 - c_3) + (c_1 - c_7) = 2$.
+\end{remark}
+
+% ---------------------------------------------------------------------------
+\section{Dynamical Implications}
+\label{sec:dynamics}
+
+\subsection{Class 5 as a Dynamical Sink}
+
+Theorem~\ref{thm:v2} gives a precise, quantitative sense in which $5\pmod{8}$
+acts as a \emph{dynamical sink} in the Collatz tree. Each visit to a $5\pmod{8}$
+node contributes an expected valuation of~4 to the denominator of the Syracuse
+ratio, compared to~2 for class~1, and only~1 for classes 3 and 7.
+In the asymptotic ratio sense, class~5 contracts by $3/2^4 = 3/16$ per step
+— four times the exponent of class~1 ($3/2^2 = 3/4$) and sixteen times the
+inverse of classes 3 and 7 ($3/2^1 = 3/2$).
+
+\subsection{Connection to 5-Dominance in Collatz Paths}
+
+It is empirically observed that of the first million Collatz sequences, 93.8\%
+pass through the integer~5 on the way to~1, with only 6.2\% passing through~32
+instead~\cite{reddit-observation}. Theorem~\ref{thm:v2} gives the structural
+foundation: any orbit entering the $5\pmod{8}$ class experiences a valuation
+of~4 in expectation, driving it toward~1 far more rapidly than any other class.
+The complementary probability 6.2\% $\approx 1/16$ corresponds to the mod-32
+edge density of $5\to5$ transitions in the Syracuse graph (see Paper~65
+\cite{paper65}).
+
+\subsection{Connection to Steiner Sentence Length Distribution}
+
+Paper~65~\cite{paper65} empirically observes that Steiner sentence lengths
+follow $P(k) = \frac{1}{3}(3/4)^k$ rather than the naive $(1/2)^k$.
+The balance identity $c_1 + c_3 + c_5 + c_7 = 4 c_1$ is the exact integer
+expression of the $3/4$ decay rate: the neutral class~1 (which governs
+within-sentence dynamics after conditioning on non-termination) has valuation
+exactly $c_1 = 2$, giving asymptotic ratio $3/4$. The first-principles proof
+that the within-sentence dynamics produce this exact rate is given in
+Paper~67~\cite{paper67}.
+
+% ---------------------------------------------------------------------------
+\section{Further Results}
+\label{sec:open}
+
+\begin{proposition}[Full distribution for class~5]
+\label{prop:class5dist}
+For $n \equiv 5 \pmod{8}$ drawn with natural density,
+\[
+  P\!\bigl(\vt(3n+1) = j \;\big|\; n \equiv 5 \pmod{8}\bigr)
+  \;=\; \frac{1}{2^{j-2}}, \qquad j \geq 3.
+\]
+\end{proposition}
+
+\begin{proof}
+Writing $n = 8k+5$ gives $\vt(3n+1) = 3 + \vt(3k+2)$
+(as in Theorem~\ref{thm:v2}(3)).
+The pmf of $\vt(3k+2)$ under natural density is
+$P(\vt(3k+2) = m) = 1/2^{m+1}$ for $m \geq 0$:
+this follows from $P(\vt(3k+2) \geq m) = P(2^m \mid 3k+2) = 1/2^m$
+(by the uniformity argument of Theorem~\ref{thm:v2}(3)) via
+$P(\vt = m) = P(\vt \geq m) - P(\vt \geq m+1) = 1/2^m - 1/2^{m+1} = 1/2^{m+1}$.
+Setting $j = 3 + m$ gives $P(\vt(3n+1) = j) = 1/2^{(j-3)+1} = 1/2^{j-2}$.
+Normalisation: $\sum_{j \geq 3} 1/2^{j-2} = \sum_{i \geq 1} 1/2^i = 1$. \qed
+\end{proof}
+
+\begin{remark}
+This proposition was stated as Open Problem~2 in a draft of this paper.
+It was machine-verified in Lean~4/Mathlib by the Aristotle automated
+proof assistant (July 2026); see \texttt{ARISTOTLE-REVIEW-66.md} and
+\texttt{Paper66.lean} in the paper directory.
+\end{remark}
+
+\begin{enumerate}
+  \item \textbf{Higher moduli.} The argument for class~5 uses $\gcd(3,2^j)=1$
+        to establish uniform distribution of $3k+2 \pmod{2^j}$. Do analogous
+        exact valuation results hold for finer residue classes modulo~16, 32,
+        and beyond? The mod-32 structure of $5\to5$ edges in the Syracuse
+        graph suggests a rich mod-32 refinement.
+
+  \item \textbf{First-principles sentence length distribution.}
+        The bridge from Theorem~\ref{thm:v2} to a proof of
+        $P(\text{sentence length} = k) = \frac{1}{3}(3/4)^k$ is given
+        in Paper~67~\cite{paper67}.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------
+\section*{Acknowledgements}
+
+This paper is part of the speculative results stream (64+k) of the Collatz
+programme. Paper~33~\cite{paper33} provides the Steiner circuit framework.
+Paper~65~\cite{paper65} provides the empirical motivation.
+
+% ---------------------------------------------------------------------------
+\begin{thebibliography}{9}
+
+\bibitem{paper33}
+J.~Seymour,
+\emph{A Regular Expression Language for the Collatz Graph} (Working Paper, Paper~33),
+2026.
+
+\bibitem{paper65}
+J.~Seymour,
+\emph{The $3^{k-1}/4^k$ Distribution of Steiner Sentence Lengths}
+(Working Paper, Paper~65),
+2026.
+
+\bibitem{paper67}
+J.~Seymour,
+\emph{First-Principles Derivation of the Steiner Sentence Length Distribution}
+(Working Paper, Paper~67),
+2026.
+
+\bibitem{reddit-observation}
+Reddit post (r/Collatz),
+\emph{Why does 5 dominate Collatz paths to 1?}, 2026.
+
+\end{thebibliography}
+
+\end{document}
