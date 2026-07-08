@@ -11,7 +11,7 @@ Research notes and papers on the Collatz conjecture.
 ## Papers
 
 ### Paper 67 — First-Principles Derivation of the Steiner Sentence Length Distribution *(working paper)*
-[PDF](papers/67-branch-length-distribution/67-branch-length-distribution.pdf) | [Source](papers/67-branch-length-distribution/67-branch-length-distribution.tex)
+[PDF](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.tex)
 
 Proves that Steiner sentences in the Syracuse graph have length distribution
 $P(\text{sentence length} = k) = 3^{k-1}/4^k$ for all $k \geq 1$.
@@ -34,7 +34,7 @@ linear and log scales. Supersedes Paper 65.
 ---
 
 ### Paper 66 — 2-adic Valuations of $3n+1$ by Residue Class mod 8 *(working paper)*
-[PDF](papers/66-syracuse-geometric-means/66-syracuse-geometric-means.pdf) | [Source](papers/66-syracuse-geometric-means/66-syracuse-geometric-means.tex)
+[PDF](https://wildducktheories.github.io/collatz/papers/66-syracuse-geometric-means/66-syracuse-geometric-means.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/66-syracuse-geometric-means/66-syracuse-geometric-means.tex)
 
 Proves that the 2-adic valuation $v_2(3n+1)$ under the Syracuse map is exactly
 determined — or has an exactly determined expectation — by $n \bmod 8$:
@@ -54,7 +54,7 @@ by the Aristotle automated proof assistant.
 ---
 
 ### Paper 33 — A Regular Expression Language for the Collatz Graph *(working paper)*
-[PDF](papers/33-architecture/33-architecture.pdf) | [Source](papers/33-architecture/33-architecture.tex)
+[PDF](https://wildducktheories.github.io/collatz/papers/33-architecture/33-architecture.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/33-architecture/33-architecture.tex)
 
 The architectural foundation of the programme. Constructs the mod-8 step taxonomy
 from first principles, defines Steiner circuits, proves the 7-run length theorem and the
@@ -65,7 +65,7 @@ distinguished from conjectures and material deferred to later papers.
 ---
 
 ### Paper 65 — The $3^{k-1}/4^k$ Distribution of Steiner Sentence Lengths *(superseded)*
-[PDF](papers/65-branch-distribution/65-branch-distribution.pdf) | [Source](papers/65-branch-distribution/65-branch-distribution.tex)
+[PDF](https://wildducktheories.github.io/collatz/papers/65-branch-distribution/65-branch-distribution.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/65-branch-distribution/65-branch-distribution.tex)
 
 The first attempt: an empirical discovery that Steiner sentence lengths follow
 $P(k) = 3^{k-1}/4^k$ rather than the naive $(1/2)^k$. Samples $10^5$ random
@@ -76,7 +76,7 @@ in Paper 67, which supersedes this paper and incorporates its experimental recor
 ---
 
 ### Paper 27 — A Regular-Language and Tree Representation of Odd Collatz Dynamics
-[PDF](papers/27-5mod8-regex/27-5mon8-regex.pdf)
+[PDF](https://wildducktheories.github.io/collatz/papers/27-5mod8-regex/27-5mon8-regex.pdf)
 
 Introduces the mod-8 step taxonomy and the regular expression `((7*3)?(1|5))*`
 characterising odd Collatz paths. *Superseded by the four-paper campaign
@@ -85,17 +85,17 @@ characterising odd Collatz paths. *Superseded by the four-paper campaign
 ---
 
 ### Paper 21 — Extract Parameters
-[PDF](papers/21-extract-parameters/extract-parameters.pdf)
+[PDF](https://wildducktheories.github.io/collatz/papers/21-extract-parameters/extract-parameters.pdf)
 
 ---
 
 ### Paper 14 — UV Polynomial
-[PDF](papers/14-uv-polynomial/uv-polynomial.pdf)
+[PDF](https://wildducktheories.github.io/collatz/papers/14-uv-polynomial/uv-polynomial.pdf)
 
 ---
 
 ### Paper 1 (2023) — A Terminating, Non-Cyclic Path Towards the Collatz Conjecture
-[PDF](papers/01-terminating-non-cyclic/paper.pdf) | [Notebook](papers/01-terminating-non-cyclic/paper.ipynb)
+[PDF](https://wildducktheories.github.io/collatz/papers/01-terminating-non-cyclic/paper.pdf) | [Notebook](https://wildducktheories.github.io/collatz/papers/01-terminating-non-cyclic/paper.ipynb)
 
 Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for $k$.
 
