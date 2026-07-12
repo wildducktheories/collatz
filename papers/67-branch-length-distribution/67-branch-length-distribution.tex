@@ -41,8 +41,9 @@ of an odd Collatz orbit whose compressed mod-8 form matches $(7^*\,3)?(1\mid 5)$
 a sequence of Syracuse-map applications beginning at any letter in $\{1,3,5,7\}$
 and terminating at the terminal letter $1$ or $5$.
 A \emph{Steiner sentence} is a string of $k \geq 1$ consecutive Steiner words
-in which all but the last word terminate at letter~$1$, and the final word
-terminates at letter~$5$; its \emph{length} is the number of words~$k$.
+comprising a \emph{clause} (the first $k-1$ words, each terminating
+at letter~$1$) followed by a \emph{closing word} (the final word, terminating at
+letter~$5$); its \emph{length} is the number of words~$k$.
 We prove that the sentence length distribution is
 $P(\text{length} = k) = 3^{k-1}/4^k$ for all $k \geq 1$.
 
@@ -97,10 +98,11 @@ the \emph{terminal letter} is $1$ or $5$.
 \end{definition}
 
 \begin{definition}[Steiner sentence]
-\label{def:sentence}
+\label{def:fullsentence}
 A \emph{Steiner sentence} of length $k \geq 1$ is a string of $k$ consecutive
-Steiner words in a Collatz orbit such that the first $k-1$ words terminate at
-letter~$1$ and the final word terminates at letter~$5$.
+Steiner words in a Collatz orbit comprising a \emph{clause} (the
+first $k-1$ words, each terminating at letter~$1$) followed by a \emph{closing
+word} (the final word, terminating at letter~$5$).
 \end{definition}
 
 The full Steiner language hierarchy (alphabet, letters, words, sentences, and
@@ -109,9 +111,9 @@ higher-level structures) is developed in Appendix~\ref{app:hierarchy}.
 \begin{remark}
 A sentence of length~$k$ corresponds to a path of $k$ edges in the overlay tree
 whose nodes are odd integers $\equiv 5 \pmod{8}$ and whose edges are individual
-Steiner words: consecutive words in the sentence that terminate at
-letter~$1$ extend the current edge, while the word terminating at letter~$5$
-completes it.
+Steiner words: consecutive words in the clause terminate at
+letter~$1$ and extend the current edge, while the closing word terminates at
+letter~$5$ and completes it.
 This paper is self-contained; the Steiner circuit decomposition, the
 regular-expression characterisation, and the overlay tree will be developed in
 full generality in future work, but are not required here.
@@ -138,11 +140,12 @@ not a single fixed shift.
 
 The Markov chain on entry letters tracks how the entry letter of each word
 determines the entry letter of the next, via the transition matrix $P$.
-Letter~5 is the unique terminal letter that ends a sentence; letter~1 is the
-other terminal letter, but it begins the next word rather than ending the sentence.
+Letter~5 is the unique terminal letter that ends a sentence (the closing
+word); letter~1 is the other terminal letter, but it begins the next word
+rather than ending the sentence.
 Within a sentence the surviving chain operates on entry letters in $\{1,3,7\}$:
-a word with entry letter~5 would have terminated the \emph{previous} sentence,
-so letter~5 never acts as an entry letter for a non-initial word inside a sentence.
+a word with entry letter~5 would have been the closing word of the \emph{previous}
+sentence, so letter~5 never acts as an entry letter within the clause.
 For entry letters~1, 3, and~7, the 2-adic valuation $\vt(3n+1)$ is a
 \emph{constant} determined by the entry letter alone, so every transition
 probability is an exact rational.
@@ -170,7 +173,7 @@ a letter in the alphabet $\{1,3,5,7\}$.
 Each word terminates at a terminal letter ($1$ or $5$); this terminal letter is
 the entry letter of the \emph{next} word (since the terminal node of one word
 is the starting node of the next).
-A sentence ends when a word terminates at letter~$5$.
+A sentence ends when a word terminates at letter~$5$ (the closing word).
 The transition probability $P[a][b]$ is therefore the natural density of
 odd integers $n \equiv a \pmod{8}$ for which $\Sm(n) \equiv b \pmod{8}$:
 \[
@@ -262,10 +265,27 @@ Therefore $P[7][3] = P[7][7] = 1/2$ and $P[7][1] = P[7][5] = 0$.
 \end{proof}
 
 \begin{remark}[Forbidden transitions]
+\label{rem:forbidden}
 The zero entries in $P$ — transitions $3 \to 3$, $3 \to 7$, $7 \to 1$,
 $7 \to 5$ — are \emph{structurally forbidden} for all $n$, not just on
 average. Classes~3 and~7 each map into a strict subset of $\{1,3,5,7\}$.
 This structural restriction is the engine of the proof.
+\end{remark}
+
+\begin{remark}[Row~7 is asymptotically $1/2$--$1/2$ but deterministic at mod~16]
+\label{rem:row7-determinism}
+The transition $P[7][3] = P[7][7] = 1/2$ is an \emph{asymptotic density}:
+over all $n \equiv 7 \pmod 8$, half map to class~3 and half to class~7.
+At the finer scale mod~16 the transition is deterministic:
+$n \equiv 7 \pmod{16}$ always maps to class~3, and
+$n \equiv 15 \pmod{16}$ always maps to class~7.
+The $1/2$--$1/2$ split arises because $7 \pmod{16}$ and $15 \pmod{16}$
+occur with equal density among $n \equiv 7 \pmod 8$.
+This determinism does not affect sentence-length probabilities: it governs
+\emph{which} letter-3 or letter-7 word follows a letter-7 entry,
+not whether the next step terminates at letter~5.
+Since $P[3][5] + P[7][5] = 1/2 + 0 = 1/2$ regardless of which sub-class of
+letter-7 is taken, the per-step escape probability is unchanged.
 \end{remark}
 
 \begin{remark}[Machine verification]
@@ -285,7 +305,8 @@ The Lean source is in \texttt{Paper67.lean} in the paper directory.
 \label{rem:exact}
 Row~5 of~$P$ is never used in the proof of Theorem~\ref{thm:main}.
 Within a sentence, class~5 is a sink: once the chain reaches~5
-the sentence ends, and class~5 never acts as a source for subsequent words.
+the sentence ends (at the closing word), and class~5 never acts as a
+source for subsequent words in the clause.
 The surviving distribution (Definition~\ref{def:surviving}) propagates
 mass only through rows~1, 3, and~7 of~$P$.
 
@@ -308,11 +329,11 @@ algebraic.
 \label{sec:firstpassage}
 
 A sentence is the first-passage time of the Markov chain $(P, \pi_0)$ to
-state~$5$, where $\pi_0$ is the sentence-start distribution.
+state~$5$, where $\pi_0$ is the sentence start distribution.
 
-\begin{lemma}[Sentence-start distribution]
+\begin{lemma}[Sentence start distribution]
 \label{lem:start}
-The sentence-start distribution is
+The sentence start distribution is
 $\pi_0 = (1/4, 1/4, 1/4, 1/4)$ — uniform on $\{1,3,5,7\}$.
 \end{lemma}
 
@@ -322,7 +343,43 @@ By Theorem~\ref{thm:matrix}, row~5 of~$P$ is uniform,
 so $b_0 \bmod 8$ is uniform on $\{1,3,5,7\}$.
 \end{proof}
 
-The sentence terminates at the first word where the chain visits state~$5$.
+\begin{proposition}[Start distribution is a pooled asymptotic density]
+\label{prop:start-density}
+The uniformity $\pi_0 = (1/4,1/4,1/4,1/4)$ is an \emph{asymptotic density}
+over the ensemble of all sentences, not a pointwise property of
+individual sentences.
+
+More precisely: for any specific $n \equiv 5 \pmod 8$, the start letter
+$b_0 = \Sm(n) \bmod 8$ is a single deterministic value in $\{1,3,5,7\}$, not
+a random draw.
+The uniformity arises because, as $n$ ranges over all residues $\equiv 5 \pmod 8$,
+each target class is equally represented in natural density
+(Theorem~\ref{thm:matrix}, row~5).
+
+A finer consequence concerns class~7.
+When $b_0 \equiv 7 \pmod 8$, the start node $b_0$ belongs to one of two
+mod-16 sub-classes:
+\begin{itemize}
+  \item $b_0 \equiv 7 \pmod{16}$: the first word's exit is \emph{always} class~3
+        (Remark~\ref{rem:row7-determinism}).
+  \item $b_0 \equiv 15 \pmod{16}$: the first word's exit is \emph{always} class~7.
+\end{itemize}
+In the pooled ensemble the two sub-classes are equally likely, so the
+aggregate transition $P[7][3] = P[7][7] = 1/2$ is recovered.
+But within any individual sentence these sub-class probabilities are $0$ or $1$,
+not $1/2$, and the asymptotic equiprobability is not available step-by-step
+within a sentence.
+
+All results in this paper — Lemma~\ref{lem:invariant}, Theorem~\ref{thm:main},
+and the $3^{k-1}/4^k$ distribution — are stated and proved at the level of
+asymptotic densities over the full ensemble, where $\pi_0$ is genuinely
+uniform.
+They are not claimed to hold for individual sentences conditioned on a
+specific mod-16 start sub-class.
+\end{proposition}
+
+The sentence terminates at the closing word, i.e.\ the first word where
+the chain visits state~$5$.
 The sentence length $k$ is this first-passage time.
 
 \begin{definition}[Surviving distribution]
@@ -362,7 +419,7 @@ $d_3^{(k)} = d_7^{(k)}$ for all $k \geq 0$.
 \begin{proof}
 By Definition~\ref{def:surviving}, the surviving distribution sums only
 over sources $t \neq 5$; class~5 contributes nothing because once the
-chain reaches~5 the sentence terminates (the mass is absorbed, not
+chain reaches~5 the sentence terminates at the closing word (the mass is absorbed, not
 propagated). The transition update for states~3 and~7 is therefore:
 \begin{align*}
 d_3^{(k+1)} &= d_1^{(k)} \cdot P[1][3] + d_3^{(k)} \cdot P[3][3] + d_7^{(k)} \cdot P[7][3] \\
@@ -372,7 +429,9 @@ d_7^{(k+1)} &= d_1^{(k)} \cdot P[1][7] + d_3^{(k)} \cdot P[3][7] + d_7^{(k)} \cd
 \end{align*}
 The two expressions are identical: $d_3^{(k+1)} = d_7^{(k+1)}$ for any
 $d_1^{(k)}, d_3^{(k)}, d_7^{(k)}$.
-By induction, since $d_3^{(0)} = d_7^{(0)} = 1/4$ (Lemma~\ref{lem:start}),
+By induction, since $d_3^{(0)} = d_7^{(0)} = 1/4$ (Lemma~\ref{lem:start},
+valid as an asymptotic density over the full ensemble;
+see Proposition~\ref{prop:start-density}),
 $d_3^{(k)} = d_7^{(k)}$ for all $k \geq 0$.
 \end{proof}
 
@@ -393,6 +452,67 @@ The invariant is unconditional — it holds for \emph{any} value of $d_1$,
 not just at the fixed point of the chain.
 \end{remark}
 
+\begin{remark}[The $7^*$ self-loop and geometric balance]
+\label{rem:7star}
+The column symmetry above might seem surprising given that letter~$7$ has a
+self-loop ($P[7][7] = 1/2$) while letter~$3$ does not.
+The invariant $d_3 = d_7$ is an \emph{ensemble} statement about long-run letter
+densities pooled over all sentences; it does \emph{not} hold sentence-by-sentence
+or word-by-word.
+For instance, a $7$-free sentence such as $315$ or $(31)^k 5$ has $d_7 = 0$
+locally, while a sentence containing a long $7^*$ run has $d_7 > d_3$.
+The invariant asserts only that these deviations cancel across the full ensemble.
+
+The cancellation mechanism is as follows.
+For $n \equiv 7 \pmod 8$, the exit from the $7^*$ run is \emph{deterministic}:
+the run length is exactly $\vt(n+1) - 1$, and the exit is \emph{always} to
+class~$3$ (since $P[7][1] = P[7][5] = 0$; letter~$7$ can only reach $\{3,7\}$).
+The entire $7^*3$ sub-path is therefore a single deterministic atomic unit given
+$n$: it contributes one letter-$3$ unconditionally, preceded by $\vt(n+1)-1$
+letter-$7$ nodes.
+
+Across the ensemble, $\vt(n+1) - 1$ is geometric with parameter~$1/2$
+(since $\vt$ of a random integer is geometric), so the mean $7$-run length
+is~$1$ and the mean $7^*3$ contribution is $1$ letter-$7$ plus $1$ letter-$3$.
+Words entering via class~$3$ contribute $1$ letter-$3$ and $0$ letter-$7$;
+words entering via class~$7$ contribute $1$ letter-$3$ and on average $1$
+letter-$7$.
+Under a uniform start distribution these two word types occur with equal
+probability, so their contributions to $d_3$ and $d_7$ are equal in
+expectation --- the global balance that the invariant records.
+
+Replacing $7^*$ with a single abstract state that exits deterministically to~$3$
+captures this balance and reduces the $7^*3$ fragment to an atomic opening step,
+which is the perspective adopted by the Steiner word decomposition
+(Paper~70~\cite{paper70}).
+\end{remark}
+
+\begin{remark}[Stratified behaviour of $d_3$ and $d_7$]
+\label{rem:stratified-d3-d7}
+The invariant $d_3^{(k)} = d_7^{(k)}$ holds unconditionally, but it is an
+asymptotic statement about the mixing of all sentences.
+When sentences are stratified by their \emph{start class} $b_0 \bmod 8$
+(the entry letter of the first Steiner word), a transient bias appears:
+
+\begin{itemize}
+  \item \emph{Start class~3:} the first word itself is counted as a class-3
+        word, inflating $d_3$ relative to $d_7$ during the sentence.
+        Empirically, $d_3 \approx 2\,d_7$ within this stratum.
+  \item \emph{Start class~7:} symmetrically, $d_7 \approx 2\,d_3$ within
+        this stratum.
+  \item \emph{Start classes~1 and~5:} the first word contributes equally to
+        both classes via the uniform row of $P$, so $d_3 \approx d_7$ within
+        each stratum.
+\end{itemize}
+
+The biases cancel in the pooled sample because the four start classes are
+equally likely (row~5 of $P$ is uniform, so $b_0$ is uniform over
+$\{1,3,5,7\}$). The invariant is therefore correctly stated for any
+individual sentence viewed without conditioning on its start class, and
+for the pooled ensemble: the transient class-specific bias is a
+presentation artefact of conditioning, not a violation of the lemma.
+\end{remark}
+
 % ---------------------------------------------------------------------------
 \section{Main Theorem}
 \label{sec:main}
@@ -408,9 +528,9 @@ Equivalently, $P(\text{sentence length} = k) = \frac{1}{3}\left(\frac{3}{4}\righ
 
 \begin{proof}
 We use the splitting: $P(\text{sentence length} = 1) = \pi_0(5) = 1/4$ (sentences
-that start at $b_0 \equiv 5$ terminate immediately). For $k \geq 2$,
-the sentence does not terminate at word~1 (probability $3/4$) and then
-terminates at word $k-1$ from the conditional start, i.e.\
+whose first word is already the closing word, i.e.\ $b_0 \equiv 5$).
+For $k \geq 2$, the sentence does not terminate at word~1 (probability $3/4$)
+and then terminates at word $k-1$ from the conditional start, i.e.\
 $P(\text{length} = k) = \tfrac{3}{4} \cdot g_{k-1}$,
 where $g_j$ is the first-passage probability to~5 starting from the
 conditional distribution $\pi_0(\,\cdot \mid \cdot \neq 5) = (1/3, 1/3, 1/3)$
@@ -422,7 +542,8 @@ $\{1,3,7\}$ satisfies $M_j = (3/4)^j$.
 
 \medskip
 \noindent\textbf{Step 1: $d_3 = d_7$ is preserved.}
-The conditional start has $d_3^{(0)} = d_7^{(0)} = 1/3$, so
+The conditional start has $d_3^{(0)} = d_7^{(0)} = 1/3$ (equal weight on
+$\{1,3,7\}$ in the pooled ensemble; see Proposition~\ref{prop:start-density}), so
 Lemma~\ref{lem:invariant} applies: $d_3^{(k)} = d_7^{(k)}$ for all $k \geq 0$.
 
 \medskip
@@ -502,13 +623,12 @@ $\{1,3,5,7\}$ and terminates on drawing~5.
 This appearance is striking because class~5 plays three distinct and
 mutually reinforcing roles in the sentence structure.
 
-\textbf{Class~5 as the termination state.}
-A sentence terminates exactly when a word's terminal letter is~$5$.
-Since letter~$5$ is the unique absorbing boundary of the chain (once the
-chain's terminal letter is~$5$, the sentence ends), letter~$5$ is structurally
-absent as an entry letter for all intermediate words.
-Empirically, letter~$5$ accounts for only $\approx 6.2\%$ of within-sentence
-word entries (Appendix~B, Table~\ref{tab:entry}) — one entry per sentence,
+\textbf{Class~5 as the termination state (closing word).}
+A sentence terminates exactly when the closing word's terminal letter is~$5$.
+Since letter~$5$ is the unique absorbing boundary of the chain, letter~$5$ is
+structurally absent as an entry letter for all words in the clause.
+Empirically, letter~$5$ accounts for only $\approx 6.2\%$ of word entries within
+sentences (Appendix~B, Table~\ref{tab:entry}) — one entry per sentence,
 uniformly distributed across sentence lengths — rather than the
 $25\%$ it would contribute if words were unrestricted.
 
@@ -518,7 +638,8 @@ By row~5 of the transition matrix (Theorem~\ref{thm:matrix}), letter~$5$
 maps uniformly over $\{1,3,5,7\}$: any of the four letters is equally
 likely as the entry letter of the first word.
 In particular, exactly $1/4$ of sentences have $b_0 \equiv 5$, meaning
-length~$k=1$. This is the correct $P(k=1) = 1/4$, not the naive $1/2$.
+length~$k=1$ (the first word is already the closing word).
+This is the correct $P(k=1) = 1/4$, not the naive $1/2$.
 Class~5 is the unique class for which $\vt(3n+1) \geq 3$ always
 (proved in Paper~66~\cite{paper66}), which forces the extra halvings
 that spread the output uniformly.
@@ -545,7 +666,8 @@ The two papers are complementary: Paper~66 establishes what happens \emph{at}
 the class~5 boundary (a geometrically distributed valuation requiring an
 infinite series for its expectation), while the present paper shows that by
 choosing Steiner sentences as the unit of analysis, the class~5 boundary
-need never be crossed from the inside — it only needs to be \emph{entered}.
+need never be crossed from the inside — it only needs to be \emph{entered}
+(as the closing word).
 
 The value $3/4$ also appears in the classical Collatz heuristic~\cite{terras,lagarias}
 as the mean multiplicative contraction per odd step: $3/2^2 = 3/4$ for the
@@ -583,7 +705,7 @@ The naive prediction $(1/2)^k$ arises from treating each step as an
 independent trial that terminates whenever the current word is in class~3
 (with probability~$1/2$, since $P[3][5] = 1/2$) or class~7 (also $1/2$
 by this model).
-If the within-sentence distribution were uniform over $\{1,3,5,7\}$, the
+If the word entry distribution within a sentence were uniform over $\{1,3,5,7\}$, the
 effective per-step termination probability would be:
 \[
   \tfrac{1}{4}\cdot 0 \;+\; \tfrac{1}{4}\cdot\tfrac{1}{2}
@@ -660,6 +782,8 @@ $n = 8k+5$) that depends on $k$ and is unbounded; its statistical behaviour
 requires an infinite geometric series and is studied in Paper~66~\cite{paper66}.
 The two \emph{terminal letters} are $1$ and $5$: these are the only letters at
 which a Steiner word can end.
+Letters~$1$ and~$5$ are called \emph{terminal} letters; letters~$3$ and~$7$ are
+\emph{non-terminal}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection*{Steiner Words}
@@ -672,9 +796,10 @@ matches the regular expression
 \]
 That is: zero or more letters~$7$, optionally followed by one letter~$3$,
 followed by exactly one terminal letter ($1$ or $5$).
-Every Steiner word terminates at a terminal letter; words terminating at
-letter~$1$ are \emph{OEE-terminal} and words terminating at letter~$5$ are
-\emph{OEEE$^+$-terminal}.
+Every Steiner word terminates at a terminal letter.
+A word terminating at letter~$1$ is called an \emph{opening word}
+(OEE-terminal); a word terminating at letter~$5$ is called a \emph{closing
+word} (OEEE$^+$-terminal).
 The \emph{entry letter} of a word is its first letter (the residue mod~8 of
 its starting node); the \emph{terminal letter} is its last letter ($1$ or~$5$).
 
@@ -696,12 +821,26 @@ The term \emph{circuit} is retained as a synonym (and in the compound
 \end{remark}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection*{Steiner Sentences}
+\subsection*{Steiner Clauses and Sentences}
+
+A \emph{Steiner clause} of length $m \geq 0$ is a (possibly empty) string of
+$m$ consecutive Steiner opening words (each terminating at letter~$1$).
+A clause of length~$0$ is the empty string.
+Clauses are the building blocks of sentences.
 
 A \emph{Steiner sentence} of length $k \geq 1$ is a string of $k$ consecutive
-Steiner words in a Collatz orbit such that the first $k-1$ words are
-OEE-terminal (terminal letter~$1$) and the $k$-th word is
-OEEE$^+$-terminal (terminal letter~$5$).
+Steiner words in a Collatz orbit comprising a \emph{clause} (the first $k-1$
+words, each OEE-terminal, i.e.\ terminating at letter~$1$) followed by a
+\emph{closing word} (the $k$-th word, OEEE$^+$-terminal, terminating at
+letter~$5$).
+
+\begin{remark}[Clause is the prefix of a sentence, never itself a sentence]
+The clause of a sentence of length~$k$ has length $k-1$ (possibly empty when
+$k=1$).
+It is never itself a sentence: a sentence must end with a closing word
+(terminating at letter~$5$), whereas every word in the clause terminates at
+letter~$1$.
+\end{remark}
 
 Equivalently, a sentence is a path of $k$ edges in the \emph{$5 \pmod{8}$
 overlay tree}: the directed graph whose nodes are odd integers $\equiv 5
@@ -740,13 +879,13 @@ and is reproduced here in full as the empirical record accompanying this paper's
   \item Set $n = 8t + 5$ (so $n \equiv 5 \pmod{8}$).
   \item Compute $b_0 = \Sm(n)$, the first Steiner word of the new sentence.
   \item Follow consecutive Steiner circuits from $b_0$, counting words, until
-        the first output $b \equiv 5 \pmod{8}$. Record the word count as $k$.
+        the closing word (first output $b \equiv 5 \pmod{8}$). Record the word count as $k$.
 \end{enumerate}
 
 $N = 10^5$ independent sentences were collected with seed~42. Independence between
 samples is ensured by the random draw of~$t$; no orbit tails are shared.
 
-\subsection*{Sentence-start Distribution}
+\subsection*{Sentence-Start Distribution}
 
 By Theorem~\ref{thm:matrix}, row~5 of~$P$ is uniform, so $b_0 = \Sm(n) \bmod 8$
 should be uniform on $\{1,3,5,7\}$.
@@ -769,11 +908,11 @@ by Theorem~\ref{thm:matrix}.}
 \label{tab:start}
 \end{table}
 
-\subsection*{Within-sentence Steiner Word Entry Distribution}
+\subsection*{Within-Sentence Steiner Word Entry Distribution}
 
 The entry letter of each Steiner word within a sentence determines its termination
-behaviour. Words with entry letter~5 always terminate the sentence, so they appear only as
-the final word — their within-sentence frequency is structurally suppressed to
+behaviour. Words with entry letter~5 are always the closing word, so they appear only as
+the final word — their frequency within sentences is structurally suppressed to
 approximately $1/(k+1)$ for a sentence of length $k$, averaging to $\approx 1/16$
 empirically.
 
@@ -785,14 +924,14 @@ Entry $\bmod 8$ & Count & Fraction & Can reach class~5 directly? & Term.\ prob. 
 \midrule
 1 & 125450 & 0.31333 & yes ($P_{15}=1/4$)  & $1/4$ \\
 3 & 125119 & 0.31250 & yes ($P_{35}=1/2$)  & $1/2$ \\
-5 &  24852 & 0.06207 & --- (terminal only) & $1$ \\
+5 &  24852 & 0.06207 & --- (closing word only) & $1$ \\
 7 & 124955 & 0.31209 & no  ($P_{75}=0$)    & $0$ \\
 \midrule
 Total & 400376 & & & \\
 \bottomrule
 \end{tabular}
 \caption{Within-sentence Steiner word entry distribution across all $10^5$
-sentences (400376 total words). Class~5 appears only as the terminal word,
+sentences (400376 total words). Class~5 appears only as the closing word,
 giving frequency ${\approx}6.2\%$ rather than the uniform $25\%$.
 The last column gives the probability of a word terminating at letter~$5$
 given its entry letter ($P_{15}=1/4$, $P_{35}=1/2$, $P_{75}=0$) — these are the exact entries
@@ -806,14 +945,61 @@ effective per-word termination probability exactly~$1/4$
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{entry-distributions.png}
-  \caption{Left: sentence-start distribution ($b_0 \bmod 8$) against the
+  \caption{Left: sentence start distribution ($b_0 \bmod 8$) against the
   uniform $1/4$ baseline — confirmed uniform (Table~\ref{tab:start}).
-  Right: within-sentence Steiner word entry distribution against the uniform
+  Right: Steiner word entry distribution within sentences against the uniform
   $1/4$ baseline. Class~5 is structurally suppressed to ${\approx}6.2\%$
-  (it can only appear as the terminal word); classes 1, 3, 7
+  (it can only appear as the closing word); classes 1, 3, 7
   each carry ${\approx}31\%$.}
   \label{fig:entry}
 \end{figure}
+
+\subsection*{Empirical Transition Matrix}
+
+Theorem~\ref{thm:matrix} gives explicit values for all 16 entries of the
+transition matrix $P$.
+To verify these directly, we sample $2 \times 10^5$ random odd nodes
+$n \equiv a \pmod 8$ (for each $a \in \{1,3,5,7\}$, independently of the
+sentence sampling) and record $\Sm(n) \bmod 8$.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrrrr}
+\toprule
+From $\backslash$ To & $\equiv 1$ & $\equiv 3$ & $\equiv 5$ & $\equiv 7$ & Theory \\
+\midrule
+$1 \pmod 8$ & 0.2502 & 0.2497 & 0.2494 & 0.2507 & $1/4$ each \\
+$3 \pmod 8$ & 0.4999 & 0.0000 & 0.5001 & 0.0000 & $1/2,\ 0,\ 1/2,\ 0$ \\
+$5 \pmod 8$ & 0.2502 & 0.2501 & 0.2514 & 0.2483 & $1/4$ each \\
+$7 \pmod 8$ & 0.0000 & 0.5010 & 0.0000 & 0.4990 & $0,\ 1/2,\ 0,\ 1/2$ \\
+\bottomrule
+\end{tabular}
+\caption{Empirical transition matrix $P[a][b] = P(\Sm(n) \equiv b \pmod 8 \mid n \equiv a \pmod 8)$,
+measured by sampling $2 \times 10^5$ random odd nodes per row ($T_{\max} = 10^{15}$).
+All four rows are consistent with Theorem~\ref{thm:matrix}.
+The zero entries in rows~3 and~7 are exact across all $2 \times 10^5$ samples
+in each row, confirming the structural forbidden transitions
+(Remark~\ref{rem:forbidden}).}
+\label{tab:matrix}
+\end{table}
+
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+Row & $\chi^2$ & $p$-value & Verdict \\
+\midrule
+$1 \pmod 8$ & $0.72$ & $0.87$ & Consistent (df\,=\,3) \\
+$3 \pmod 8$ & $0.02$ & $0.89$ & Consistent (df\,=\,1) \\
+$5 \pmod 8$ & $3.80$ & $0.28$ & Consistent (df\,=\,3) \\
+$7 \pmod 8$ & $0.73$ & $0.39$ & Consistent (df\,=\,1) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+All rows are consistent with the theoretical values.
+The zero entries $P[3][3]=P[3][7]=P[7][1]=P[7][5]=0$ are observed as
+exact zeros across all $2\times 10^5$ samples per row, confirming they
+are structural rather than probabilistic.
 
 \subsection*{Sentence Length Distribution}
 
@@ -854,26 +1040,202 @@ factor of~2 and decays far too fast for $k \geq 3$.}
   \label{fig:lengths}
 \end{figure}
 
+\subsection*{Stratified Length Distribution by Start Class}
+
+A natural concern is whether the theoretical distribution $3^{k-1}/4^k$
+holds within each start class or only in the pooled sample.
+Theorem~\ref{thm:matrix} says $b_0 \bmod 8$ is uniform on $\{1,3,5,7\}$,
+but sentences starting at different classes have different initial weight
+vectors, so the pooled chi-squared test could mask per-stratum misfits.
+
+Two specific concerns arise:
+\begin{enumerate}
+  \item \emph{Class-7 forced detour.}
+        Since $P[7][5] = 0$, a sentence starting at class~7 cannot terminate
+        at $k=1$: the first word is a class-7 entry, which can only transition
+        to class~3 or class~7, never directly to the closing class~5.
+        One might therefore expect class-7 sentences to have
+        systematically longer lengths — mass shifted away from $k=1$
+        toward $k \geq 2$ — relative to the $3^{k-1}/4^k$ prediction.
+  \item \emph{Class-3 early termination.}
+        Symmetrically, $P[3][5] = 1/2$ is the highest termination probability
+        of any internal class, so class-3 start sentences might be biased
+        toward shorter lengths.
+\end{enumerate}
+Both effects are real at the level of \emph{individual word transitions},
+but the concern is whether they distort the sentence-length distribution
+relative to theory.
+The key resolution is that $b_0$ is the output of $\Sm$ applied to
+$n \equiv 5 \pmod 8$, which mixes the class-7 and class-3 effects
+via row~5 of~$P$: the uniform start from row~5 means class-7 sentences
+do not begin mid-chain from a pure class-7 state, but from the full
+distribution conditioned on $b_0 \equiv 7 \pmod 8$.
+Once conditioned on $b_0 \equiv 7$, the class-7 forced-detour argument
+applies to individual steps but the Markov chain's invariant
+$d_3 = d_7$ (Lemma~\ref{lem:invariant}) ensures the aggregate escape rate
+remains exactly $1/4$ per word regardless of start class.
+
+The stratified length distributions are shown in Table~\ref{tab:lengths-stratified};
+the pooled distribution appears in Table~\ref{tab:lengths-pooled}.
+Each stratum is compared against its own exact per-class theory, computed
+from the Markov chain with initial state $e_{b_0}$
+(see Remark~\ref{rem:stratified-d3-d7} for the formula).
+
+\begin{table}[!ht]
+\centering
+\small
+\begin{tabular}{rrrrrrrrrr}
+\toprule
+& \multicolumn{2}{c}{start=1} & \multicolumn{2}{c}{start=3}
+& \multicolumn{2}{c}{start=7} & \multicolumn{2}{c}{start=3 or 7} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+$k$ & emp. & theory & emp. & theory & emp. & theory & emp. & theory \\
+\midrule
+ 1 & 0.25070 & 0.25000 & 0.49973 & 0.50000 & 0.00000 & 0.00000 & 0.25086 & 0.25000 \\
+ 2 & 0.18836 & 0.18750 & 0.12593 & 0.12500 & 0.25131 & 0.25000 & 0.18837 & 0.18750 \\
+ 3 & 0.14041 & 0.14062 & 0.09404 & 0.09375 & 0.18606 & 0.18750 & 0.13987 & 0.14062 \\
+ 4 & 0.10466 & 0.10547 & 0.07085 & 0.07031 & 0.14183 & 0.14062 & 0.10620 & 0.10547 \\
+ 5 & 0.07878 & 0.07910 & 0.05283 & 0.05273 & 0.10434 & 0.10547 & 0.07848 & 0.07910 \\
+ 6 & 0.05944 & 0.05933 & 0.03869 & 0.03955 & 0.07865 & 0.07910 & 0.05859 & 0.05933 \\
+ 7 & 0.04396 & 0.04449 & 0.02925 & 0.02966 & 0.05852 & 0.05933 & 0.04383 & 0.04449 \\
+ 8 & 0.03303 & 0.03337 & 0.02223 & 0.02225 & 0.04452 & 0.04449 & 0.03333 & 0.03337 \\
+ 9 & 0.02454 & 0.02503 & 0.01629 & 0.01669 & 0.03358 & 0.03337 & 0.02490 & 0.02503 \\
+10 & 0.01933 & 0.01877 & 0.01225 & 0.01251 & 0.02473 & 0.02503 & 0.01846 & 0.01877 \\
+\midrule
+\multicolumn{9}{l}{%
+  \footnotesize$\dagger$ start=5: $P(k=1)=1$ exactly (b$_0\equiv 5$ is itself
+  the closing word); $P(k{\geq}2)=0$.
+} \\
+\bottomrule
+\end{tabular}
+\caption{Per-class sentence length distributions ($N{\approx}125{,}000$ per stratum,
+$T_{\max}=10^{15}$, seed~5) vs exact Markov-chain theory.
+Valid starts are $b_0\in\{1,3,7\}$; start=5 is a degenerate length-1 sentence
+(the closing word itself) and collapses to $P(k=1)=1$, $P(k{\geq}2)=0$.
+The combined start=3 or~7 series cancels to the pooled curve (Table~\ref{tab:lengths-pooled}).}
+\label{tab:lengths-stratified}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\begin{tabular}{rrrr}
+\toprule
+$k$ & emp. & Theory $3^{k-1}/4^k$ & start=5 theory \\
+\midrule
+ 1 & 0.24902 & 0.25000 & 1.00000 \\
+ 2 & 0.18710 & 0.18750 & 0.00000 \\
+ 3 & 0.14085 & 0.14062 & 0.00000 \\
+ 4 & 0.10585 & 0.10547 & 0.00000 \\
+ 5 & 0.07919 & 0.07910 & 0.00000 \\
+ 6 & 0.05952 & 0.05933 & 0.00000 \\
+ 7 & 0.04455 & 0.04449 & 0.00000 \\
+ 8 & 0.03331 & 0.03337 & 0.00000 \\
+ 9 & 0.02526 & 0.02503 & 0.00000 \\
+10 & 0.01898 & 0.01877 & 0.00000 \\
+\bottomrule
+\end{tabular}
+\caption{Pooled sentence length distribution ($N=500{,}000$, $T_{\max}=10^{15}$,
+seed~4) vs theory $3^{k-1}/4^k$.
+The start=5 column shows the degenerate distribution for completeness:
+$b_0\equiv 5\pmod 8$ contributes a single spike at $k=1$ (the closing word itself)
+and is absent from all $k\geq 2$.
+The pooled empirical values are the average across all four start classes
+weighted equally, so the start=5 spike at $k=1$ is diluted to $1/4$ of
+$1 = 0.25$, consistent with the $3^{0}/4^{1}=0.25$ pooled theory.}
+\label{tab:lengths-pooled}
+\end{table}
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{entry-distributions-stratified.png}
+  \caption{Steiner sentence length distribution stratified by start class
+  $b_0 \bmod 8$: start=1 (steelblue), start=3 (green), start=7 (red),
+  combined start=3 or~7 (purple dashed), pooled $3^{k-1}/4^k$ (black dotted);
+  solid/dashed lines = exact per-class Markov-chain theory; dots/squares = empirical.
+  Left: linear scale; right: log scale.
+  Start=7 is shifted right (forbidden at $k=1$); start=3 is shifted left
+  ($P(k=1)=1/2$); they cancel exactly in the combined series.}
+  \label{fig:lengths-stratified}
+\end{figure}
+
+The per-class distributions show the compensation mechanism explicitly.
+Start=3 is front-loaded ($P(k=1)=1/2$, twice the pooled rate) because
+$P[3][5]=1/2$ allows immediate termination; start=7 is delayed
+($P(k=1)=0$ exactly, since $P[7][5]=0$) and has elevated mass at
+$k=2$ ($P(k=2|\text{start}=7)=1/4$, again above pooled).
+For $k\geq 3$ all three active strata ($b_0\in\{1,3,7\}$) converge to
+the same $3/4$ decay, and the pooled distribution is exactly $3^{k-1}/4^k$
+because all four start classes are equally likely (including the degenerate
+$b_0=5$ case which contributes only at $k=1$).
+
+The reason is visible in the proof of Theorem~\ref{thm:main}: once the
+first word is fixed with entry $b_0$, the surviving chain on $\{1,3,7\}$
+is governed by the same $3/4$ decay regardless of which class $b_0$
+belongs to, because the invariant $d_3 = d_7$ holds for \emph{any}
+initial weight vector $(d_1^{(0)}, d_3^{(0)}, d_7^{(0)})$
+(Lemma~\ref{lem:invariant}).
+The class-7 forced detour shifts \emph{which} class-3 or class-7 words
+appear inside the sentence, not how fast the sentence terminates.
+
+\subsection*{Stratified Entry-Letter Distribution}
+
+Stratifying word entry letters by sentence-start class reveals the transient
+bias predicted by Remark~\ref{rem:stratified-d3-d7}: within sentences
+starting at class~3, letter-3 words are approximately twice as frequent as
+letter-7 words ($d_3 \approx 2\,d_7$); within sentences starting at class~7,
+the ratio is reversed ($d_7 \approx 2\,d_3$); classes~1 and~5 show $d_3
+\approx d_7$ throughout. The biases cancel exactly in the pooled sample because
+all four start classes are equally likely (Table~\ref{tab:start}).
+
 \subsection*{Statistical Tests}
 
-A $\chi^2$ goodness-of-fit test on 15 length bins plus a tail bin, using
-$N = 10^5$ sentences:
+A $\chi^2$ goodness-of-fit test on 15 length bins plus a tail bin.
+Per-stratum tests use the exact Markov-chain theory for that stratum,
+not the pooled $3^{k-1}/4^k$ formula:
 
 \begin{center}
-\begin{tabular}{lrrl}
+\begin{tabular}{lrrrl}
 \toprule
-Model & $\chi^2$ & $p$-value & Verdict \\
+Model / stratum & $N$ & $\chi^2$ & $p$-value & Verdict \\
 \midrule
-Naive $(1/2)^k$     & $1{,}022{,}029$ & $\approx 0$ & \textbf{Rejected} \\
-Theory $3^{k-1}/4^k$ & $12.9$          & $0.61$      & Consistent \\
+Naive $(1/2)^k$ (pooled)              & $500{,}000$ & ${\gg}10^6$ & $\approx 0$ & \textbf{Rejected} \\
+Theory $3^{k-1}/4^k$ (pooled)         & $500{,}000$ & $15.9$      & $0.39$      & Consistent \\
+\midrule
+Exact theory, start=1       & $124{,}603$ & $ 7.2$ & $0.95$ & Consistent \\
+Exact theory, start=3       & $125{,}669$ & $ 8.0$ & $0.92$ & Consistent \\
+Exact theory, start=7       & $124{,}673$ & $28.0$ & $0.01$ & Marginal \\
+Exact theory, start=3 or~7  & $250{,}342$ & $25.4$ & $0.04$ & Marginal \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The naive model is rejected with overwhelming confidence. The theoretical formula
-$3^{k-1}/4^k$ is consistent with the data at all tested lengths.
+The pooled distribution and the start=1 and start=3 strata are consistent
+with theory.
+The start=7 and combined start=3 or~7 strata show a marginal departure,
+driven by slightly more long sentences ($k>15$) than the mod-8 theory predicts.
+
+Theorem~\ref{thm:matrix} is not at fault: $P[7][3]=P[7][7]=1/2$ as asymptotic
+densities over all $n\equiv 7\pmod 8$ is correct.
+The flaw is the implicit assumption that the mod-16 sub-classes of class~7
+are equiprobable within each sentence, which is only true in the pooled
+ensemble (Proposition~\ref{prop:start-density}).
+Within a sentence starting at a specific $b_0\equiv 7\pmod 8$, the mod-16
+sub-class of $b_0$ is fixed, and subsequent class-7 nodes inherit that
+sub-class deterministically (Remark~\ref{rem:row7-determinism}), so
+consecutive class-7 transitions are correlated rather than independent —
+giving slightly heavier tails than the pooled Markov model predicts.
+
+Start=3 is unaffected because $P[3][1]=P[3][5]=1/2$ is \emph{exact} at mod~8:
+for $n\equiv 3\pmod 8$ the valuation $v_2(3n+1)=1$ is fixed, so each
+transition is a genuinely independent coin flip with no sub-modulus memory.
+The combined start=3 or~7 stratum inherits the start=7 tail excess at half
+weight, giving $p=0.04$.
+The pooled fit is unaffected because the start=7 excess is diluted across
+all four start classes, and the asymptotic equiprobability holds in aggregate.
 
 % ---------------------------------------------------------------------------
+\clearpage
 \begin{thebibliography}{9}
 
 \bibitem{steiner}

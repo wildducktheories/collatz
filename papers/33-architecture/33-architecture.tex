@@ -176,12 +176,11 @@ Every orbit of $C$ visits $\mathbb{O}$ after at most finitely many even steps, s
 records exactly the odd nodes visited by $C$, with even intermediates suppressed.
 The two maps are related by $S(n) = C^{v_2(3n+1)+1}(n)$ for all $n \in \mathbb{O}$.
 
-The \emph{Terras map} $T : \mathbb{O} \to \mathbb{Z}^+$~\cite{terras1976} folds the
-mandatory halving into the odd step:
+The \emph{Terras map} $T : \mathbb{Z}^+ \to \mathbb{Z}^+$~\cite{terras1976} is defined by
 \[
-  T(n) \;=\; \frac{3n+1}{2}, \qquad n \in \mathbb{O}.
+  T(n) \;=\; \begin{cases} n/2 & \text{if } n \text{ is even,} \\ (3n+1)/2 & \text{if } n \text{ is odd.} \end{cases}
 \]
-Note that $T(n)$ is not generally odd; the Terras map steps from odd integer to
+Note that $T(n)$ is not generally odd when $n$ is odd; the Terras map steps from odd integer to
 integer (odd or even), whereas $S$ steps from odd integer to odd integer.
 Note that $T$ maps odd inputs to integers that may themselves be even, so iterating
 $T$ does not in general recover $S$.

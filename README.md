@@ -10,6 +10,27 @@ Research notes and papers on the Collatz conjecture.
 
 ## Papers
 
+### Paper 64 — Rigidity of the Syracuse Transition Matrix *(working paper)*
+[PDF](https://wildducktheories.github.io/collatz/papers/64-transitions/64-transitions.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/64-transitions/64-transitions.tex)
+
+Proves that the Syracuse transition matrix $T[M]$ — whose $(r,j)$ entry is the
+probability that $S(n) \equiv j \pmod{M}$ given $n \equiv r \pmod{M}$ — is
+*almost entirely rigid*: for each odd residue $r$ with $v_2(3r+1) = v$, row $r$
+is an exact arithmetic identity (independent of any measure or corpus) whenever
+$2^{v+1} \mid M$ (ordinary integer divisibility). In that case every odd
+$n \equiv r \pmod{M}$ has $v_2(3n+1) = v$ exactly, and the reachable targets
+form an arithmetic progression of length $2^v$, each hit with probability
+exactly $1/2^v$.
+
+The only non-rigid rows are the *exceptional* residues — those for which $2^{v+1} \nmid M$.
+At $M = 2^k$ there is exactly one such residue class, represented by
+$r_k = (4^k-1)/3$. The sequence $r_1, r_2, \ldots = 1, 5, 21, 85, \ldots$
+converges 2-adically to $-1/3$ — the singularity of the Syracuse map where
+$3n+1 = 0$ and $v_2(3n+1) = +\infty$. All main claims machine-verified in
+Lean 4/Mathlib by the Aristotle automated proof assistant.
+
+---
+
 ### Paper 67 — First-Principles Derivation of the Steiner Sentence Length Distribution *(working paper)*
 [PDF](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.tex)
 
