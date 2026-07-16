@@ -55,7 +55,7 @@ point as a rational function of $(g,h,q)$.
 Beyond these core results, we develop a system of five equivalent
 representations of any parity sequence --- its bits (the $p$-value), the
 structural polynomial $\kpoly_w(g,h)$, its specialisation $\kpoly_w(3,2)$,
-the $\sigma$-polynomial $\sigma_w(u,v)$, and the Collatz orbit $\phi_w$ ---
+the $\sigma$-polynomial $\sigma_w(u,v)$, and the orbit parity sequence $\phi_w$ ---
 connected by explicitly invertible transformations.  We also introduce a
 successor operation on $\kpoly_w$ in $\ZZ/(h^e-g^o)\ZZ$ that generates all
 cycle representatives by rotation, and we warn that polynomial
@@ -110,7 +110,7 @@ and includes a remark cautioning that polynomial non-divisibility does not
 imply pointwise non-divisibility.
 Section~\ref{sec:pvalue} develops the five representations of a parity
 sequence --- the $p$-value, the $\sigma$-polynomial, $\kpoly_w(g,h)$,
-$\kpoly_w(3,2)$, and the Collatz orbit $\phi_w$ --- and unifies them in a
+$\kpoly_w(3,2)$, and the orbit parity sequence $\phi_w$ --- and unifies them in a
 single diagram.
 Section~\ref{sec:examples} collects worked examples illustrating the theory.
 
@@ -480,12 +480,12 @@ Section~\ref{sec:grand-cycle}.
 \label{sec:grand-cycle}
 %------------------------------------------------------------
 
-\begin{definition}[Collatz orbit representation $\phi_w$]
+\begin{definition}[Orbit parity sequence $\phi_w$]
 \label{def:phi}
 Let $w$ be a parity sequence with $o$ odd steps, $e$ even steps, and
 $\kpoly_w(3,2) = k$.  Set $q = 2^e - 3^o$ and define the sequence
 $a_0 = k,\; a_{i+1} = \Phi_{\text{step}}(a_i)$ under the $(3,2,q)$ Collatz
-map.  The \emph{Collatz orbit representation} of $w$ is
+map.  The \emph{orbit parity sequence} of $w$ is the parity sequence
 \[
   \phi_w \;:=\; (s_0, s_1, \ldots, s_{n-1}), \qquad
   s_i = \begin{cases} O & \text{if } a_i \text{ is odd}, \\ E & \text{if } a_i \text{ is even}. \end{cases}
@@ -637,8 +637,11 @@ cycle representatives have the same length $n$.
 
 \subsubsection*{Change of variables}
 
-The substitution $g = 1/2$, $h = 2$ that produces $N_w$ can be made
-polynomial (avoiding fractional exponents) by a change of variables.
+The $\sigma$-polynomial arises from $\kpoly_w(g,h)$ by the substitution
+$g = u/v$, $h = v$, followed by clearing the denominator $v^{o-1}$:
+$\sigma_w(u,v) = \kpoly_w(u/v,\,v)\cdot v^{o-1} \in \ZZ[u,v]$.
+The inverse substitution $u = gh$, $v = h$ recovers
+$\kpoly_w(g,h) = \sigma_w(gh,h)/h^{o-1}$.
 
 \begin{definition}[$\sigma$-polynomial]
 \label{def:sigma}
@@ -653,12 +656,8 @@ positions $p_0 < \cdots < p_{o-1}$, define
 
 The exponent of $u$ in the $j$-th term counts the $O$-steps \emph{after}
 position $j$; the exponent of $v$ is the bit-position of the $j$-th $O$-step.
-Two specialisations recover the objects already defined:
-\[
-  \kpoly_w(g,h) \;=\; \frac{\sigma_w(gh,\, h)}{h^{o-1}}, \qquad
-  N_w \;=\; \sigma_w(1,\, 2),
-\]
-and consequently $p_w = \sigma_w(1,2) + 2^n$.
+Specialising to $u = 1$, $v = 2$ recovers the bit-encoding: $N_w = \sigma_w(1,2)$,
+and consequently $p_w = \sigma_w(1,2) + 2^n$ (edge A inverse).
 
 \subsubsection*{The successor operation on $\sigma$}
 
