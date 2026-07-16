@@ -31,6 +31,30 @@ Lean 4/Mathlib by the Aristotle automated proof assistant.
 
 ---
 
+### Paper 71 — The Structural Polynomial of a Parity Sequence and Its Applications *(working paper)*
+[PDF](https://wildducktheories.github.io/collatz/papers/71-structural-polynomial/71-structural-polynomial.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/71-structural-polynomial/71-structural-polynomial.tex)
+
+Develops a polynomial representation for parity sequences of generalised Collatz-type maps
+$(g,h,q)$, working in the ring $\mathbb{Z}[g,h]$ rather than specialising immediately to
+numerical values. The central object is the *structural polynomial* $k_w(g,h)$, which encodes
+the accumulated additive contribution of the odd steps independently of the parameter $q$.
+
+The main results are: (1) a *path identity* $h^e b = g^o a + q\,k_w(g,h)$; (2) a *geometric
+polynomial theorem* showing that Steiner words $\mathrm{St}(\alpha,\beta)$ have
+$k(g,h) = (g^\alpha - h^\alpha)/(g-h)$, independent of $\beta$; (3) a *composition rule*
+$k_{Q\circ P} = g^{o_Q} k_P + h^{e_P} k_Q$; and (4) a *cycle element identity*
+$a = q\,k_w/(h^e - g^o)$ giving the fixed point as a rational function of $(g,h,q)$.
+
+Beyond these core results, the paper develops a system of five equivalent representations of
+any parity sequence — its bits (the $p$-value), the structural polynomial $k_w(g,h)$, its
+specialisation $k_w(3,2)$, the $\sigma$-polynomial $\sigma_w(u,v)$, and the Collatz orbit
+$\phi_w$ — connected by explicitly invertible transformations, and unifies them in a single
+diagram. A key illustration is the $5x+1$ cycle at $17$: the cycle element emerges as
+$a = 1 \cdot 51/3 = 17$, where the near-miss $2^7 - 5^3 = 3$ is the arithmetic accident
+that makes the cycle possible, visible as a polynomial phenomenon.
+
+---
+
 ### Paper 67 — First-Principles Derivation of the Steiner Sentence Length Distribution *(working paper)*
 [PDF](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/67-branch-length-distribution/67-branch-length-distribution.tex)
 
