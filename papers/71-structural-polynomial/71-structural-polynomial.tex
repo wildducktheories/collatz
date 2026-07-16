@@ -126,11 +126,12 @@ elementary maps are the \emph{odd step} $O\colon x \mapsto gx + q$ and the
 \end{definition}
 
 \begin{definition}[Parity sequence]
-A \emph{parity sequence} is a finite non-empty word $w = w_1 w_2 \cdots w_n$
-over the alphabet $\{O, E\}$.  It defines an affine map $\Phi_w$ by composing
-the corresponding elementary maps from left to right: $\Phi_w = \Phi_{w_n}
-\circ \cdots \circ \Phi_{w_1}$.  We write $o = o(w)$ for the number of
-occurrences of $O$ in $w$ and $e = e(w)$ for the number of occurrences of $E$.
+A \emph{parity sequence} is a finite word $w = w_1 w_2 \cdots w_n$ (possibly
+empty, $n \geq 0$) over the alphabet $\{O, E\}$.  It defines an affine map
+$\Phi_w$ by composing the corresponding elementary maps from left to right:
+$\Phi_w = \Phi_{w_n} \circ \cdots \circ \Phi_{w_1}$ (the empty composition
+is the identity map).  We write $o = o(w)$ for the number of occurrences of
+$O$ in $w$ and $e = e(w)$ for the number of occurrences of $E$.
 \end{definition}
 
 \begin{remark}
@@ -438,8 +439,7 @@ replaces this $g^o$ by $h^e$ — exactly the substitution $g^o\equiv h^e
 $h^e - g^o$ is the cycle denominator from Theorem~\ref{thm:cycle}, so this
 operation is only natural in the context of a fixed cycle $(o,e)$.
 As a consequence, the $n$ rotations of $w$ produce exactly $n$ values of
-$\kpoly_{w'}(g,h)$ in $\ZZ/(h^e-g^o)\ZZ$, corresponding to the $n$ nodes
-of the grand cycle diagram (Section~\ref{sec:grand-cycle}).
+$\kpoly_{w'}(g,h)$ in $\ZZ/(h^e-g^o)\ZZ$, one for each cycle representative.
 \end{proposition}
 
 \begin{corollary}[Canonical cycle basis]
@@ -602,21 +602,36 @@ The \emph{$p$-value} of a parity sequence $w = b_0 b_1 \cdots b_{n-1}$ is
 \begin{theorem}[$p$-value uniqueness]
 \label{thm:pvalue}
 The map $w \mapsto p_w$ is a bijection from the set of all finite parity
-sequences over $\{O,E\}$ to the set of integers $\geq 2$.  Moreover, $w$ is
-uniquely recovered from $p_w$ by writing $p_w$ in binary: the highest set bit
-(at position $n$) records the length, and bits $0, \ldots, n-1$ give the
-sequence with $1 = O$ and $0 = E$.
+sequences over $\{O,E\}$ (including the empty sequence) to the set of
+integers $\geq 1$.  The empty sequence has $p_\varepsilon = 2^0 = 1$.
+For non-empty $w$, $w$ is uniquely recovered from $p_w$ by writing $p_w$
+in binary: the highest set bit (at position $n$) records the length, and
+bits $0, \ldots, n-1$ give the sequence with $1 = O$ and $0 = E$.
 \end{theorem}
 
 \begin{proof}
-Given $p_w$, let $n = \lfloor \log_2 p_w \rfloor$ (the position of the
-highest set bit).  Then bits $0, \ldots, n-1$ of $p_w$ coincide with $N_w$
-and uniquely determine the positions of all $O$-steps, hence the full sequence
-$w$.  The map is therefore injective.  Surjectivity onto integers $\geq 2$
-follows since every such integer has a unique highest set bit at some position
-$n \geq 1$, and the lower $n$ bits define a valid parity sequence of length
-$n$.
+The empty sequence has $n = 0$, $N_\varepsilon = 0$, and $p_\varepsilon = 0 + 2^0 = 1$.
+For non-empty $w$, given $p_w \geq 2$, let $n = \lfloor \log_2 p_w \rfloor \geq 1$
+(the position of the highest set bit).  Then bits $0, \ldots, n-1$ of $p_w$
+coincide with $N_w$ and uniquely determine the positions of all $O$-steps,
+hence the full sequence $w$.  The map is therefore injective.  Surjectivity
+onto integers $\geq 1$ follows since every positive integer has a unique
+highest set bit at some position $n \geq 0$: $n = 0$ gives the empty
+sequence, and $n \geq 1$ gives the parity sequence whose $i$-th step is $O$
+iff bit $i$ of $p_w$ is $1$.
 \end{proof}
+
+\begin{remark}[Successor as cyclic bit rotation]
+The successor $w \mapsto w'$ (Proposition~\ref{prop:ksucc}) acts on the
+$p$-value as a \emph{right} rotation of the lower $n$ bits.  Reading the
+data bits in the conventional MSB-first order as $b_{n-1} b_{n-2} \cdots b_1 b_0$,
+the right rotation moves the rightmost bit $b_0$ to the leftmost data position:
+\[
+  p_{w'} \;=\; 2^n + b_0\, 2^{n-1} + b_{n-1}\, 2^{n-2} + \cdots + b_1.
+\]
+The sentinel bit at position $n$ is unchanged, reflecting the fact that all
+cycle representatives have the same length $n$.
+\end{remark}
 
 \subsection{The $\sigma$-polynomial (edges A, D)}
 
