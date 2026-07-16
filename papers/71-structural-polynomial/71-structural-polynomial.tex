@@ -393,11 +393,12 @@ $h^e > g^o$) and divisibility.
 \begin{remark}
 For path problems (no fixed-point condition), $q$ is a free parameter of the
 basis and $\kpoly_w(g,h)$ encodes only the parity sequence's structural
-contribution.  For cycle problems, the equation~\eqref{eq:cycle} constrains
-the basis: given $(g,h)$ and the parity sequence $w$, the value of $a$ is
-determined, and $q$ must be chosen to make it an integer.  Typically $q$
-is fixed (e.g.\ $q = 1$) and the question becomes whether $(h^e - g^o)
-\mid \kpoly_w(g,h)$.
+contribution.  For cycle problems, $q$ is no longer free: setting $d = h^e - g^o$,
+equation~\eqref{eq:cycle} requires $d \mid q\cdot\kpoly_w(g,h)$, so $q$ must be
+a multiple of $d/\gcd(d,\kpoly_w(g,h))$.  The smallest valid choice is exactly
+$q_w = d/\gcd(d,\kpoly_w(g,h))$ (Corollary~\ref{prop:canonical}); in particular,
+$q$ must be a divisor of $d$.  In particular, $q_w = 1$ if and only if $d \mid \kpoly_w(g,h)$ at the
+given integer basis $(g,h)$.
 \end{remark}
 
 \begin{remark}[Polynomial vs.\ pointwise divisibility]
