@@ -146,16 +146,17 @@ Number the $O$-steps from $0$ to $o-1$ in the order they appear in $w$.
 For $0 \leq j \leq o-1$, let $\kappa_j$ denote the number of $E$-steps that
 appear in $w$ \emph{strictly before} the $(j+1)$-th $O$-step.  The sequence
 $(\kappa_0, \kappa_1, \ldots, \kappa_{o-1})$ is the \emph{$\kappa$-tuple}
-of $w$.  It satisfies $0 = \kappa_0 \leq \kappa_1 \leq \cdots \leq \kappa_{o-1} < e$.
+of $w$.  It satisfies $0 \leq \kappa_0 \leq \kappa_1 \leq \cdots \leq \kappa_{o-1} \leq e$.
 For example, $w = OEEOEOEE$ has $o = 3$ odd steps at positions $0, 3, 5$,
 preceded by $0$, $2$, $3$ even steps respectively, so $\kappa = (0, 2, 3)$.
 \end{definition}
 
 \begin{remark}
-For the standard Collatz basis ($g=3$, $q=1$), a parity sequence corresponds
-to a legal orbit if and only if its $\kappa$-tuple is strictly increasing; the
-polynomial framework works unchanged for non-strict profiles
-(see Example~\ref{ex:noncollatz}).
+For the standard Collatz basis ($g=3$, $q=1$), a parity sequence beginning
+with an $O$-step (i.e.\ $\kappa_0 = 0$) corresponds to a legal orbit starting
+from an odd integer if and only if its $\kappa$-tuple is strictly increasing
+(equivalently, no two $O$-steps are adjacent).  The polynomial framework works
+unchanged for non-strict profiles (see Example~\ref{ex:noncollatz}).
 \end{remark}
 
 \begin{definition}[Structural polynomial]
@@ -373,9 +374,10 @@ fixed-point equation for a parity sequence.
 
 \begin{theorem}[Cycle element identity]
 \label{thm:cycle}
-Let $w$ be a parity sequence with $o$ odd steps, $e$ even steps, and
-structural polynomial $\kpoly_w(g,h)$.  A positive integer $a$ satisfies
-$\Phi_w(a) = a$ if and only if
+Let $(g,h,q)$ be a basis with $\gcd(g,h) = 1$, and let $w$ be a parity
+sequence with $o$ odd steps, $e$ even steps, and structural polynomial
+$\kpoly_w(g,h)$.  A positive integer $a$ satisfies $\Phi_w(a) = a$ if and
+only if
 \begin{equation}
   \label{eq:cycle}
   a \;=\; \frac{q\cdot\kpoly_w(g,h)}{h^e - g^o}.
@@ -394,12 +396,12 @@ $h^e > g^o$) and divisibility.
 \begin{remark}
 For path problems (no fixed-point condition), $q$ is a free parameter of the
 basis and $\kpoly_w(g,h)$ encodes only the parity sequence's structural
-contribution.  For cycle problems, $q$ is no longer free: setting $d = h^e - g^o$,
-equation~\eqref{eq:cycle} requires $d \mid q\cdot\kpoly_w(g,h)$, so $q$ must be
-a multiple of $d/\gcd(d,\kpoly_w(g,h))$.  The smallest valid choice is exactly
-$q_w = d/\gcd(d,\kpoly_w(g,h))$ (Corollary~\ref{prop:canonical}); in particular,
-$q$ must be a divisor of $d$.  In particular, $q_w = 1$ if and only if $d \mid \kpoly_w(g,h)$ at the
-given integer basis $(g,h)$.
+contribution.  For cycle problems (assuming $\gcd(g,h)=1$), $q$ is no longer free: setting
+$d = h^e - g^o$, equation~\eqref{eq:cycle} requires $d \mid q\cdot\kpoly_w(g,h)$,
+so $q$ must be a multiple of $d/\gcd(d,\kpoly_w(g,h))$.  The smallest valid
+choice is exactly $q_w = d/\gcd(d,\kpoly_w(g,h))$ (Corollary~\ref{prop:canonical});
+in particular, $q$ must be a divisor of $d$.  In particular, $q_w = 1$ if and
+only if $d \mid \kpoly_w(g,h)$ at the given integer basis $(g,h)$.
 \end{remark}
 
 \begin{remark}[Polynomial vs.\ pointwise divisibility]
@@ -418,9 +420,10 @@ identities.
 
 \begin{proposition}[Successor on $\kpoly_w$ around a cycle]
 \label{prop:ksucc}
-Let $w = w_0 w_1 \cdots w_{n-1}$ be a cyclic parity sequence with $o$ odd
+Let $(g,h,q)$ be a basis with $\gcd(g,h) = 1$, and let
+$w = w_0 w_1 \cdots w_{n-1}$ be a cyclic parity sequence with $o$ odd
 steps and $e$ even steps in total, and let $w' = w_1 \cdots w_{n-1} w_0$
-be the left rotation by one step.  Then, working in $\ZZ/(h^e-g^o)\ZZ$,
+be the rotation by one step.  Then, working in $\ZZ/(h^e-g^o)\ZZ$,
 \[
   \kpoly_{w'}(g,h)
   \;\equiv\;
@@ -435,11 +438,15 @@ the leading monomial $g^{o-1}\mapsto g^o$, and the natural recurrence
   \kpoly_{w'}(g,h) \;=\; g\cdot\kpoly_w(g,h) + (h^e - g^o)
 \]
 replaces this $g^o$ by $h^e$ — exactly the substitution $g^o\equiv h^e
-\pmod{h^e-g^o}$ — keeping the degree at $o-1$ in $g$.  The modulus
-$h^e - g^o$ is the cycle denominator from Theorem~\ref{thm:cycle}, so this
-operation is only natural in the context of a fixed cycle $(o,e)$.
-As a consequence, the $n$ rotations of $w$ produce exactly $n$ values of
+\pmod{h^e-g^o}$ — keeping the degree at $o-1$ in $g$.  In the $E$-step
+case, $h^{-1}$ exists in $\ZZ/(h^e-g^o)\ZZ$ because $\gcd(g,h)=1$ implies
+$\gcd(h,\,h^e-g^o)=1$.  The modulus $h^e - g^o$ is the cycle denominator
+from Theorem~\ref{thm:cycle}, so this operation is only natural in the
+context of a fixed cycle $(o,e)$.
+As a consequence, if $w$ is primitive (not a proper power of a shorter word),
+the $n$ rotations of $w$ produce exactly $n$ distinct values of
 $\kpoly_{w'}(g,h)$ in $\ZZ/(h^e-g^o)\ZZ$, one for each cycle representative.
+For a non-primitive $w$ of period $p \mid n$, there are exactly $p$ distinct values.
 \end{proposition}
 
 \begin{corollary}[Canonical cycle basis]
@@ -722,12 +729,12 @@ after exactly $n$ steps.  See~\cite{paper14} for the full development.
 $w = OEEOEOEE$ ($n=8$, $o=3$), evaluated at $(\omega_3, \omega_8)$.
 Coloured dots show the three monomials of $\sigma_w$; the green arrow is
 their sum (the value of $\sigma_w$ as a complex number).
-\emph{Left} (step~0, $E$-step, $\gamma=0$): $\sigma = u^2 + uv^3 + v^4$.
-Notice all three dots rotate together by $\omega_8^{-1}$ — an $E$-step
-is a pure phase rotation with no change to the $u$-weights.
+\emph{Left} (step~0, $O$-step, $\gamma=1$): $\sigma = u^2 + uv^3 + v^4$.
+The $O$-step multiplies by $\omega_3$ in addition to rotating by $\omega_8^{-1}$,
+changing the $u$-weights as well as the phase.
 \emph{Centre} (after two $E$-steps): $\sigma = u^2 v + uv^2 + v^6$ — the
 dots have rotated twice; the sum (green arrow) has changed direction.
-\emph{Right} (after the first $O$-step, $\gamma=1$): $\sigma = u^2 + uv + v^5$.
+\emph{Right} (after the second $O$-step, $\gamma=1$): $\sigma = u^2 + uv + v^5$.
 The $O$-step multiplies by $\omega_3$ in addition to rotating by $\omega_8^{-1}$,
 redistributing the $u$-weights and visibly changing the triangle of dots.}
 
@@ -749,7 +756,7 @@ respectively; the return path from $\phi_w$ runs via \textbf{C} then \textbf{B} 
 \textbf{E}     & $\kpoly_w(3,2) = 3^2+3\cdot 2^2+2^3 = 29$ \\[4pt]
 \textbf{F}     & $q=5,\;a_0=29$; iterate $(3,2,5)$: \\
                & $29\xrightarrow{O}92\xrightarrow{E}46\xrightarrow{E}23\xrightarrow{O}
-                 74\xrightarrow{E}37\xrightarrow{O}119\xrightarrow{E}62\xrightarrow{E}29
+                 74\xrightarrow{E}37\xrightarrow{O}116\xrightarrow{E}58\xrightarrow{E}29
                  \;\Rightarrow\;\phi_w = OEEOEOEE$ \\[4pt]
 \textbf{C}     & $b_8 b_7\cdots b_0 = 1,0,0,1,0,1,0,0,1$ \quad($b_8{=}1$ sentinel encodes $n{=}8$) \\
 \textbf{B}     & $\kappa_j=(0,2,3)$,\; $\kpoly_w(g,h)=g^2+gh^2+h^3\ \checkmark$
