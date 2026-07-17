@@ -203,11 +203,15 @@ $b = \Phi_w(a)$ then
 \begin{proof}
 We proceed by induction on the length $n = |w|$ of the parity sequence.
 
-\textit{Base cases.}
-If $w = O$ (single odd step), then $e = 0$, $o = 1$, $b = ga + q$, and
-$\kpoly_w = g^0 h^0 = 1$.  The identity reads $b = ga + q\cdot 1$, which
-holds.  If $w = E$ (single even step), then $o = 0$, $e = 1$, $b = a/h$,
-$\kpoly_w = 0$, and the identity reads $h \cdot (a/h) = a$, which holds.
+\textit{Base case ($n = 0$).}  The empty word has $o = e = 0$,
+$\kpoly_\varepsilon = 0$, and $\Phi_\varepsilon = \mathrm{id}$, so $b = a$
+and the identity reads $1 \cdot a = 1 \cdot a + q \cdot 0$, which holds.
+
+\textit{Inductive step for single-letter words.}
+If $w = O$, then $e = 0$, $o = 1$, $b = ga + q$, and
+$\kpoly_w = 1$.  The identity reads $b = ga + q$, which holds.
+If $w = E$, then $o = 0$, $e = 1$, $b = a/h$, $\kpoly_w = 0$, and the
+identity reads $h \cdot (a/h) = a$, which holds.
 
 \textit{Inductive step.}  Suppose~\eqref{eq:path} holds for all parity
 sequences of length less than $n$, and write $w = w' \cdot \sigma$ where
@@ -433,8 +437,11 @@ by $t \geq 0$:
   b(t) \;=\; g^o \cdot t + b_0,
 \end{equation}
 where $b_0 = (g^o r + q\kpoly_w(g,h))/h^e$ is the image of $r$ under
-$\Phi_w$.  Both $a(t)$ and $b(t)$ are affine functions of $t$; the path
-$a \to b$ is the letter-driven trajectory prescribed by $w$.
+$\Phi_w$.  Since $r \in \{0,1,\ldots,h^e-1\}$ (the canonical representative
+chosen above), $a(t) = h^e t + r \geq 0$ for all $t \geq 0$, with
+$a(t) > 0$ whenever $t \geq 1$ or $r > 0$.  Both $a(t)$ and $b(t)$ are
+affine functions of $t$; the path $a \to b$ is the letter-driven
+trajectory prescribed by $w$.
 
 \begin{remark}
 The residue $r$ encodes the admissibility of the path: a starting value
@@ -459,31 +466,50 @@ Setting $b = a$ in~\eqref{eq:affine-path} requires
 \]
 hence $(h^e - g^o) \cdot t = b_0 - r$, i.e.\ $d \cdot t = b_0 - r$.
 This has an integer solution in $t$ if and only if $d \mid (b_0 - r)$,
-and when it does, the solution is unique:
-\[
-  t^* \;=\; \frac{b_0 - r}{d}, \qquad a^* \;=\; h^e \cdot t^* + r.
-\]
-Substituting $t^* = (b_0 - r)/d$ into $a^* = h^e t^* + r$ and using
+and when it does, the solution is unique; call it $t_0 = (b_0 - r)/d$,
+giving the cycle element $a_0 = h^e t_0 + r$.  Substituting and using
 $b_0 = (g^o r + q k)/h^e$:
 \[
-  d \cdot a^* = h^e b_0 - g^o r
+  d \cdot a_0 = h^e b_0 - g^o r
               = (g^o r + qk) - g^o r
               = qk.
 \]
-The residue $r$ cancels exactly, giving the integer identity $d\cdot a^* = qk$
-— the cycle element identity developed in Section~\ref{sec:cycle}.
+The admissibility residue $r$ cancels exactly.  We record this as a corollary.
+
+\begin{corollary}[Cycle element identity]
+\label{cor:cycle-element}
+Let $w$ be a parity sequence with $o$ odd steps, $e$ even steps, and
+$d = h^e - g^o \neq 0$.  If the affine path family~\eqref{eq:affine-path}
+intersects the diagonal $a = b$ at a non-negative integer $t_0$, then the
+cycle element $a_0 = h^e t_0 + r$ satisfies
+\begin{equation}
+  \label{eq:cycle-element}
+  d \cdot a_0 \;=\; q \cdot \kpoly_w(g,h).
+\end{equation}
+The defining congruence for $r$ gives $h^e \mid g^o r + qk$, so $b_0 =
+(g^o r + qk)/h^e$ is an integer.  The admissibility residue $r$ does not
+appear in~\eqref{eq:cycle-element}: if $d \mid b_0 - r$, the integer
+solution $t_0 = (b_0 - r)/d$ is unique because $d \neq 0$.  Hence $a_0$
+is the unique fixed point of $\Phi_w$ associated with this word $w$ and
+this admissibility residue $r$.  Other elements of a nontrivial orbit correspond to
+rotations of $w$; the fixed-point value $a_0$ is determined entirely by
+$w$ and the basis $(g,h,q)$ via~\eqref{eq:cycle-element}.
+\end{corollary}
+
 The affine path family thus makes explicit what the cycle identity summarises:
 a cycle exists when the path family and the diagonal $a = b$ intersect at a
-non-negative integer $t^*$, and at that intersection the admissibility residue
-drops out.
+non-negative integer $t_0$, and at that intersection the admissibility residue
+drops out.  Section~\ref{sec:cycle} develops this identity as an algebraic
+object in its own right.
 
 \begin{remark}
-For path problems, $t$ ranges freely over $\ZZ_{\geq 0}$, giving an
-infinite arithmetic progression of valid $(a,b)$ pairs.  For cycle
-problems, $t$ is pinned to the single value $t^*$ (if it exists and is
-a non-negative integer).  The transition from path to cycle is therefore
-a transition from a free parameter to a determined one — the same
-phenomenon seen in the cycle element identity, here made geometric.
+For path problems, $t$ ranges over $\ZZ_{\geq 0}$: since
+$r \in \{0,1,\ldots,h^e-1\}$, every $t \geq 0$ gives $a(t) \geq 0$,
+and the full family is an infinite arithmetic progression of valid
+$(a,b)$ pairs.  For cycle problems, $t$ is pinned to a single determined
+value $t_0$ (if an integer solution exists).  The transition from path to
+cycle is therefore a transition from a free parameter to a determined one
+— the same phenomenon seen in the cycle element identity, here made geometric.
 \end{remark}
 
 \begin{example}[The $5x+1$ cycle at $a = 17$]
@@ -504,9 +530,9 @@ so the affine family is
 \[
   a(t) = 128t + 17, \qquad b(t) = 125t + 17.
 \]
-Setting $a = b$: $3t = b_0 - r = 0$, giving $t^* = 0$ and $a^* = 17$.
+Setting $a = b$: $3t = b_0 - r = 0$, giving $t_0 = 0$ and cycle element $a_0 = 17$.
 The equation $3t = 0$ has exactly one non-negative integer solution,
-so $a = 17$ is the unique element of this cycle.
+so $17$ is the unique element of this cycle.
 \end{example}
 
 %------------------------------------------------------------
@@ -516,12 +542,12 @@ so $a = 17$ is the unique element of this cycle.
 
 Section~\ref{sec:affine-paths} derived the cycle element identity as a
 geometric consequence: setting $a = b$ in the affine path family forces
-$d \cdot a^* = qk$.  We now develop this identity as an algebraic object
+$d \cdot a = qk$.  We now develop this identity as an algebraic object
 in its own right, establishing the reduction theory and the successor
 operation that generate all cycle representatives.
 
-Setting $a = b$ in the path identity~\eqref{eq:path} gives the
-\emph{cycle element identity}: for any fixed point $\Phi_w(a) = a$,
+Corollary~\ref{cor:cycle-element} established the \emph{cycle element identity}
+geometrically: any $a$ with $\Phi_w(a) = a$ satisfies
 \begin{equation}
   \label{eq:cycle-intro}
   (h^e - g^o)\cdot a \;=\; q \cdot \kpoly_w(g,h).
@@ -530,117 +556,141 @@ Writing $d = h^e - g^o$ and $k = \kpoly_w(g,h)$, the \emph{natural solution}
 $(a,q) = (k,d)$ is always an integer solution, so every abstract cycle word
 is immediately realisable.  The interesting question is which cycles admit a
 \emph{reduced} solution — one where $\gcd(a,q) = 1$ and in particular $q=1$.
-We develop the reduction theory in four stages: the natural encoding
-(Proposition~\ref{prop:natural-encoding}), the uniform factor lemma for
-coprime bases (Lemma~\ref{lem:natural-factor}), the joint gcd for non-coprime
-bases (Lemma~\ref{lem:cycle-gcd}), and the reduced identity and its
-consequences (Theorems~\ref{thm:cycle}--\ref{thm:q-determined},
+We develop the reduction theory in four stages: (1) the natural encoding
+(Proposition~\ref{prop:natural-encoding}); (2) the definition of the joint
+gcd $\delta_w$ (Definition~\ref{def:delta}) and the uniform factor lemma for
+coprime bases (Lemma~\ref{lem:natural-factor}); (3) the behaviour of $\delta_w$
+for non-coprime bases (Lemma~\ref{lem:cycle-gcd}); and (4) the reduced
+identity and its consequences (Theorems~\ref{thm:cycle}--\ref{thm:q-determined},
 Propositions~\ref{prop:pointwise}--\ref{prop:ksucc}).
 
-Throughout this section $\gcd$ denotes the positive greatest common divisor,
-so $\gcd(k,|d|) > 0$ always, and the sign of $q_w = d/\gcd(k,|d|)$ matches
-the sign of $d$.
+Throughout this section $\gcd$ denotes the positive greatest common divisor.
+All quantities $k_i = \kpoly_{w_i}(g,h)$ and $d = h^e - g^o$ are integers
+evaluated at a fixed basis $(g,h)$; the gcd is taken over these integer values.
 
 \begin{proposition}[Every abstract cycle has a natural encoding]
 \label{prop:natural-encoding}
 Let $w$ be any parity sequence with $o \geq 1$ odd steps and $e$ even steps,
-and let $(g,h)$ be any integer pair.  Setting $q = d = h^e - g^o$ and
-$a = k = \kpoly_w(g,h)$, the pair $(a,q)$ satisfies $\Phi_w(a) = a$ at
-basis $(g,h,q)$.  In particular, every abstract cycle word $w$ is realised
-as a genuine integer cycle at every integer pair $(g,h)$ simply by choosing
-$q = h^e - g^o$.
+and let $(g,h)$ be a pair of positive integers with $d = h^e - g^o \neq 0$.
+Setting $q = d$ and $a = k = \kpoly_w(g,h)$, the pair $(a,q)$ satisfies
+$\Phi_w(a) = a$ at basis $(g,h,q)$.  In particular, every abstract cycle
+word $w$ is realised as a genuine integer cycle at every pair $(g,h)$ with
+$h^e \neq g^o$, simply by choosing $q = h^e - g^o$.
 \end{proposition}
 
 \begin{proof}
 The pair $(a,q) = (k,d)$ satisfies $d \cdot k = d \cdot k$ trivially,
-hence $d \cdot a = q \cdot k$.  Setting $b = a$ in the path
-identity~\eqref{eq:path} shows this is equivalent to $\Phi_w(a) = a$.
+hence $d \cdot a = q \cdot k$.  By the path identity~\eqref{eq:path},
+$h^e \cdot \Phi_w(k) = g^o \cdot k + d \cdot k = (g^o + d) k = h^e k$,
+and since $h > 0$ we may cancel to obtain $\Phi_w(k) = k$.
+
+It remains to verify that every intermediate E-step is admissible,
+i.e.\ that the running value is always divisible by $h$ when an E-step
+is applied.  The intermediate states are precisely the rotation structural
+values $k_0 = k, k_1, \ldots, k_{n-1}$.  For an O-leading rotation,
+$k_{i+1} = g k_i + d$ (Proposition~\ref{prop:ksucc}), which is an
+integer.  For an E-leading rotation, the structural polynomial definition gives
+$k_{i+1} = k_i / h$, so $h \mid k_i$ and the division is admissible.  Thus the
+orbit $k \to k_1 \to \cdots \to k_{n-1} \to k$ consists entirely of
+integers and all E-steps are admissible.
 \end{proof}
 
 \begin{remark}
 Since the natural solution exists for every $(g,h)$ and every word $w$, the
 existence of an integer cycle is not in itself remarkable — it is guaranteed
-by construction once $q = d$.  What matters is \emph{reduction}: when
-$\gcd(g,h)=1$ the factor $f = \gcd(k,|d|)$ is uniform across the whole
-cycle (Lemma~\ref{lem:natural-factor} below), and dividing through gives
-the reduced solution $a_w = k/f$, $q_w = d/f$ with $\gcd(a_w,|q_w|)=1$.
-The mythical cycles are the reduced cycles at the standard Collatz basis
-$(g,h,q) = (3,2,1)$ with $o > 1$: these would require $|d| = |2^e - 3^o|$
-to divide $\kpoly_w(3,2)$, and no such cycle is known to exist.
+by construction once $q = d$.  What matters is reduction, developed in
+Theorem~\ref{thm:cycle}.
 \end{remark}
 
-\begin{lemma}[Natural cycles carry a uniform factor]
+\begin{definition}[Joint gcd of a cycle at a basis]
+\label{def:delta}
+Let $w = w_0 w_1 \cdots w_{n-1}$ be the complete parity sequence of a
+cycle — the full closed sentence traversed by a periodic orbit — with $o$
+odd steps and $e$ even steps in total, and let $(g,h)$ be a pair of positive integers.
+The $n$ \emph{rotations} $w_0, w_1, \ldots, w_{n-1}$ are the $n$ indexed
+re-readings of the same cycle starting from each position in turn (not
+necessarily distinct if $w$ is a proper power); each rotation $w_i$ is
+again a complete sentence of length $n$.  Write
+$k_i = \kpoly_{w_i}(g,h) \in \ZZ$ for the structural value of the $i$-th
+rotation evaluated at $(g,h)$, and $d = h^e - g^o \in \ZZ$.  The
+\emph{joint gcd of the cycle $w$ at $(g,h)$} is
+\[
+  \delta_w \;:=\; \gcd(k_0,\, k_1,\, \ldots,\, k_{n-1},\, |d|) \;\in\; \ZZ_{>0}.
+\]
+This is a property of the complete cycle, not of any individual rotation or
+fragment: omitting any rotation can only increase the value of $\delta_w$.
+\end{definition}
+
+\begin{lemma}[Coprime bases: single-rotation gcd equals joint gcd]
 \label{lem:natural-factor}
 Let $\gcd(g,h) = 1$, let $w$ be a parity sequence with $o \geq 1$, and let
-$w_0, w_1, \ldots, w_{n-1}$ be the cyclic rotations of $w$ with structural
-values $k_i = \kpoly_{w_i}(g,h)$.  Set $d = h^e - g^o$ and
-$f = \gcd(k_0, |d|)$.  Then $f \mid k_i$ for every $i$, and consequently
-$f \mid \gcd(k_0, k_1, \ldots, k_{n-1}, |d|)$.  In particular, the
-reduced solution $a_w = k_0/f$, $q_w = d/f$ is a valid integer cycle.
+$k_i = \kpoly_{w_i}(g,h)$ and $d = h^e - g^o$.  Then
+$\gcd(k_i,\,|d|) = \gcd(k_j,\,|d|)$ for all $i,j$, and
+\[
+  \delta_w \;=\; \gcd(k_i,\,|d|) \quad \text{for any rotation } i.
+\]
+In particular $\gcd(a_w,\,|q_w|) = 1$.
 \end{lemma}
 
 \begin{proof}
-We show $f \mid k_i$ is preserved under each rotation step.  By hypothesis
-$f \mid k_0$ and $f \mid |d|$.
+Set $f = \gcd(k_0,|d|)$.  We show $f \mid k_i$ for every $i$ by induction
+on rotation steps.
 
-\emph{O-leading step} ($w_i$ begins with O): the successor value satisfies
-$k_{i+1} = g k_i + d$ (Proposition~\ref{prop:ksucc}).  Since $f \mid k_i$
-and $f \mid d$, we have $f \mid g k_i + d = k_{i+1}$.
+\emph{O-leading step} ($w_i$ begins with O): $k_{i+1} = g k_i + d$
+(Proposition~\ref{prop:ksucc}).  Since $f \mid k_i$ and $f \mid d$,
+we have $f \mid k_{i+1}$.
 
-\emph{E-leading step} ($w_i$ begins with E): the successor value satisfies
-$k_{i+1} = k_i / h$.  Since $\gcd(g,h) = 1$, we have $\gcd(h, d) =
-\gcd(h, h^e - g^o) = \gcd(h, g^o) = 1$, so $\gcd(f, h) = 1$.  Together
-with $f \mid k_i$ and $h \mid k_i$ (required for the E-step to yield an
-integer), $\gcd(f,h) = 1$ gives $f \mid k_i/h = k_{i+1}$.
+\emph{E-leading step} ($w_i$ begins with E): $k_{i+1} = k_i/h$.
+Since $\gcd(g,h)=1$, $\gcd(h,d) = \gcd(h,h^e-g^o) = \gcd(h,g^o) = 1$,
+so $\gcd(f,h)=1$.  With $f \mid k_i$ and $h \mid k_i$, coprimality gives
+$f \mid k_i/h = k_{i+1}$.
 
-Since $f$ divides every $k_i$ and $|d|$, the reduced pair
-$(k_0/f,\, d/f)$ satisfies $d \cdot (k_0/f) = (d/f) \cdot k_0$,
-confirming it is a valid integer cycle.
+Hence $f \mid k_i$ for all $i$, so $f \mid \delta_w$.  But $\delta_w \mid k_0$
+and $\delta_w \mid |d|$ by definition, hence $\delta_w \mid f$.  Therefore
+$\delta_w = f = \gcd(k_i,|d|)$ for any $i$, and $\gcd(a_w,|q_w|) =
+\gcd(k/\delta_w,|d/\delta_w|) = 1$.
 \end{proof}
 
 \begin{remark}
-This lemma explains the role of $\gcd(g,h) = 1$ in the reduction argument.
-It is not that reduced cycles fail to exist when $\gcd(g,h) > 1$ — they
-may still exist — but the propagation argument above breaks down at the
-E-leading step: $\gcd(f,h) = 1$ need not hold when $h$ and $d$ share a
-common factor, so $f \mid k_i$ does not automatically imply $f \mid k_i/h$.
-When $\gcd(g,h) = 1$, every natural cycle carries the uniform factor
-$f = \gcd(k_0, |d|)$, and dividing through always produces a reduced cycle.
+This lemma explains the role of $\gcd(g,h) = 1$: the propagation argument
+fails at E-leading steps when $\gcd(h,d) > 1$, so $f \mid k_i$ need not
+imply $f \mid k_i/h$.  Readers focused on the standard Collatz basis, where
+$\gcd(3,2) = 1$ always holds, may skip the next subsection and proceed
+directly to Theorem~\ref{thm:cycle}.
 \end{remark}
 
-\begin{lemma}[Cycle gcd under non-coprime bases]
+\subsection*{The non-coprime case}
+
+\begin{lemma}[Non-coprime bases: per-rotation gcds are inconsistent]
 \label{lem:cycle-gcd}
 Let $w = w_0 w_1 \cdots w_{n-1}$ be a parity sequence with $o$ odd steps,
 $e$ even steps, $d = h^e - g^o$, and let $r = \gcd(g,h)$.  If $r > 1$
-then $r \mid \kpoly_{w_i}(g,h)$ for every rotation $w_i$ of $w$, and
-$r \mid d$.  Consequently $\gcd(\kpoly_{w_i}(g,h),\, d)$ is divisible by
-$r$ for each $i$, and in general
+then $r \mid d$, and $\gcd(k_i,\,|d|)$ varies across rotations in general:
 \[
-  \gcd(\kpoly_{w_i}(g,h),\, d) \;\neq\; \gcd(\kpoly_{w_j}(g,h),\, d)
+  \gcd(k_i,\,|d|) \;\neq\; \gcd(k_j,\,|d|)
 \]
-for distinct rotations $i \neq j$.  The primitive solution to the cycle
-system therefore requires the \emph{joint} gcd
-\[
-  \delta_w \;:=\; \gcd\!\bigl(\kpoly_{w_0}(g,h),\, \kpoly_{w_1}(g,h),\, \ldots,\,
-                              \kpoly_{w_{n-1}}(g,h),\, |d|\bigr),
-\]
-not the single-rotation gcd $\gcd(\kpoly_{w_i}(g,h), d)$.  When
-$\gcd(g,h) = 1$, the single-rotation gcd suffices: $\delta_w =
-\gcd(\kpoly_w(g,h),\, |d|)$ for any rotation $w$.
+for some pairs of rotations $i \neq j$.  In particular no single-rotation
+gcd equals $\delta_w$ in general, so the reduced solution requires the
+full joint gcd $\delta_w$ (Definition~\ref{def:delta}).
 \end{lemma}
 
 \begin{proof}
-Every monomial $g^{o-1-j}h^{\kappa_j}$ of $\kpoly_w(g,h)$ has positive
-total degree in $g$ and $h$ (since $o \geq 1$), so $r \mid \kpoly_{w_i}$
-for every rotation $w_i$.  Since $r \mid g^o$ and $r \mid h^e$, we have
-$r \mid d$.  Hence $r$ divides every individual $\gcd(\kpoly_{w_i}, d)$,
-and $\gcd(\kpoly_{w_i}, d)$ may differ from $\gcd(\kpoly_{w_j}, d)$ for
-$i \neq j$ because the spurious factor $r$ is distributed unevenly across
-rotation values.  The joint gcd $\delta_w$ absorbs only the common content
-of all rotations and is therefore the correct divisor.  When $\gcd(g,h)=1$,
-the rotation recurrence (Proposition~\ref{prop:ksucc}) acts by
-multiplication by $g$ or $h^{-1}$ modulo $d$, so all $\kpoly_{w_i}$ lie
-in the same $\gcd(\cdot,d)$-class, and the single-rotation formula suffices.
+Since $r \mid g$ and $r \mid h$, we have $r \mid g^o$ and $r \mid h^e$,
+hence $r \mid d = h^e - g^o$.
+
+For a monomial $g^{o-1-j}h^{\kappa_j}$ in $\kpoly_{w_i}(g,h)$: if
+$o - 1 - j > 0$ or $\kappa_j > 0$ then $r$ divides that monomial.  The
+sole exception is $j = o-1$ and $\kappa_{o-1} = 0$, which occurs exactly
+when rotation $w_i$ has the form $O^o E^e$ (all O-steps precede all
+E-steps).  In that case $\kpoly_{w_i}(g,h) = \sum_{j=0}^{o-1} g^{o-1-j}
+= (g^o - 1)/(g-1)$, which need not be divisible by $r$.
+
+Hence $r \mid k_i$ for every rotation that is not of the form $O^o E^e$,
+but may fail for the block rotation.  Since $r \mid d$ regardless, the
+quantity $r$ divides $\gcd(k_i,\,|d|)$ for those rotations where $r \mid k_i$
+but not necessarily for the block rotation.  The per-rotation gcds are
+therefore inconsistent across rotations, and the joint gcd $\delta_w$
+— which takes the minimum over all rotations — is the correct divisor.
 \end{proof}
 
 \begin{remark}
@@ -715,50 +765,63 @@ $[23, 74, 37, 116, 58, 29, 92, 46]$.)
 \begin{theorem}[Reduced cycle element identity]
 \label{thm:cycle}
 Let $w$ be a parity sequence with $o$ odd steps, $e$ even steps,
-$d = h^e - g^o$, and $k = \kpoly_w(g,h)$.  Define
+$d = h^e - g^o \neq 0$, $k = \kpoly_w(g,h)$, and $\delta_w$ the joint gcd of
+the cycle at $(g,h)$ (Definition~\ref{def:delta}).
+The \emph{reduced solution} to~\eqref{eq:cycle-intro} is
 \[
-  \delta \;:=\;
-  \begin{cases}
-    \gcd(k,\,|d|) & \text{if } \gcd(g,h) = 1, \\[4pt]
-    \gcd(k_0,\,k_1,\,\ldots,\,k_{n-1},\,|d|) & \text{otherwise},
-  \end{cases}
+  a_w \;=\; \frac{k}{\delta_w}, \qquad q_w \;=\; \frac{d}{\delta_w},
 \]
-where $k_i = \kpoly_{w_i}(g,h)$ denotes the structural value of the $i$-th
-rotation of $w$.  Then the \emph{reduced solution}
-to~\eqref{eq:cycle-intro} (with $\gcd(a_w,|q_w|)=1$) is
-\[
-  a_w \;=\; \frac{k}{\delta}, \qquad q_w \;=\; \frac{d}{\delta},
-\]
-Here $a_w > 0$ and $q_w$ has the sign of $d$.  Every other solution with
-$a > 0$ is a positive-integer multiple of $(a_w, q_w)$.
+Here $a_w > 0$ and $q_w$ has the sign of $d$.  The pair $(a_w, q_w)$ is
+the minimal positive-$a$ solution: every other solution with $a > 0$ is a
+positive-integer multiple of $(a_w, q_w)$.
+
+When $\gcd(g,h) = 1$, Lemma~\ref{lem:natural-factor} guarantees
+$\delta_w = \gcd(k,\,|d|)$, and in particular $\gcd(a_w,\,|q_w|) = 1$.
 \end{theorem}
 
 \begin{proof}
 The natural solution $(k,d)$ satisfies~\eqref{eq:cycle-intro} by
-inspection.  Dividing both sides by $\delta$ gives the reduced solution
-$(k/\delta,\, d/\delta)$ with $\gcd(k/\delta,\, |d/\delta|) = 1$.  Any
-solution $(a,q)$ with $\gcd(a,|q|)=s>1$ yields a smaller solution $(a/s,
-q/s)$, so the reduced solution is the unique one with $\gcd(a,|q|)=1$ and
-$a > 0$.  When $\gcd(g,h)=1$, Lemma~\ref{lem:natural-factor} guarantees
-that $\delta = \gcd(k,|d|)$ divides every rotation value, so the
-single-rotation formula is valid.  When $\gcd(g,h) > 1$, the joint gcd is
-required by Lemma~\ref{lem:cycle-gcd}.
+inspection.  Since $\delta_w \mid k$ and $\delta_w \mid d$, dividing both
+sides by $\delta_w$ gives the integer solution $(a_w, q_w)$.
+
+For minimality: call $(a, q)$ with $a > 0$ a \emph{consistent encoding}
+of the cycle if $d \cdot a_i = q \cdot k_i$ holds for every rotation $i$,
+where $a_i$ is the cycle element corresponding to rotation $w_i$.  Any
+consistent encoding satisfies $d \cdot a = q \cdot k$ for the chosen
+starting rotation.  Writing $q/d = a/k$ in lowest terms as $p/r$ with
+$\gcd(p,r)=1$, every $a_i = p k_i / r$ must be an integer, so $r \mid
+k_i$ for every $i$.  Likewise $r \mid d$ (since $q = pd/r$).  Hence
+$r \mid \gcd(k_i,\,|d|)$ for all $i$, so $r \mid \delta_w$.  The
+largest such $r$ is $\delta_w$, giving the minimal consistent encoding
+$(a_w, q_w) = (k/\delta_w, d/\delta_w)$; every other consistent encoding
+with $a > 0$ is a positive-integer multiple of $(a_w, q_w)$.
+
+When $\gcd(g,h)=1$, Lemma~\ref{lem:natural-factor} gives $\delta_w =
+\gcd(k,|d|)$, so $\gcd(a_w,|q_w|) = \gcd(k/\delta_w,\,|d/\delta_w|) = 1$.
 \end{proof}
+
+\begin{remark}
+The reduced solution $(a_w, q_w)$ is the minimal positive-$a$ encoding of
+the cycle $w$ at basis $(g,h)$.  A nontrivial positive Collatz cycle would
+correspond to a legal, primitive (minimal-period) parity word $w$ at
+$(g,h,q) = (3,2,1)$, distinct from the known $\mathtt{OEE}$ cycle up to
+rotation.  In the reduced encoding this requires $d = 2^e - 3^o > 0$ and
+$d \mid \kpoly_w(3,2)$ (so that $q_w = d/\delta_w = 1$); the sign
+condition $d > 0$ is essential since $d \mid k$ alone gives only
+$|q_w| = 1$.  No such nontrivial positive cycle is known to exist.
+\end{remark}
 
 \begin{theorem}[Cycle determines $q$]
 \label{thm:q-determined}
-Let $(g,h)$ be an integer pair with $\gcd(g,h)=1$, and let $w$ be a parity
-sequence with $o$ odd steps, $e$ even steps, $d = h^e - g^o$, and
-$k = \kpoly_w(g,h)$.  Given $w$ and $(g,h)$, the additive term $q$ is not a
-free parameter: the reduced value
-\[
-  q_w \;=\; \frac{d}{\gcd(k,\,|d|)}
-\]
-is the unique reduced $q$ for which the integer fixed point
-$a_w = k/\gcd(k,|d|) > 0$ exists.  In particular:
+Let $w$ be a parity sequence with $o$ odd steps, $e$ even steps,
+$d = h^e - g^o$, $k = \kpoly_w(g,h)$, and joint gcd $\delta_w$ as in
+Theorem~\ref{thm:cycle}.  Given $w$ and $(g,h)$, the additive term $q$ is
+not a free parameter: the reduced value $q_w = d/\delta_w$ is the unique
+reduced $q$ for which the integer fixed point $a_w = k/\delta_w > 0$
+exists.  In particular:
 \begin{enumerate}
   \item $q_w$ has the sign of $d = h^e - g^o$.
-  \item $q_w = 1$ if and only if $|d| \mid \kpoly_w(g,h)$.
+  \item $q_w = 1$ if and only if $d > 0$ and $d \mid \kpoly_w(g,h)$.
   \item Every other solution with $a > 0$ uses $q = m q_w$ for some
         $m \in \ZZ_{>0}$, with corresponding cycle element $m a_w$.
 \end{enumerate}
@@ -776,7 +839,7 @@ definition of $q_w = d/\gcd(k,|d|)$.
 \label{prop:pointwise}
 Polynomial non-divisibility of $h^e - g^o$ into $\kpoly_w(g,h)$ in
 $\ZZ[g,h]$ does \emph{not} imply pointwise non-divisibility at any particular
-integer pair $(g,h)$.  Consequently, no argument based solely on polynomial
+pair of positive integers $(g,h)$.  Consequently, no argument based solely on polynomial
 identities can rule out the existence of integer cycles at a specific basis.
 \end{proposition}
 
@@ -815,10 +878,12 @@ case, $h^{-1}$ exists in $\ZZ/(h^e-g^o)\ZZ$ because $\gcd(g,h)=1$ implies
 $\gcd(h,\,h^e-g^o)=1$.  The modulus $h^e - g^o$ is the cycle denominator
 from Theorem~\ref{thm:cycle}, so this operation is only natural in the
 context of a fixed cycle $(o,e)$.
-As a consequence, if $w$ is primitive (not a proper power of a shorter word),
+As a consequence, if $w$ is aperiodic (not a proper power of a shorter word),
 the $n$ rotations of $w$ produce at most $n$ distinct values of
 $\kpoly_{w'}(g,h)$ in $\ZZ/(h^e-g^o)\ZZ$.
-For a non-primitive $w$ of period $p \mid n$, there are at most $p$ distinct values.
+For a periodic $w$ of period $p \mid n$, there are at most $p$ distinct values.
+The $\sigma$-successor of Section~\ref{sec:pvalue} is the same rotation
+expressed via the change of variables $g = u/v$, $h = v$.
 \end{proposition}
 
 \begin{remark}
@@ -852,7 +917,7 @@ viewed through different choices of normalisation.
 \textbf{Flavour} & \textbf{$a$} & \textbf{$q$} & \textbf{$\gcd(|a|,|q|)$} \\
 \hline
 Natural  & $k > 0$ & $d$ (any sign) & $\geq 1$ \\
-Reduced  & $k/\gcd(k,|d|) > 0$ & $d/\gcd(k,|d|)$ (any sign) & $1$ \\
+Reduced  & $k/\delta_w > 0$ & $d/\delta_w$ (any sign) & $1$ if $\gcd(g,h)=1$ \\
 Negative & $< 0$ & $> 0$ & $1$ \\
 Rational & $k/d$ (any sign) & $1$ & $-$ \\
 \hline
@@ -867,15 +932,15 @@ to $d \cdot a = q \cdot k$:
     and $q$ by any $m \in \ZZ_{>0}$ gives another valid solution.  The
     natural solution $(k, d)$ is the representative with $a = k$.
 
-  \item \textbf{Reduced:} dividing the natural solution by
-    $\gcd(k,|d|)$ gives $a = k/\gcd(k,|d|) > 0$ and
-    $q = d/\gcd(k,|d|)$, with $q$ inheriting the sign of $d$ and
-    $\gcd(|a|,|q|) = 1$.  This is the normalisation used throughout
-    the paper.
+  \item \textbf{Reduced:} dividing the natural solution by the joint gcd
+    $\delta_w$ gives $a = k/\delta_w > 0$ and $q = d/\delta_w$, with $q$
+    inheriting the sign of $d$.  This is the minimal positive-$a$ solution.
+    When $\gcd(g,h)=1$, $\delta_w = \gcd(k,|d|)$ and $\gcd(|a|,|q|)=1$.
+    This is the normalisation used throughout the paper.
 
   \item \textbf{Negative:} an independently defined sign-reassignment
     normalisation: $a < 0$, $q > 0$, $\gcd(|a|,|q|) = 1$.  No factor
-    elimination is performed; the sign of the primitive solution is
+    elimination is performed; the sign of the reduced solution is
     assigned so that $q > 0$ rather than so that $a > 0$.
 
   \item \textbf{Rational:} setting $q = 1$ gives $a = k/d \in \mathbb{Q}$.
@@ -886,8 +951,8 @@ to $d \cdot a = q \cdot k$:
 The preferred flavour in this paper is \emph{reduced} with $a > 0$.
 The mythical Collatz cycles are the reduced cycles at $(g,h,q) = (3,2,1)$
 with $o > 1$: they sit at the intersection of the reduced and rational
-flavours, being the primitive solutions ($\gcd(a,q)=1$, $a > 0$) for
-which additionally $q = 1$ and $a \in \ZZ$.
+flavours, being the reduced solutions ($\gcd(a,q)=1$, $a > 0$, since
+$\gcd(3,2)=1$) for which additionally $q = 1$ and $a \in \ZZ$.
 
 The flavour classification applies to any fixed specialisation $(g,h)$.
 Section~\ref{sec:pvalue} steps back and asks a different question: how many
@@ -898,6 +963,27 @@ ways can a parity sequence be represented, independently of any basis?
 \label{sec:pvalue}
 \label{sec:grand-cycle}
 %------------------------------------------------------------
+
+The preceding sections computed $\kpoly_w(g,h)$ for specific families of
+words — Steiner words, compositions, cycle words.  This section asks a
+different question: how many ways can a single parity sequence $w$ be
+represented, and how do those representations relate to one another?  The
+answer is five: bits ($p_w$), the structural polynomial $\kpoly_w(g,h)$,
+its integer specialisation $\kpoly_w(3,2)$, the $\sigma$-polynomial
+$\sigma_w(u,v)$, and the orbit parity sequence $\phi_w$.  The diagram below
+makes all transformations between them explicit.  In particular, the
+specialisation from $\kpoly_w(g,h)$ to $\kpoly_w(3,2)$ (edge E) has no
+direct inverse: recovering $\kpoly_w(g,h)$ from $\kpoly_w(3,2)$ requires
+going via $\phi_w$ and the bits (the round-trip F$\to$C$\to$B).
+Traversing edge F requires $d = h^e - g^o$ as metadata alongside
+$\kpoly_w(3,2)$ and the basis $(g,h)$: one applies the $(3,2,d)$ Collatz
+map starting from $k = \kpoly_w(3,2)$ and reads parity steps until the
+orbit returns to $k$.  No knowledge of $n$ is needed — the cycle closes
+automatically.  If $(o,e)$ are known rather than $d$, they suffice since
+$d$ is computable from them; but $n = o + e$ alone does not determine $d$
+and is not what F requires.
+This indirectness reflects the distinction between polynomial and pointwise
+properties established in Proposition~\ref{prop:pointwise}.
 
 \begin{definition}[Orbit parity sequence $\phi_w$]
 \label{def:phi}
@@ -911,13 +997,32 @@ map.  The \emph{orbit parity sequence} of $w$ is the parity sequence
 \]
 \end{definition}
 
+A word on what \emph{invertible} means here.  Invertibility does not
+require that every edge admit a direct algebraic inverse.  It requires
+only that every representation can be recovered from every other by
+composing forward transformations along some path in the diagram.  Each
+forward transformation is lossless: no information about $w$ is discarded,
+so any path that returns to the originating node achieves a genuine
+inverse.  In particular, edge~E (specialisation to $(3,2)$) has no direct
+inverse, but the composition F$\circ$C$\circ$B returns to $\kpoly_w(g,h)$
+via three lossless forward steps.  The result is a true inverse of~E,
+not an approximation.  This is the ordinary transitivity of function
+composition: $f$ is invertible whenever there exist functions $g_1, g_2,
+\ldots$ such that $g_k \circ \cdots \circ g_1 \circ f = \mathrm{id}$,
+regardless of how many steps the composition requires.  Since $\kpoly_w(3,2)$ does not cover all of $\mathbb{N}$ — only those
+integers that arise as structural polynomials of valid parity sequences —
+edge~E is a bijection onto its image.  On that image, F$\circ$C$\circ$B
+is both a left and right inverse of~E, making it a two-sided inverse on
+the domain of valid parity sequence representations.
+
 Every parity sequence $w$ of length $n$ with $o$ odd steps lives simultaneously
-in five equivalent representations.  The canonical integer encoding
-$(\text{bits}, p_w)$ sits at the centre; four structural representations ---
-$\sigma_w(u,v)$, $\kpoly_w(g,h)$, $\kpoly_w(3,2)$, and $\phi_w$
-(Definition~\ref{def:phi}) --- surround it.  The diagram below serves as a
-navigational frame for the subsections that follow; each subsection develops
-one or more nodes and the edges connecting them.
+in these five representations, connected by explicitly invertible
+transformations.  The canonical integer
+encoding $(\text{bits}, p_w)$ sits at the centre; four structural
+representations --- $\sigma_w(u,v)$, $\kpoly_w(g,h)$, $\kpoly_w(3,2)$, and
+$\phi_w$ (Definition~\ref{def:phi}) --- surround it.  The diagram below serves
+as a navigational frame for the subsections that follow; each subsection
+develops one or more nodes and the edges connecting them.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -968,7 +1073,7 @@ one or more nodes and the edges connecting them.
   & (via \textbf{F} then \textbf{C} then \textbf{B}) \\[8pt]
 \textbf{F} & $\kpoly_w(3,2) \to \phi_w$ (Def.~\ref{def:phi})
   & $q = 2^e{-}3^o$,\ $a_0 = \kpoly_w(3,2)$;\ iterate $(3,2,q)$ map
-  & (via \textbf{C} then \textbf{B}) \\[6pt]
+  & (via \textbf{C} then \textbf{B} then \textbf{E}) \\[6pt]
 \hline
 \end{tabular}
 
@@ -1078,6 +1183,10 @@ position $j$; the exponent of $v$ is the bit-position of the $j$-th $O$-step.
 Specialising to $u = 1$, $v = 2$ recovers the bit-encoding: $N_w = \sigma_w(1,2)$,
 and consequently $p_w = \sigma_w(1,2) + 2^n$ (edge A inverse).
 
+The change of variables also induces a natural rotation operator on $\sigma_w$,
+corresponding to the $\kpoly_w$ successor of Proposition~\ref{prop:ksucc}
+under the same substitution.
+
 \subsubsection*{The successor operation on $\sigma$}
 
 Each step of the Collatz map acts on $\sigma_w(u,v)$ by an elegant polynomial
@@ -1093,20 +1202,24 @@ of $\sigma_w$ has $v$-exponent zero.  Define
   \operatorname{succ}_\sigma(\sigma_w(u,v))
   \;:=\; u^{\gamma_w} \cdot \sigma_w(u,v) \cdot v^{-1}.
 \]
-Then $\operatorname{succ}_\sigma(\sigma_w(u,v)) = \sigma_{w'}(u,v)$, where $w'$
-is the parity sequence obtained by rotating $w$ left by one step (moving the
-first bit to the last position).
+Then, in the quotient ring $\ZZ[u,v]/(u^o - 1, v^n - 1)$,
+\[
+  \operatorname{succ}_\sigma(\sigma_w(u,v)) \;=\; \sigma_{w'}(u,v),
+\]
+where $w'$ is the parity sequence obtained by rotating $w$ left by one step
+(moving the first bit to the last position).  The relation $v^n = 1$ is
+essential: the factor $v^{-1}$ introduced at each step accumulates to $v^{-n} = 1$
+after a full cycle of $n$ steps, returning to $\sigma_w$.  The relation $u^o = 1$
+is essential for the same reason with respect to the $O$-step count.
+This identity does \emph{not} hold as a free polynomial identity in $\ZZ[u,v]$.
 
 \begin{remark}
 Adopting the convention $0^0 = 1$, we have $\gamma_w = \sigma_w(1, 0)$:
 each term $1^{o-1-j} \cdot 0^{p_j}$ vanishes unless $p_j = 0$, which
 occurs precisely when $j = 0$ and $w$ begins with an $O$-step.
+Complex roots of unity $u = \omega_o$, $v = \omega_n$ are one natural
+realisation of the quotient-ring constraints.
 \end{remark}
-
-The successor formula is valid in any ring where $u^o = 1$ and $v^n = 1$:
-the cycle closes after $n$ steps since $v^{-n} = 1$, returning to $\sigma_w$.
-Complex roots of unity are one natural realisation of these constraints, but
-the algebraic structure depends only on these two relations.
 
 \subsubsection*{Evaluation at roots of unity}
 
@@ -1288,8 +1401,11 @@ at position $8$), and the glitched orbit was constructed by reading the bits
 of $281 - 256 = 25$ as a parity sequence.
 \end{remark}
 
-The examples above illustrate the theory across a range of bases and word
-types.  Section~\ref{sec:abstract-cycle} reflects on what this framework,
+A full end-to-end illustration of all five representations (edges A–F of the
+diagram in Section~\ref{sec:pvalue}) for a single word appears in the worked
+example of Section~\ref{sec:grand-cycle}.  The examples above focus on the
+structural polynomial and cycle element identity across a range of bases and
+word types.  Section~\ref{sec:abstract-cycle} reflects on what this framework,
 taken as a whole, reveals — and what it cannot.
 
 %------------------------------------------------------------
@@ -1336,11 +1452,12 @@ Once a parity sequence $w$ and an encoding basis $(g,h)$ are chosen,
 everything else is determined.  The cycle element $a_w = \kpoly_w(g,h) /
 \gcd(\kpoly_w(g,h), |d|)$ and the additive parameter $q_w = d /
 \gcd(\kpoly_w(g,h), |d|)$ follow with no further freedom.  There are no
-free integer cycles: every integer cycle in any basis is an encoding of
-some abstract parity sequence $w$, with the parameters $(a,q)$ fixed by
-$(w, g, h)$ through the reduced cycle element identity.  The space of
-abstract parity sequences is therefore in bijection with the space of
-reduced integer cycles across all bases.
+free integer cycles: for any parity sequence $w$ and basis $(g,h)$, the
+parameters $(a_w, q_w)$ are fixed by $(w, g, h)$ through the reduced cycle
+element identity — there is no further freedom.  Conversely, every reduced
+integer cycle $(a, q)$ at a basis $(g,h)$ arises from the parity sequence
+$w$ that its orbit traces, so the map $(w, g, h) \mapsto (a_w, q_w)$ is
+surjective onto reduced integer cycles.
 
 This perspective also reveals shared structure across different bases.
 Two bases $(g_1,h_1,q_1)$ and $(g_2,h_2,q_2)$ that yield the same
@@ -1385,9 +1502,10 @@ E-steps.
 
 The limits are not total, however.  The structural polynomial does carry
 modular information, and only a finite truncation is needed to extract it.
-Every monomial $g^{o-1-j} h^{\kappa_j}$ with $j \geq 3$ has $\kappa_j \geq 3$
-(since the $\kappa$-tuple is non-decreasing and $\kappa_j \geq j$)
-and therefore contributes a multiple of $h^3$ to $\kpoly_w(g,h)$.  The
+Every monomial $g^{o-1-j} h^{\kappa_j}$ with $j \geq 3$ has $\kappa_j \geq j \geq 3$
+(since the $\kappa$-tuple is non-decreasing and $\kappa_j \geq j$ for all $j$),
+so every such monomial is divisible by $h^3$ and contributes a multiple of
+$h^3$ to $\kpoly_w(g,h)$.  The
 first three terms alone,
 \[
   g^{o-1} + g^{o-2} h^{\kappa_1} + g^{o-3} h^{\kappa_2} \pmod{h^3},
@@ -1398,14 +1516,12 @@ at $(g,h) = (8,3)$ the same truncation reads off the mod-$27$ character.
 The polynomial carries both facts simultaneously, as specialisations of a
 single identity in $\ZZ[g,h]$.
 
-What the polynomial cannot tell us is whether the mod-$8$ structure of the
-$(3,2,1)$ map, or the mod-$27$ structure of the $(8,3,1)$ map, is the
-right tool for attacking the cycle question in each case.  Those residue
-structures are quite different — the arithmetic accidents that make one
-basis tractable need not have any analogue in the other — and the details
-almost certainly matter.  The abstract framework reveals the \emph{form}
-of the modular constraint; deciding its \emph{utility} requires engaging
-with the specific arithmetic of the basis in question.
+The abstract framework reveals the \emph{form} of the modular constraint —
+the mod-$h^3$ truncation above is a concrete instance — but deciding whether
+that constraint is the right tool for attacking the cycle question at a
+specific basis requires engaging with the arithmetic of that basis.  The
+mod-$8$ structure of $(3,2,1)$ and the mod-$27$ structure of $(8,3,1)$ are
+genuinely different, and the details matter.
 
 In short: the abstract path framework is the right language for
 understanding \emph{what} cycles are and \emph{how} they relate to one
@@ -1415,10 +1531,8 @@ any parity sequence $w$ and any $(g,h)$, a cycle always exists if one is
 prepared to let $q$ be determined by $(w,g,h)$ via the reduced cycle
 element identity, but whether that $q$ equals a pre-specified value —
 such as $q = 1$ for the standard Collatz map — is a question the abstract
-form alone cannot settle.  For that, one must engage with the concrete
-arithmetic of the map.  The abstract framework reaches further into that
-arithmetic than it might first appear, but both levels of description are
-necessary, and they overlap more than the literature typically acknowledges.
+form alone cannot settle.  Both levels of description are necessary, and
+they overlap more than the literature typically acknowledges.
 
 %------------------------------------------------------------
 \section{Related Work}
