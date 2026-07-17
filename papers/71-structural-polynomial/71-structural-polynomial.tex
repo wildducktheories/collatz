@@ -49,18 +49,26 @@ valid for any parity sequence; (2) a \emph{geometric polynomial theorem} showing
 that Steiner words $\St(\alpha,\beta)$ have $\kpoly(g,h) = (g^\alpha -
 h^\alpha)/(g-h)$, independent of $\beta$; (3) a \emph{composition rule}
 $\kpoly_{Q\circ P} = g^{o_Q}\kpoly_P + h^{e_P}\kpoly_Q$; and (4) a
-\emph{cycle element identity} $a = q\kpoly_w/(h^e - g^o)$ giving the fixed
-point as a rational function of $(g,h,q)$.
+\emph{cycle element identity} $(h^e - g^o)\cdot a = q\cdot\kpoly_w(g,h)$
+giving the fixed point in terms of $(g,h,q)$.
 
-Beyond these core results, we develop a system of five equivalent
+Beyond these core results, the path identity is read as a congruence
+constraint, yielding an \emph{affine path family} parameterised by an
+\emph{admissibility residue} $r$; cycles arise precisely when this family
+intersects the diagonal $a = b$.  Integer solutions to the cycle element
+identity are classified into four \emph{cycle flavours} (natural, reduced,
+negative, rational), each an independently defined normalisation of the
+solution pair $(a,q)$.  We also develop a system of five equivalent
 representations of any parity sequence --- its bits (the $p$-value), the
 structural polynomial $\kpoly_w(g,h)$, its specialisation $\kpoly_w(3,2)$,
 the $\sigma$-polynomial $\sigma_w(u,v)$, and the orbit parity sequence $\phi_w$ ---
-connected by explicitly invertible transformations.  We also introduce a
+connected by explicitly invertible transformations.  We introduce a
 successor operation on $\kpoly_w$ in $\ZZ/(h^e-g^o)\ZZ$ that generates all
 cycle representatives by rotation, and we warn that polynomial
 non-divisibility of $h^e - g^o \nmid \kpoly_w$ in $\ZZ[g,h]$ does not
-preclude pointwise divisibility at specific integer bases.
+preclude pointwise divisibility at specific integer bases.  A concluding
+section reflects on what the abstract path framework reveals and what it
+cannot settle.
 Applications to the $2a+1$ composition identity are developed in the companion
 paper~\cite{paper73}.
 \end{abstract}
@@ -95,9 +103,9 @@ makes the obstruction explicit.
 The power of the symbolic approach is illustrated dramatically by the $5x+1$
 system, which possesses a non-trivial cycle $17 \to 43 \to 27 \to 17$ under
 the Syracuse $5x+1$ map.  Via the cycle element identity (Section~\ref{sec:cycle}),
-the fixed point $a = 17$ emerges as a rational function of $(g,h,q)$: it
-equals $q \cdot \kpoly(g,h)/(h^e - g^o)$, where $\kpoly(5,2) = 51$ and
-$h^7 - g^3 = 128 - 125 = 3$, giving $a = 51/3 = 17$.  The near-miss
+the fixed point $a = 17$ is determined by
+$(h^e - g^o)\cdot a = q\cdot\kpoly(g,h)$: with $\kpoly(5,2) = 51$ and
+$h^7 - g^3 = 128 - 125 = 3$, we get $3 \cdot a = 51$, giving $a = 17$.  The near-miss
 $h^e - g^o = 3$ is the arithmetic miracle that makes the cycle possible, and
 it is visible as a polynomial phenomenon.
 
@@ -105,14 +113,21 @@ The paper is organised as follows.  Section~\ref{sec:path} establishes the
 path identity and defines the structural polynomial.  Section~\ref{sec:steiner}
 proves the geometric polynomial theorem for Steiner words.
 Section~\ref{sec:composition} derives the composition rule.
-Section~\ref{sec:cycle} applies these tools to cycle element identification,
-and includes a remark cautioning that polynomial non-divisibility does not
-imply pointwise non-divisibility.
+Section~\ref{sec:affine-paths} develops the affine path family, the
+admissibility residue, and their intersection with cycles.
+Section~\ref{sec:cycle} develops the cycle element identity as an algebraic
+object: natural and reduced encodings, the uniform factor lemma, the successor
+operation, and a proposition cautioning that polynomial non-divisibility does
+not imply pointwise non-divisibility.
+Section~\ref{sec:cycle-flavours} classifies cycle encodings into four flavours
+(natural, reduced, negative, rational).
 Section~\ref{sec:pvalue} develops the five representations of a parity
-sequence --- the $p$-value, the $\sigma$-polynomial, $\kpoly_w(g,h)$,
-$\kpoly_w(3,2)$, and the orbit parity sequence $\phi_w$ --- and unifies them in a
-single diagram.
+sequence --- the orbit parity sequence $\phi_w$, the $p$-value, the
+$\sigma$-polynomial, $\kpoly_w(g,h)$, and $\kpoly_w(3,2)$ --- and unifies
+them in a single diagram.
 Section~\ref{sec:examples} collects worked examples illustrating the theory.
+Section~\ref{sec:abstract-cycle} reflects on what the abstract path framework
+reveals and what it leaves open.
 
 %------------------------------------------------------------
 \section{The Structural Polynomial and Path Identity}
@@ -153,8 +168,10 @@ preceded by $0$, $2$, $3$ even steps respectively, so $\kappa = (0, 2, 3)$.
 
 \begin{remark}
 For the standard Collatz basis ($g=3$, $q=1$), a parity sequence beginning
-with an $O$-step (i.e.\ $\kappa_0 = 0$) corresponds to a legal orbit starting
-from an odd integer if and only if its $\kappa$-tuple is strictly increasing
+with an $O$-step (i.e.\ $\kappa_0 = 0$) corresponds to a \emph{legal} orbit
+(one driven by the actual parity of each element, not by the letters of $w$)
+starting from an odd integer if and only if its $\kappa$-tuple is strictly
+increasing
 (equivalently, no two $O$-steps are adjacent).  The polynomial framework works
 unchanged for non-strict profiles (see Example~\ref{ex:noncollatz}).
 \end{remark}
@@ -364,6 +381,12 @@ exponents are displaced upward by the $e_P$ even divisions already consumed
 by $P$.
 \end{remark}
 
+The composition rule tells us how structural polynomials combine, but it
+leaves open a complementary question: given a fixed word $w$, which starting
+values $a$ are compatible with it as a path, and which make it a cycle?
+Section~\ref{sec:affine-paths} answers this by reading the path identity as
+a congruence constraint on $a$.
+
 %------------------------------------------------------------
 \section{Affine Path Equations}
 \label{sec:affine-paths}
@@ -376,6 +399,8 @@ it characterises the full family of integer pairs $(a,b)$ for which $w$
 is a valid path.
 
 \subsection{The admissibility constraint}
+
+Throughout this section we assume $\gcd(g,h) = 1$.
 
 For a word $w$ with $o$ odd steps and $e$ even steps, the path identity is
 \[
@@ -392,7 +417,10 @@ a unique solution $r \in \{0, 1, \ldots, h^e - 1\}$:
 \[
   r \;\equiv\; -q\kpoly_w(g,h) \cdot (g^o)^{-1} \pmod{h^e}.
 \]
-We call $r$ the \emph{admissibility residue} of $w$.
+We call $r$ the \emph{admissibility residue} of $w$.  (This use of
+``admissibility'' is distinct from the orbit-level sense in the remark
+after Definition~\ref{def:eprofile}: here it means integrality of each
+E-step's output, not legality of the driving parity sequence.)
 
 \subsection{The affine path family}
 
@@ -442,11 +470,11 @@ $b_0 = (g^o r + q k)/h^e$:
               = (g^o r + qk) - g^o r
               = qk.
 \]
-The residue $r$ cancels exactly, recovering the cycle element
-identity~\eqref{eq:cycle-intro}.  The affine path family thus makes
-explicit what the cycle identity summarises: a cycle exists when the
-path family and the diagonal $a = b$ intersect at a non-negative
-integer $t^*$, and at that intersection the admissibility residue
+The residue $r$ cancels exactly, giving the integer identity $d\cdot a^* = qk$
+— the cycle element identity developed in Section~\ref{sec:cycle}.
+The affine path family thus makes explicit what the cycle identity summarises:
+a cycle exists when the path family and the diagonal $a = b$ intersect at a
+non-negative integer $t^*$, and at that intersection the admissibility residue
 drops out.
 
 \begin{remark}
@@ -460,8 +488,10 @@ phenomenon seen in the cycle element identity, here made geometric.
 
 \begin{example}[The $5x+1$ cycle at $a = 17$]
 \label{ex:affine-5x1}
-Consider $w = \texttt{OEOEEEOEEE}$ at basis $(g,h,q) = (5,2,1)$: $o = 3$,
-$e = 7$, $h^e = 128$, $g^o = 125$, $d = 3$, $\kpoly_w(5,2) = 51$.
+Consider the clause $w = \texttt{OEOEEEOEEE}$ at basis $(g,h,q) = (5,2,1)$:
+$o = 3$, $e = 7$, $h^e = 128$, $g^o = 125$, $d = 3$.
+The $\kappa$-tuple is $(0,1,4)$, giving $\kpoly_w(g,h) = g^2 + gh + h^4$
+and $\kpoly_w(5,2) = 25 + 10 + 16 = 51$.
 
 The admissibility residue is $r \equiv -51 \cdot (125)^{-1} \pmod{128}$.
 Since $125 \equiv -3 \pmod{128}$ and $(-3)^{-1} \equiv 85 \pmod{128}$
@@ -484,7 +514,13 @@ so $a = 17$ is the unique element of this cycle.
 \label{sec:cycle}
 %------------------------------------------------------------
 
-Setting $a = b$ in the path identity~\eqref{eq:path} immediately gives the
+Section~\ref{sec:affine-paths} derived the cycle element identity as a
+geometric consequence: setting $a = b$ in the affine path family forces
+$d \cdot a^* = qk$.  We now develop this identity as an algebraic object
+in its own right, establishing the reduction theory and the successor
+operation that generate all cycle representatives.
+
+Setting $a = b$ in the path identity~\eqref{eq:path} gives the
 \emph{cycle element identity}: for any fixed point $\Phi_w(a) = a$,
 \begin{equation}
   \label{eq:cycle-intro}
@@ -494,6 +530,12 @@ Writing $d = h^e - g^o$ and $k = \kpoly_w(g,h)$, the \emph{natural solution}
 $(a,q) = (k,d)$ is always an integer solution, so every abstract cycle word
 is immediately realisable.  The interesting question is which cycles admit a
 \emph{reduced} solution — one where $\gcd(a,q) = 1$ and in particular $q=1$.
+We develop the reduction theory in four stages: the natural encoding
+(Proposition~\ref{prop:natural-encoding}), the uniform factor lemma for
+coprime bases (Lemma~\ref{lem:natural-factor}), the joint gcd for non-coprime
+bases (Lemma~\ref{lem:cycle-gcd}), and the reduced identity and its
+consequences (Theorems~\ref{thm:cycle}--\ref{thm:q-determined},
+Propositions~\ref{prop:pointwise}--\ref{prop:ksucc}).
 
 Throughout this section $\gcd$ denotes the positive greatest common divisor,
 so $\gcd(k,|d|) > 0$ always, and the sign of $q_w = d/\gcd(k,|d|)$ matches
@@ -739,7 +781,7 @@ identities can rule out the existence of integer cycles at a specific basis.
 \end{proposition}
 
 \begin{proof}
-The $5x+1$ cycle at $a = 17$ with word $w = \texttt{OEE}$ is a concrete
+The $5x+1$ cycle at $a = 17$ with clause $w = \texttt{OEOEEEOEEE}$ is a concrete
 witness (Example~\ref{ex:5x1}): the polynomial $h^7 - g^3$ does not divide
 $\kpoly_w(g,h) = g^2 + gh + h^4$ in $\ZZ[g,h]$, yet at $(g,h) = (5,2)$
 one has $2^7 - 5^3 = 3$ and $\kpoly_w(5,2) = 51 = 3 \times 17$, so $3
@@ -779,43 +821,29 @@ $\kpoly_{w'}(g,h)$ in $\ZZ/(h^e-g^o)\ZZ$.
 For a non-primitive $w$ of period $p \mid n$, there are at most $p$ distinct values.
 \end{proposition}
 
-\begin{corollary}[Canonical cycle basis]
-\label{prop:canonical}
-Let $(g,h)$ be an integer pair with $\gcd(g,h)=1$, let $w$ be a parity
-sequence with $o$ odd and $e$ even steps, and let $d = h^e - g^o$,
-$k = \kpoly_w(g,h)$, $\delta = \gcd(k,|d|) > 0$.  The canonical pair
-\[
-  q_w \;:=\; \frac{d}{\delta}, \qquad
-  a_w \;:=\; \frac{k}{\delta}
-\]
-is the unique reduced solution to $d \cdot a = q \cdot k$ with $a_w > 0$
-(i.e.\ $\gcd(a_w, q_w) = 1$).
-Here $a_w > 0$ and $q_w$ has the sign of $d$.  Every solution with $a > 0$
-is a positive-integer multiple of $(a_w, q_w)$.
-\end{corollary}
-
-\begin{proof}
-This is the content of Theorem~\ref{thm:cycle}.
-\end{proof}
-
 \begin{remark}
-When $d \mid \kpoly_w$, the canonical basis has $q_w = 1$, recovering the
+When $d \mid \kpoly_w$, the reduced solution has $q_w = 1$, recovering the
 standard Collatz setting.
 A worked example ($w = OEEOEOEE$, $q_w = 5$, $a_w = 29$) appears in
 Section~\ref{sec:grand-cycle}.
 \end{remark}
+
+The reduction theory fixes the reduced solution $(a_w, q_w)$ uniquely once
+$(w, g, h)$ are given.  Section~\ref{sec:cycle-flavours} steps back and
+classifies the full family of normalisations of the solution pair $(a, q)$.
 
 %------------------------------------------------------------
 \section{Cycle Flavours}
 \label{sec:cycle-flavours}
 %------------------------------------------------------------
 
-The cycle element identity $d \cdot a = q \cdot k$ has infinitely many
-integer solutions, related by overall scaling and sign.  Different
-conventions on the signs and integrality of $a$ and $q$ give rise to
-what we call \emph{cycle flavours}.  These are not distinct cycles: they
-are the same underlying algebraic object viewed through different choices
-of normalisation.
+The preceding section established that once $(w, g, h)$ are fixed, the
+reduced solution $(a_w, q_w)$ is unique.  But the equation $d \cdot a = q \cdot k$
+admits infinitely many integer solutions related by overall scaling and sign,
+and different conventions on the signs and integrality of $a$ and $q$
+arise naturally in different contexts.  We call these \emph{cycle flavours}.
+They are not distinct cycles: they are the same underlying algebraic object
+viewed through different choices of normalisation.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.4}
@@ -831,23 +859,24 @@ Rational & $k/d$ (any sign) & $1$ & $-$ \\
 \end{tabular}
 \end{center}
 
-The equivalences between flavours all follow from the symmetry of
-$d \cdot a = q \cdot k$:
+Each flavour is an independently defined normalisation of the solutions
+to $d \cdot a = q \cdot k$:
 
 \begin{itemize}
   \item \textbf{Natural $\leftrightarrow$ scaled:} multiplying both $a$
     and $q$ by any $m \in \ZZ_{>0}$ gives another valid solution.  The
     natural solution $(k, d)$ is the representative with $a = k$.
 
-  \item \textbf{Reduced and Negative:} both have $\gcd(|a|,|q|)=1$ but
-    differ in sign convention.  A reduced cycle has $a > 0$ with $q$
-    inheriting the sign of $d$; a negative cycle has $a < 0$ and $q > 0$.
-    The same underlying equation $d \cdot a = q \cdot k$ is satisfied in
-    both cases: negating both $a$ and $q$ simultaneously is always valid,
-    so every reduced cycle with $q < 0$ corresponds to a negative cycle
-    with $q > 0$, and every reduced cycle with $q > 0$ has no negative
-    counterpart with $\gcd = 1$ (since negating gives $a < 0$, $q < 0$,
-    which violates $q > 0$).
+  \item \textbf{Reduced:} dividing the natural solution by
+    $\gcd(k,|d|)$ gives $a = k/\gcd(k,|d|) > 0$ and
+    $q = d/\gcd(k,|d|)$, with $q$ inheriting the sign of $d$ and
+    $\gcd(|a|,|q|) = 1$.  This is the normalisation used throughout
+    the paper.
+
+  \item \textbf{Negative:} an independently defined sign-reassignment
+    normalisation: $a < 0$, $q > 0$, $\gcd(|a|,|q|) = 1$.  No factor
+    elimination is performed; the sign of the primitive solution is
+    assigned so that $q > 0$ rather than so that $a > 0$.
 
   \item \textbf{Rational:} setting $q = 1$ gives $a = k/d \in \mathbb{Q}$.
     This is an integer exactly when $d \mid k$, i.e.\ when the reduced
@@ -856,7 +885,13 @@ $d \cdot a = q \cdot k$:
 
 The preferred flavour in this paper is \emph{reduced} with $a > 0$.
 The mythical Collatz cycles are the reduced cycles at $(g,h,q) = (3,2,1)$
-with $o > 1$: rational cycles at $q=1$ that are also integers, with $a > 0$.
+with $o > 1$: they sit at the intersection of the reduced and rational
+flavours, being the primitive solutions ($\gcd(a,q)=1$, $a > 0$) for
+which additionally $q = 1$ and $a \in \ZZ$.
+
+The flavour classification applies to any fixed specialisation $(g,h)$.
+Section~\ref{sec:pvalue} steps back and asks a different question: how many
+ways can a parity sequence be represented, independently of any basis?
 
 %------------------------------------------------------------
 \section{Representations of a Parity Sequence}
@@ -1144,125 +1179,6 @@ Since $\gcd(5,29)=1$, the canonical basis gives $q_w=5$, $a_w=29$:
 no $3x{+}1$ cycle, but an integer $3x{+}5$ cycle at $a=29$.
 
 %------------------------------------------------------------
-\section{What the Abstract Cycle Tells Us — and What It Does Not}
-\label{sec:abstract-cycle}
-%------------------------------------------------------------
-
-The preceding sections have established that a parity sequence $w$ admits
-many equivalent representations: as the orbit parity sequence $\phi_w$,
-as a binary integer $p_w$, as the $\sigma$-polynomial $\sigma_w(u,v)$,
-as the structural polynomial $\kpoly_w(g,h)$ over an arbitrary basis,
-and as the integer $\kpoly_w(3,2)$.  When $w$ is a cycle word, it
-carries additionally the cycle flavour table of Section~\ref{sec:cycle-flavours}.
-Each of these representations illuminates a different facet of the same
-object.
-
-Ironically, one of the least revealing representations of a cycle is the
-one most commonly encountered in the literature: a cycle expressed as a
-list of integers in a specific basis $(g,h,q)$.  When $k = \kpoly_w(g,h)$
-and $d = h^e - g^o$ are collapsed into a single ratio $a = qk/d$, most
-of the algebraic structure disappears.  The cycle element $a$ is just a
-number.  The richness encoded in $\kpoly_w$ as a polynomial in $g$ and
-$h$ — its monomial structure, the $\kappa$-tuple, the geometric sum form
-for Steiner words — is invisible.  That the structure survives at all,
-and that $a$ is an integer, is one of the small mysteries of mathematics;
-but the \emph{why} is not apparent from the integer alone.
-
-By contrast, the abstract representations make structure explicit.
-The $\kappa$-tuple encodes exactly how E-steps are distributed before each
-O-step.  The structural polynomial $\kpoly_w(g,h)$ makes the dependence
-on the basis parameters transparent: one can see immediately how the cycle
-element scales as $g$ or $h$ varies, and how cycles at different bases
-relate to one another.  The $\sigma$-polynomial connects the combinatorial
-structure of $w$ to geometry: the monomials are points in a lattice, and
-the successor operation is a rotation.  The $p$-value gives a canonical
-integer encoding that is independent of any basis.
-
-\subsection*{All integer Collatz-like cycles are mere encodings of an abstract cycle}
-
-Once a parity sequence $w$ and an encoding basis $(g,h)$ are chosen,
-everything else is determined.  The cycle element $a_w = \kpoly_w(g,h) /
-\gcd(\kpoly_w(g,h), |d|)$ and the additive parameter $q_w = d /
-\gcd(\kpoly_w(g,h), |d|)$ follow with no further freedom.  There are no
-free integer cycles: every integer cycle in any basis is an encoding of
-some abstract parity sequence $w$, with the parameters $(a,q)$ fixed by
-$(w, g, h)$ through the reduced cycle element identity.  The space of
-abstract parity sequences is therefore in bijection with the space of
-reduced integer cycles across all bases.
-
-This perspective also reveals shared structure across different bases.
-Two bases $(g_1,h_1,q_1)$ and $(g_2,h_2,q_2)$ that yield the same
-parity sequence $w$ as a cycle are encoding the same abstract object.
-The structural polynomial $\kpoly_w(g,h)$ makes this commonality explicit:
-any algebraic identity that holds in $\ZZ[g,h]$ — such as the factorisation
-$\kpoly_w(g,h) = h^e - g^o$ on the variety $g = h^2 - 1$ — is inherited
-by every basis that specialises to that variety.
-
-\subsection*{The polynomial form can characterise individual bases}
-
-That said, the polynomial form can establish non-trivial facts that are
-\emph{specific to the $(3,2,1)$ encoding}.  A striking example is the
-$2a+1$ composition identity: for the Steiner words $\St(\alpha,1)$ and
-$\St(1,\beta)$, the identity
-\[
-  \Phi_{\St(1,\beta)}\!\bigl(\Phi_{\St(\alpha,1)}(a)\bigr)
-  \;=\; \Phi_{\St(\alpha+1,\,\beta+2)}(2a+1)
-\]
-holds for all $\alpha \geq 1$, $\beta \geq 0$, and all admissible $a$.
-In~\cite{paper73} we prove — working entirely in $\ZZ[g,h]$ via the
-structural polynomial — that among all bases $(g,h,q)$ with $g,h \geq 2$
-and $g \neq h$, this identity characterises $(g,h,q) = (3,2,1)$ uniquely.
-The proof forces $h = 2$ from the coefficient of $a$, then $g = 3$ by
-requiring the constant-term equation to hold for all $\alpha$, and finally
-$q = 1$ by substitution.  This is a purely polynomial argument: no
-numerical verification, no modular arithmetic, no appeal to orbit dynamics.
-The structural polynomial framework is the natural setting for such
-uniqueness results.
-
-The abstract framework has limits, however.  It does not, by itself, answer
-the question of whether the standard Collatz map $(3,2,1)$ has a non-trivial
-cycle.  That question requires understanding the modular arithmetic of
-$3x+1$, $x/2$ — the residue structure, the admissibility constraints, the
-interplay between the parity of $3^o a + \kpoly_w(3,2)$ and the required
-E-steps.
-
-The limits are not total, however.  The structural polynomial does carry
-modular information, and only a finite truncation is needed to extract it.
-Every monomial $g^{o-1-j} h^{\kappa_j}$ with $j \geq 3$ has $\kappa_j \geq 3$
-and therefore contributes a multiple of $h^3$ to $\kpoly_w(g,h)$.  The
-first three terms alone,
-\[
-  g^{o-1} + g^{o-2} h^{\kappa_1} + g^{o-3} h^{\kappa_2} \pmod{h^3},
-\]
-determine $\kpoly_w(g,h) \pmod{h^3}$ completely — for any basis.  At
-$(g,h) = (3,2)$ this reads off the mod-$8$ character of the cycle element;
-at $(g,h) = (8,3)$ the same truncation reads off the mod-$27$ character.
-The polynomial carries both facts simultaneously, as specialisations of a
-single identity in $\ZZ[g,h]$.
-
-What the polynomial cannot tell us is whether the mod-$8$ structure of the
-$(3,2,1)$ map, or the mod-$27$ structure of the $(8,3,1)$ map, is the
-right tool for attacking the cycle question in each case.  Those residue
-structures are quite different — the arithmetic accidents that make one
-basis tractable need not have any analogue in the other — and the details
-almost certainly matter.  The abstract framework reveals the \emph{form}
-of the modular constraint; deciding its \emph{utility} requires engaging
-with the specific arithmetic of the basis in question.
-
-In short: the abstract cycle framework is the right language for
-understanding \emph{what} cycles are and \emph{how} they relate to one
-another across bases.  It is not sufficient on its own for understanding
-\emph{whether} a particular cycle exists for a \emph{specified} $q$: for
-any parity word $w$ and any $(g,h)$, a cycle always exists if one is
-prepared to let $q$ be determined by $(w,g,h)$ via the reduced cycle
-element identity, but whether that $q$ equals a pre-specified value —
-such as $q = 1$ for the standard Collatz map — is a question the abstract
-form alone cannot settle.  For that, one must engage with the concrete
-arithmetic of the map.  The abstract framework reaches further into that
-arithmetic than it might first appear, but both levels of description are
-necessary, and they overlap more than the literature typically acknowledges.
-
-%------------------------------------------------------------
 \section{Examples}
 \label{sec:examples}
 %------------------------------------------------------------
@@ -1276,7 +1192,7 @@ integer $17$ is a periodic point.  Its orbit is
      \;\xrightarrow{O}\; 216 \;\xrightarrow{E^3}\; 27
      \;\xrightarrow{O}\; 136 \;\xrightarrow{E^3}\; 17.
 \]
-The parity sequence is $w = OEOEEEOEEE$, with $o = 3$, $e = 7$.
+The clause is $w = \texttt{OEOEEEOEEE}$, with $o = 3$, $e = 7$.
 
 The $\kappa$-tuple is $\kappa_0 = 0$, $\kappa_1 = 1$, $\kappa_2 = 4$
 (the three $O$-steps are preceded by $0$, $1$, and $4$ even steps
@@ -1292,9 +1208,9 @@ Evaluating at $(g,h) = (5,2)$:
   \qquad
   h^e - g^o = 2^7 - 5^3 = 128 - 125 = 3.
 \]
-By Theorem~\ref{thm:cycle},
+By Theorem~\ref{thm:cycle}, $d \cdot a = q \cdot k$ gives
 \[
-  a = \frac{1 \cdot 51}{3} = 17. \quad \checkmark
+  3 \cdot a = 1 \cdot 51 = 51, \qquad a = 17. \quad \checkmark
 \]
 The near-miss $h^e - g^o = 3$ is what makes this cycle arithmetically possible:
 $2^7 - 5^3 = 3$ is a specific arithmetic accident with no analogue for the
@@ -1371,6 +1287,138 @@ the integer $281$ encodes the sequence directly in binary (with sentinel bit
 at position $8$), and the glitched orbit was constructed by reading the bits
 of $281 - 256 = 25$ as a parity sequence.
 \end{remark}
+
+The examples above illustrate the theory across a range of bases and word
+types.  Section~\ref{sec:abstract-cycle} reflects on what this framework,
+taken as a whole, reveals — and what it cannot.
+
+%------------------------------------------------------------
+\section{What the Abstract Path Tells Us — and What It Does Not}
+\label{sec:abstract-cycle}
+%------------------------------------------------------------
+
+The preceding sections have established that a parity sequence $w$ admits
+many equivalent representations: as the orbit parity sequence $\phi_w$,
+as a binary integer $p_w$, as the $\sigma$-polynomial $\sigma_w(u,v)$,
+as the structural polynomial $\kpoly_w(g,h)$ over an arbitrary basis,
+and as the integer $\kpoly_w(3,2)$.  When $w$ is a cycle word, it
+carries additionally the cycle flavour table of Section~\ref{sec:cycle-flavours}.
+Each of these representations illuminates a different facet of the same
+object, as the examples of Section~\ref{sec:examples} illustrate concretely:
+the $5x+1$ cycle at $17$ (Example~\ref{ex:5x1}) and the $g = h^2 - 1$ family
+(Example~\ref{ex:gh2}) both arise as specialisations of a single abstract
+parity sequence to different bases.
+
+Ironically, one of the least revealing representations of a cycle is the
+one most commonly encountered in the literature: a cycle expressed as a
+list of integers in a specific basis $(g,h,q)$.  When $k = \kpoly_w(g,h)$
+and $d = h^e - g^o$ are collapsed into a single ratio $a = qk/d$, most
+of the algebraic structure disappears.  The cycle element $a$ is just a
+number.  The richness encoded in $\kpoly_w$ as a polynomial in $g$ and
+$h$ — its monomial structure, the $\kappa$-tuple, the geometric sum form
+for Steiner words — is invisible.  That the structure survives at all,
+and that $a$ is an integer, is one of the small mysteries of mathematics;
+but the \emph{why} is not apparent from the integer alone.
+
+By contrast, the abstract representations make structure explicit.
+The $\kappa$-tuple encodes exactly how E-steps are distributed before each
+O-step.  The structural polynomial $\kpoly_w(g,h)$ makes the dependence
+on the basis parameters transparent: one can see immediately how the cycle
+element scales as $g$ or $h$ varies, and how cycles at different bases
+relate to one another.  The $\sigma$-polynomial connects the combinatorial
+structure of $w$ to geometry: the monomials are points in a lattice, and
+the successor operation is a rotation.  The $p$-value gives a canonical
+integer encoding that is independent of any basis.
+
+\subsection*{All integer Collatz-like cycles are mere encodings of an abstract cycle}
+
+Once a parity sequence $w$ and an encoding basis $(g,h)$ are chosen,
+everything else is determined.  The cycle element $a_w = \kpoly_w(g,h) /
+\gcd(\kpoly_w(g,h), |d|)$ and the additive parameter $q_w = d /
+\gcd(\kpoly_w(g,h), |d|)$ follow with no further freedom.  There are no
+free integer cycles: every integer cycle in any basis is an encoding of
+some abstract parity sequence $w$, with the parameters $(a,q)$ fixed by
+$(w, g, h)$ through the reduced cycle element identity.  The space of
+abstract parity sequences is therefore in bijection with the space of
+reduced integer cycles across all bases.
+
+This perspective also reveals shared structure across different bases.
+Two bases $(g_1,h_1,q_1)$ and $(g_2,h_2,q_2)$ that yield the same
+parity sequence $w$ as a cycle are encoding the same abstract object.
+The $g = h^2 - 1$ family (Example~\ref{ex:gh2}) makes this vivid: the
+bases $(g,h) = (3,2)$ and $(g,h) = (8,3)$ share the clause $\St(1,1)^3$
+as a cycle word, differing only in the specialisation of the structural
+polynomial.  More generally, the structural polynomial $\kpoly_w(g,h)$
+makes this commonality explicit: any algebraic identity that holds in
+$\ZZ[g,h]$ — such as the factorisation $\kpoly_w(g,h) = h^e - g^o$ on
+the variety $g = h^2 - 1$ — is inherited by every basis that specialises
+to that variety.
+
+\subsection*{The polynomial form can characterise individual bases}
+
+That said, the polynomial form can establish non-trivial facts that are
+\emph{specific to the $(3,2,1)$ encoding}.  A striking example is the
+$2a+1$ composition identity: for the Steiner words $\St(\alpha,1)$ and
+$\St(1,\beta)$, the identity
+\[
+  \Phi_{\St(1,\beta)}\!\bigl(\Phi_{\St(\alpha,1)}(a)\bigr)
+  \;=\; \Phi_{\St(\alpha+1,\,\beta+2)}(2a+1)
+\]
+holds for all $\alpha \geq 1$, $\beta \geq 0$, and all $a$ in the domain
+of $\Phi_{\St(\alpha,1)}$.
+In~\cite{paper73} we prove — working entirely in $\ZZ[g,h]$ via the
+structural polynomial — that among all bases $(g,h,q)$ with $g,h \geq 2$
+and $g \neq h$, this identity characterises $(g,h,q) = (3,2,1)$ uniquely.
+The proof forces $h = 2$ from the coefficient of $a$, then $g = 3$ by
+requiring the constant-term equation to hold for all $\alpha$, and finally
+$q = 1$ by substitution.  This is a purely polynomial argument: no
+numerical verification, no modular arithmetic, no appeal to orbit dynamics.
+The structural polynomial framework is the natural setting for such
+uniqueness results.
+
+The abstract framework has limits, however.  It does not, by itself, answer
+the question of whether the standard Collatz map $(3,2,1)$ has a non-trivial
+cycle.  That question requires understanding the modular arithmetic of
+$3x+1$, $x/2$ — the residue structure, the admissibility constraints, the
+interplay between the parity of $3^o a + \kpoly_w(3,2)$ and the required
+E-steps.
+
+The limits are not total, however.  The structural polynomial does carry
+modular information, and only a finite truncation is needed to extract it.
+Every monomial $g^{o-1-j} h^{\kappa_j}$ with $j \geq 3$ has $\kappa_j \geq 3$
+(since the $\kappa$-tuple is non-decreasing and $\kappa_j \geq j$)
+and therefore contributes a multiple of $h^3$ to $\kpoly_w(g,h)$.  The
+first three terms alone,
+\[
+  g^{o-1} + g^{o-2} h^{\kappa_1} + g^{o-3} h^{\kappa_2} \pmod{h^3},
+\]
+determine $\kpoly_w(g,h) \pmod{h^3}$ completely — for any basis.  At
+$(g,h) = (3,2)$ this reads off the mod-$8$ character of the cycle element;
+at $(g,h) = (8,3)$ the same truncation reads off the mod-$27$ character.
+The polynomial carries both facts simultaneously, as specialisations of a
+single identity in $\ZZ[g,h]$.
+
+What the polynomial cannot tell us is whether the mod-$8$ structure of the
+$(3,2,1)$ map, or the mod-$27$ structure of the $(8,3,1)$ map, is the
+right tool for attacking the cycle question in each case.  Those residue
+structures are quite different — the arithmetic accidents that make one
+basis tractable need not have any analogue in the other — and the details
+almost certainly matter.  The abstract framework reveals the \emph{form}
+of the modular constraint; deciding its \emph{utility} requires engaging
+with the specific arithmetic of the basis in question.
+
+In short: the abstract path framework is the right language for
+understanding \emph{what} cycles are and \emph{how} they relate to one
+another across bases.  It is not sufficient on its own for understanding
+\emph{whether} a particular cycle exists for a \emph{specified} $q$: for
+any parity sequence $w$ and any $(g,h)$, a cycle always exists if one is
+prepared to let $q$ be determined by $(w,g,h)$ via the reduced cycle
+element identity, but whether that $q$ equals a pre-specified value —
+such as $q = 1$ for the standard Collatz map — is a question the abstract
+form alone cannot settle.  For that, one must engage with the concrete
+arithmetic of the map.  The abstract framework reaches further into that
+arithmetic than it might first appear, but both levels of description are
+necessary, and they overlap more than the literature typically acknowledges.
 
 %------------------------------------------------------------
 \section{Related Work}
