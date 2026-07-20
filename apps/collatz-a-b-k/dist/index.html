@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Collatz (a, b, k) surface</title>
+    <script type="module" crossorigin src="/collatz/apps/collatz-a-b-k/dist/assets/index-Dl6O7Pmi.js"></script>
+    <link rel="stylesheet" crossorigin href="/collatz/apps/collatz-a-b-k/dist/assets/index-DaKr4VqJ.css">
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <label>Start: <input id="start" type="number" value="27" min="1" step="2"></label>
+      <button id="rebuild">Rebuild</button>
+    </div>
+    <div id="legend">
+      <b>Collatz (a, b, log&#x2082;k) surface</b><br><br>
+      Each point: <em>a</em> (x), <em>b</em> (y), log&#x2082;<em>k</em> (z)<br>
+      where <em>b</em> = T<sup>n</sup>(<em>a</em>) and <em>k</em> = 2<sup>e</sup><em>b</em> &minus; 3<sup>o</sup><em>a</em><br><br>
+      Colour: <em>a</em> mod 8<br>
+      <span class="sw" style="background:#4caf50"></span> 1 mod 8 &nbsp;
+      <span class="sw" style="background:#2196f3"></span> 3 mod 8<br>
+      <span class="sw" style="background:#f44336"></span> 5 mod 8 &nbsp;
+      <span class="sw" style="background:#ff9800"></span> 7 mod 8<br><br>
+      <small>drag = rotate &nbsp;|&nbsp; scroll = zoom</small>
+    </div>
+    <div id="tooltip"></div>
+  </body>
+</html>

@@ -164,6 +164,17 @@ Interactive force-directed visualisation of the Collatz graph.
 
 ---
 
+### Collatz (a, b, k) Surface
+[Launch](https://wildducktheories.github.io/collatz/apps/collatz-a-b-k/dist/)
+
+3D surface visualisation of the path metric $k = 2^e b - 3^o a$ along a Collatz path.
+Given a starting odd integer, all sub-path pairs $(a_i, a_j)$ with $i < j$ are plotted
+as points at coordinates $(a_i,\, a_j,\, \log_2 k)$. Colour encodes $a_i \bmod 8$.
+Drag to rotate, scroll to zoom; hover over a point to see $a$, $b$, $k$, and the
+sub-path type $(o, e)$.
+
+---
+
 ## Contact
 
 Please message [@a\_beautiful\_k](https://twitter.com/a\_beautiful\_k) on Twitter/X
