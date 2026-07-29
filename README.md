@@ -148,6 +148,17 @@ Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for 
 
 ## Apps
 
+### Collatz FSM — mod 2^k
+[Launch](https://wildducktheories.github.io/collatz/apps/collatz-fsm-k/dist/) | [Source](apps/collatz-fsm-k/)
+
+Interactive 3D visualisation of the unreduced mod-M Collatz FSM at arbitrary M = 2^k (k = 3–12).
+Nodes are odd residues mod M arranged on four latitudinal circles of a torus, one per mod-8 class.
+Edges show all valid transitions r → s (every n ≡ r mod M with S(n) ≡ s mod M). Features:
+slider to vary k; arc/straight-line toggle; pruned-graph toggle (G_M* — deletes high 3/7 mod 8
+nodes and propagates); hover tooltips; arrowheads on selected edges (bidirectional pairs shown together).
+
+---
+
 ### Collatz FSM
 [Launch](https://wildducktheories.github.io/collatz/apps/collatz-fsm/dist/) | [Source](apps/collatz-fsm/)
 
