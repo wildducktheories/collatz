@@ -29,20 +29,21 @@
       .key-5 { color: #f44336; }
       .key-7 { color: #ff9800; }
       #navbar {
-        position: fixed; top: 16px; right: 16px;
+        position: fixed; top: 16px; right: 200px;
         font-size: 12px;
       }
       #navbar a { color: #aaa; text-decoration: none; }
       #navbar a:hover { color: #eee; }
       #tooltip {
-        position: fixed; display: none; pointer-events: none;
+        position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+        display: none; pointer-events: none;
         background: rgba(0,0,0,0.85); border: 1px solid #666;
-        padding: 8px 12px; border-radius: 5px;
+        padding: 10px 14px; border-radius: 5px;
         font-size: 12px; line-height: 1.8; color: #eee;
-        white-space: nowrap;
+        white-space: nowrap; min-width: 160px;
       }
     </style>
-    <script type="module" crossorigin src="/collatz/apps/collatz-fsm-k/dist/assets/index-DRO22z3F.js"></script>
+    <script type="module" crossorigin src="/collatz/apps/collatz-fsm-k/dist/assets/index-BQTjevgX.js"></script>
   </head>
   <body>
     <canvas id="canvas"></canvas>
