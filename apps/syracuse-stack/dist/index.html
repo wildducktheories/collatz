@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Syracuse Stack — mod 2^k</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #111; color: #eee; font-family: monospace; overflow: hidden; }
+      #canvas { display: block; }
+      #hud {
+        position: fixed; top: 16px; left: 16px;
+        background: rgba(0,0,0,0.7); border: 1px solid #444;
+        padding: 12px 16px; border-radius: 6px; min-width: 200px;
+        font-size: 13px; line-height: 2.0;
+      }
+      #hud .label { color: #888; }
+      #hud .val   { color: #eee; font-weight: bold; }
+      #controls {
+        position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 14px;
+        background: rgba(0,0,0,0.7); border: 1px solid #444;
+        padding: 10px 20px; border-radius: 6px;
+      }
+      #controls label { color: #aaa; font-size: 13px; }
+      #k-slider, #t-slider { width: 120px; cursor: pointer; }
+      .key-1 { color: #4caf50; }
+      .key-3 { color: #2196f3; }
+      .key-5 { color: #f44336; }
+      .key-7 { color: #ff9800; }
+      #navbar {
+        position: fixed; top: 16px; right: 200px;
+        font-size: 18px; font-weight: bold;
+      }
+      #navbar a { color: #eee; text-decoration: none; }
+      #navbar a:hover { color: #eee; }
+      #tooltip {
+        position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+        display: none; pointer-events: none;
+        background: rgba(0,0,0,0.85); border: 1px solid #666;
+        padding: 10px 14px; border-radius: 5px;
+        font-size: 12px; line-height: 1.8; color: #eee;
+        white-space: nowrap; min-width: 160px;
+      }
+      #kbd-hints {
+        position: fixed; top: 52px; right: 16px;
+        background: rgba(0,0,0,0.7); border: 1px solid #444;
+        padding: 8px 14px; border-radius: 6px;
+        font-size: 11px; line-height: 1.9; color: #888;
+        white-space: nowrap;
+      }
+      #kbd-hints kbd {
+        display: inline-block; background: #333; border: 1px solid #555;
+        border-radius: 3px; padding: 0 5px; color: #ccc; font-family: monospace;
+        font-size: 11px;
+      }
+    </style>
+    <script type="module" crossorigin src="/collatz/apps/syracuse-stack/dist/assets/index-D0bnoNy6.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">
+      <div><span class="label">M = 2^k, k = </span><span class="val" id="k-label">—</span></div>
+      <div><span class="label">M = </span><span class="val" id="m-label">—</span></div>
+      <div><span class="label" id="t-label-prefix">t_max = </span><span class="val" id="t-label">∞</span></div>
+      <div style="margin-top:8px; font-size:12px; line-height:1.8;">
+        <span class="key-1">■ 1 mod 8</span>&nbsp;&nbsp;
+        <span class="key-3">■ 3 mod 8</span><br>
+        <span class="key-5">■ 5 mod 8</span>&nbsp;&nbsp;
+        <span class="key-7">■ 7 mod 8</span>
+      </div>
+    </div>
+    <div id="path-entry" style="position:fixed; top:50%; left:16px; transform:translateY(-50%);
+      display:flex; flex-direction:column; gap:8px;
+      background:rgba(0,0,0,0.7); border:1px solid #444;
+      padding:8px 16px; border-radius:6px; font-size:13px; color:#aaa; font-family:monospace;">
+      <label for="a-input">a =</label>
+      <input id="a-input" type="text" inputmode="numeric" placeholder="odd integer"
+        style="width:120px; background:#222; border:1px solid #555; border-radius:3px;
+               padding:2px 6px; color:#eee; font-family:monospace; font-size:13px;" />
+      <label for="k-slider-path">k =</label>
+      <input id="k-slider-path" type="range" min="3" max="12" value="5" style="width:100px; cursor:pointer;" />
+      <span class="val" id="k-label-path">5</span>
+      <span class="label">(M = <span id="m-label-path">32</span>)</span>
+    </div>
+    <div id="controls">
+      <label for="arc-toggle">
+        <input id="arc-toggle" type="checkbox" /> arcs
+      </label>
+      <span id="t-slider-row" style="margin-left:10px;">
+        <label for="prune-toggle">
+          <input id="prune-toggle" type="checkbox" /> t=∞
+        </label>
+        <span id="t-slider-inner" style="margin-left:10px;">
+          <label for="t-slider">t_max =</label>
+          <input id="t-slider" type="range" min="0" max="8" value="0" />
+          <span class="val" id="t-label-ctrl">∞</span>
+          <label for="logscale-toggle" style="margin-left:10px;">
+            <input id="logscale-toggle" type="checkbox" checked /> log scale
+          </label>
+        </span>
+      </span>
+      <span id="collapse-row" style="margin-left:10px;">
+        <label for="collapse-toggle">
+          <input id="collapse-toggle" type="checkbox" /> collapse
+        </label>
+      </span>
+    </div>
+    <div id="navbar">
+      <a href="https://github.com/wildducktheories/collatz" target="_blank">Syracuse Stack</a>
+    </div>
+    <div id="tooltip"></div>
+    <div id="kbd-hints">
+      <kbd>n</kbd> next &nbsp; <kbd>p</kbd> prev &nbsp; <kbd>z</kbd> clear trail<br>
+      <kbd>+</kbd> / <kbd>-</kbd> &nbsp;double / halve M
+    </div>
+    <div id="path-info" style="display:none; position:fixed; right:16px; bottom:72px;
+      background:rgba(0,0,0,0.7); border:1px solid #444; padding:10px 14px;
+      border-radius:5px; font-size:12px; line-height:1.8; color:#eee;
+      white-space:nowrap; font-family:monospace;"></div>
+    <script>
+      (function () {
+        function makeDraggable(el) {
+          el.style.cursor = 'grab';
+          el.style.userSelect = 'none';
+          let ox, oy, startX, startY, active = false;
+          el.addEventListener('mousedown', e => {
+            // Don't intercept clicks on interactive children
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' ||
+                e.target.tagName === 'A' || e.target.tagName === 'KBD') return;
+            const r = el.getBoundingClientRect();
+            ox = r.left; oy = r.top;
+            startX = e.clientX; startY = e.clientY;
+            active = true;
+            el.style.cursor    = 'grabbing';
+            el.style.right     = 'auto';
+            el.style.bottom    = 'auto';
+            el.style.transform = 'none';
+            el.style.left      = ox + 'px';
+            el.style.top       = oy + 'px';
+            e.preventDefault();
+          });
+          window.addEventListener('mousemove', e => {
+            if (!active) return;
+            el.style.left = (ox + e.clientX - startX) + 'px';
+            el.style.top  = (oy + e.clientY - startY) + 'px';
+          });
+          window.addEventListener('mouseup', () => {
+            if (!active) return;
+            active = false;
+            el.style.cursor = 'grab';
+          });
+        }
+
+        ['hud', 'kbd-hints', 'path-entry', 'path-info'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) makeDraggable(el);
+        });
+      })();
+    </script>
+  </body>
+</html>
