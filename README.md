@@ -148,6 +148,18 @@ Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for 
 
 ## Apps
 
+### Syracuse Stack
+[Launch](https://wildducktheories.github.io/collatz/apps/syracuse-stack/dist/) | [Source](apps/syracuse-stack/)
+
+Interactive 3D visualisation of the mod-2^k Syracuse FSM with stacked window-index layers.
+Odd residues mod M = 2^k are arranged in a funnel layout across four horizontal rings (one per mod-8 class),
+stacked along the z-axis by window index t. Features: t=∞ pruned single-layer view (Ω-admitted residues only);
+window stack mode (t = 1–8, nodes (t,r) with n = Mt+r); collapse animation (layers flatten and merge downward);
+path mode (?a=n) tracing the exact Syracuse path n→1 as sparse (t,r) pairs; log-scale layer spacing;
+curved arc edges; draggable HUD panels; camera state in URL.
+
+---
+
 ### Collatz FSM — mod 2^k
 [Launch](https://wildducktheories.github.io/collatz/apps/collatz-fsm-k/dist/) | [Source](apps/collatz-fsm-k/)
 
