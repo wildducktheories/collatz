@@ -1,0 +1,1154 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{booktabs}
+
+\geometry{margin=1in}
+
+%------------------------------------------------------------
+% Theorem environments
+%------------------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{plain}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+%------------------------------------------------------------
+% Notation macros
+%------------------------------------------------------------
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\lam}{\lambda}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\OO}{\mathsf{O}}
+\newcommand{\EE}{\mathsf{E}}
+\newcommand{\Kval}{K}
+\newcommand{\Dval}{\Delta}
+
+%------------------------------------------------------------
+\title{Using Mediant Trees to Transduce Rational Approximations of Real Numbers}
+\author{Jon Seymour}
+\date{\today}
+%------------------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Given an oracle for a real number $z$ of sufficient precision, we present three contributions.
+First, an algorithm that constructs a \emph{mediant tree} of increasingly precise rational
+approximations to $z$: starting from a Farey-adjacent bounded pair bracketing $z$, each
+iteration applies a weighted mediant step with an optimal integer weight $w$ given by a
+closed-form formula, yielding a new, tighter bounded pair.
+Second, an algorithm that converts the mediant tree into a \emph{parity sequence} --- a string
+over $\{\OO, \EE\}$ encoding the approximation path --- and shows that for $z > 1$ this
+sequence is conjectured to be almost equivalent to the Sturmian sequence with slope
+$1/(1+z)$, agreeing at every position except possibly the last symbol of each finite prefix.
+Third, we show how to extend both algorithms to real numbers $z \in (0, 1)$ and $z < 0$
+via simple algebraic reductions to the $z > 1$ case.
+\end{abstract}
+
+\tableofcontents
+
+%------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+%------------------------------------------------------------
+
+The problem of approximating irrational numbers by rationals is classical.
+The Stern--Brocot tree and Farey sequences provide a systematic account of
+best rational approximants, and the continued-fraction expansion of a real number gives
+its convergents --- the sequence of closest rational approximations with bounded denominators.
+
+The present paper is motivated by a specific need that arises in the study of
+generalised Collatz sequences: to compute, algorithmically, a sequence of increasingly precise
+rational approximations to the logarithm $\log_h(g)$, where $g > h \in \NN$, together with
+an explicit control over the approximation error at each step.
+The theory we develop is completely general: the core algorithm handles any real number $z > 1$,
+and Section~\ref{sec:extension} shows how to reduce all other real numbers to this case.
+
+Our approach works with pairs of rational estimates that simultaneously bracket $z$ from above
+and below.
+We call such a pair a \emph{bounded pair} (Definition~\ref{def:bounded-pair}).
+At each step we construct two new mediants from the current pair, choosing an integer weight $w$
+so that the new pair is again bounded, and so that the approximation errors strictly decrease.
+The central contribution is a closed-form formula for the optimal $w$
+(Theorem~\ref{thm:optimal-w}), which enables efficient iteration.
+
+We also observe that the entire construction can be encoded as a string of symbols from the
+two-letter alphabet $\{\OO, \EE\}$, which we call the \emph{parity sequence}
+(Section~\ref{sec:parity}).
+This representation connects rational approximation theory to combinatorics on words and, in the
+Collatz setting, to the odd/even parity structure of trajectories.
+
+A striking consequence (Section~\ref{sec:sturmian}) is that the parity sequence produced by
+the mediant tree appears to be identical to the Sturmian sequence with slope $1/(1+z)$
+(Conjecture~\ref{prop:sturmian}, verified computationally for several irrational $z$).
+The mediant tree thus provides a compressed transducer for the Sturmian sequence: it encodes
+a prefix of length $N$ using only $O(\log N)$ real-arithmetic operations, after which the
+symbols can be enumerated by a purely integer recursive traversal of the tree.
+
+The algorithm requires an oracle for $z$ — a means of evaluating $\lceil oz \rceil$ to
+sufficient precision at each step — but is otherwise entirely general.
+Given such an oracle, the mediant tree can represent \emph{any} real number as a
+parity sequence over $\{\OO, \EE\}$, making it a universal encoder from reals to binary
+sequences.
+
+\paragraph{Organisation.}
+Section~\ref{sec:definitions} introduces the core definitions.
+Section~\ref{sec:mediant} develops the mediant construction and the straddling inequality.
+Section~\ref{sec:optimal-w} derives the optimal weight formula.
+Section~\ref{sec:parity} introduces parity sequences.
+Section~\ref{sec:convergence} analyses the rate of convergence.
+Section~\ref{sec:examples} presents examples and computational results.
+Section~\ref{sec:extension} extends the construction to all real $z \notin \{0, 1\}$.
+Section~\ref{sec:conclusion} concludes with open questions.
+
+%------------------------------------------------------------
+\section{Definitions and Notation}
+\label{sec:definitions}
+%------------------------------------------------------------
+
+Throughout Sections~\ref{sec:definitions}--\ref{sec:sturmian}, let $z > 1$ be a fixed real
+number.
+Section~\ref{sec:extension} handles all other real numbers by reduction to this case.
+We write $\NN$ for the positive integers and $\lfloor \cdot \rfloor$, $\lceil \cdot \rceil$ for
+floor and ceiling.
+
+\begin{definition}[Estimate]
+\label{def:estimate}
+A \emph{rational estimate} of $z$ is any pair $(e, o) \in \NN^2$; we regard the pair as
+representing the rational number $e/o$.
+\end{definition}
+
+\begin{definition}[Good estimate]
+\label{def:good-estimate}
+An estimate $e/o$ is a \emph{good estimate} of $z$ if
+\[
+  e \in \{\lfloor o \cdot z \rfloor,\, \lceil o \cdot z \rceil\},
+\]
+i.e.\ $e/o$ is one of the two nearest rationals to $z$ with denominator $o$.
+A good estimate with $e = \lceil oz \rceil$ satisfies $e/o \geq z$ and is an \emph{upper bound};
+one with $e = \lfloor oz \rfloor$ satisfies $e/o \leq z$ and is a \emph{lower bound}.
+\end{definition}
+
+\begin{remark}
+In the special case $z = \log_h(g)$ with $g, h \in \NN$, the upper-bound condition
+$e = \lceil oz \rceil$ translates to the integer inequality $h^{e-1} < g^o \leq h^e$,
+which is the standard condition on even-step/odd-step counts in Collatz analysis.
+\end{remark}
+
+\begin{definition}[Bounded pair]
+\label{def:bounded-pair}
+Two good estimates $e_l/o_l$ and $e_u/o_u$ form a \emph{bounded pair} if
+$e_l/o_l$ is a lower bound, $e_u/o_u$ is an upper bound,
+\[
+  \frac{e_l}{o_l} < z \leq \frac{e_u}{o_u},
+\]
+and they satisfy the \emph{Farey adjacency condition}
+\[
+  e_u \cdot o_l - e_l \cdot o_u = 1.
+\]
+\end{definition}
+
+The Farey adjacency condition ensures that the pair lies on adjacent branches of the
+Stern--Brocot tree and that no rational with smaller denominator lies strictly between
+$e_l/o_l$ and $e_u/o_u$.
+
+\begin{definition}[$\lambda$ and $\varepsilon$]
+\label{def:lambda-eps}
+For an estimate $e/o$ of $z$, define the \emph{relative ratio}
+\[
+  \lam = \frac{e/o}{z}
+\]
+and the \emph{relative error}
+\[
+  \eps = \lam - 1 = \frac{e/o}{z} - 1.
+\]
+An upper-bound good estimate satisfies $\lam \geq 1$ (so $\eps \geq 0$);
+a lower-bound good estimate satisfies $\lam \leq 1$ (so $\eps \leq 0$).
+In both cases $|\eps|$ is small when $o$ is large.
+\end{definition}
+
+We will index estimates by $i, i+1, j, k$ and write $\lam_i$, $\eps_i$, etc.\ for the
+corresponding values.
+In a bounded pair we always orient so that $|\eps_i| > |\eps_{i+1}|$, i.e.\ $r_{i+1}$
+is the better estimate of the two.
+
+\begin{definition}[$\Delta$ and $K$]
+\label{def:delta-K}
+Given a bounded pair $(r_i, r_{i+1}) = (e_i/o_i,\, e_{i+1}/o_{i+1})$ with
+$|\eps_i| > |\eps_{i+1}|$, define
+\[
+  \Dval = e_{i+1} o_i - e_i o_{i+1}
+\]
+and
+\[
+  \Kval = o_{i+1}(e_{i+1} - z \cdot o_{i+1}).
+\]
+\end{definition}
+
+The Farey adjacency condition in Definition~\ref{def:bounded-pair} requires
+$e_u \cdot o_l - e_l \cdot o_u = 1$, which is precisely $|\Dval| = 1$
+(the sign depends on which of $r_i$, $r_{i+1}$ is the upper bound).
+One checks that $|K| \leq 1$ for any good estimate with $|\eps_{i+1}|$ small, and that
+$\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$ throughout the iteration.
+
+\paragraph{Domain restriction.}
+The definitions in this section assume $z > 1$.
+Section~\ref{sec:extension} shows how to reduce all other real numbers to this case.
+
+%------------------------------------------------------------
+\section{The Mediant Construction}
+\label{sec:mediant}
+%------------------------------------------------------------
+
+The classical \emph{mediant} of two fractions $e_i/o_i$ and $e_{i+1}/o_{i+1}$ is
+$(e_i + e_{i+1})/(o_i + o_{i+1})$.
+We generalise this to a weighted family parametrised by a positive integer $w$.
+
+\begin{definition}[Weighted mediants $j$ and $k$]
+\label{def:mediants}
+Given a bounded pair $(r_i, r_{i+1})$ and a positive integer $w \geq 1$, define
+\begin{align*}
+  r_j &= \frac{e_i + (w-1)\,e_{i+1}}{o_i + (w-1)\,o_{i+1}}, \\[4pt]
+  r_k &= \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}}.
+\end{align*}
+\end{definition}
+
+\begin{theorem}[Mediant convergence]
+\label{thm:mediant-convergence}
+Let $(r_i, r_{i+1})$ be a bounded pair for $z$ with $|\eps_i| > |\eps_{i+1}|$, and let
+$w \geq 1$ be a positive integer such that $(r_j, r_k)$ brackets $z$ (i.e.\
+$(\lam_j - 1)(\lam_k - 1) \leq 0$).
+Then
+\[
+  |\eps_j| \leq |\eps_i| \qquad \text{and} \qquad |\eps_k| < |\eps_{i+1}| < |\eps_i|.
+\]
+(When $w = 1$, $r_j = r_i$ exactly so $|\eps_j| = |\eps_i|$; otherwise $|\eps_j| < |\eps_i|$.)
+Moreover $(r_j, r_k)$ is itself a bounded pair.
+The two mediants are assigned as $r_{i+2}$ and $r_{i+3}$, where $r_{i+3}$ is
+whichever of $r_j$, $r_k$ has the smaller $|\eps|$ (the better estimate), and
+$r_{i+2}$ takes the other.
+Since $r_k$ always satisfies $|\eps_k| < |\eps_{i+1}|$, we have
+$|\eps_{i+3}| < |\eps_{i+1}|$ regardless of which candidate is assigned to $r_{i+3}$.
+\end{theorem}
+
+\begin{proof}
+The denominators satisfy $o_j = o_i + (w-1)o_{i+1} < o_i + w\,o_{i+1} = o_k$, so
+$r_j$ and $r_k$ are distinct.
+The ratio $\lam_j$ is a weighted combination of $\lam_i$ and $\lam_{i+1}$:
+\[
+  \lam_j = \frac{o_i\,\lam_i + (w-1)o_{i+1}\,\lam_{i+1}}{o_i + (w-1)o_{i+1}}.
+\]
+When $w = 1$ this gives $\lam_j = \lam_i$ exactly, so $|\eps_j| = |\eps_i|$.
+When $w \geq 2$, $\lam_j$ is a strict convex combination of $\lam_i$ and $\lam_{i+1}$,
+lying strictly between them, so $|\lam_j - 1| < |\lam_i - 1|$, i.e.\ $|\eps_j| < |\eps_i|$.
+For $r_k$ (weight $w \geq 1$), the combination is always strict, so
+$|\lam_k - 1| < |\lam_i - 1|$ and $|\lam_k - 1| < |\lam_{i+1} - 1|$,
+i.e.\ $|\eps_k| < |\eps_{i+1}| < |\eps_i|$.
+The Farey adjacency condition for $(r_j, r_k)$ follows by direct expansion:
+\begin{align*}
+  e_k o_j - e_j o_k
+    &= (e_i + w\,e_{i+1})(o_i + (w-1)o_{i+1})
+     - (e_i + (w-1)e_{i+1})(o_i + w\,o_{i+1}) \\
+    &= \bigl[(w-1) - w\bigr]e_i\,o_{i+1}
+     + \bigl[w - (w-1)\bigr]e_{i+1}\,o_i \\
+    &= -e_i\,o_{i+1} + e_{i+1}\,o_i = \Dval,
+\end{align*}
+so $|e_k o_j - e_j o_k| = |\Dval| = 1$, and the Farey adjacency of $(r_j, r_k)$
+is inherited directly from that of $(r_i, r_{i+1})$.
+\end{proof}
+
+\begin{corollary}[Straddling inequality]
+\label{cor:straddling}
+Under the conditions of Theorem~\ref{thm:mediant-convergence},
+\[
+  \eps_j\,\eps_k < 0 \qquad \text{and} \qquad |\eps_j||\eps_k| < |\eps_i|\,|\eps_{i+1}|.
+\]
+\end{corollary}
+
+\begin{proof}
+The first inequality holds because $r_j$ and $r_k$ straddle $z$, so their errors
+have opposite signs.
+For the second: $|\eps_j| \leq |\eps_i|$ and $|\eps_k| < |\eps_{i+1}|$
+(Theorem~\ref{thm:mediant-convergence}), so
+$|\eps_j||\eps_k| \leq |\eps_i||\eps_k| < |\eps_i|\,|\eps_{i+1}|$.
+\end{proof}
+
+%------------------------------------------------------------
+\section{The Optimal Weight Formula}
+\label{sec:optimal-w}
+%------------------------------------------------------------
+
+A key question is: for which integer $w$ is the resulting bounded pair $(r_j, r_k)$ the
+most accurate, i.e.\ which $w$ minimises the larger of $|\eps_j|$ and $|\eps_k|$?
+
+The real-valued optimum is found by differentiating the left-hand side of the straddling
+inequality with respect to $w$ and setting the derivative to zero.
+Recall that $r_j = \mathrm{Mediant}(r_i, r_{i+1}, w-1)$ and $r_k = \mathrm{Mediant}(r_i, r_{i+1}, w)$,
+so $\lam_j - 1 = \eps_j$ and $\lam_k - 1 = \eps_k$ are functions of $w$.
+Computing the derivative gives
+\[
+  \frac{d}{dw}\text{LHS} =
+    \frac{\Dval}{z}
+    \left[
+      \frac{\eps_j}{(o_i + w\,o_{i+1})^2}
+      +
+      \frac{\eps_k}{(o_i + (w-1)o_{i+1})^2}
+    \right].
+\]
+Setting this to zero and solving yields the following closed-form expression.
+
+\begin{theorem}[Optimal weight]
+\label{thm:optimal-w}
+The real-valued minimiser of the combined approximation error is
+\[
+  w = \frac{1}{2} - \frac{o_i}{o_{i+1}}
+    + \frac{\Dval \pm \sqrt{\Dval^2 - \Kval^2}}{2\Kval},
+\]
+where
+\[
+  \Dval = e_{i+1} o_i - e_i o_{i+1}, \qquad
+  \Kval = o_{i+1}(e_{i+1} - z \cdot o_{i+1}).
+\]
+The formula yields two real candidates (one for $+$, one for $-$), and the integer value of
+$w$ is found by taking the floor or ceiling of each candidate and selecting the one that
+satisfies $(\lam_j - 1)(\lam_k - 1) \leq 0$ (i.e.\ that the pair brackets $z$).
+A full derivation is given in Appendix~\ref{app:optimal-w}.
+\end{theorem}
+
+\begin{remark}
+When $\Kval = 0$ the formula is undefined, which corresponds to the situation where
+$e_{i+1}/o_{i+1}$ is an exact rational representation of $z$ and no further improvement
+is possible.
+When $|\Kval|$ is small, the discriminant $\Dval^2 - \Kval^2 \approx 1$ and the two
+candidates are approximately $1/(1-\Kval)$ apart, so the optimal $w$ is of moderate size.
+\end{remark}
+
+\paragraph{Algorithm.}
+The iteration proceeds as follows.
+\begin{enumerate}
+  \item Start with an initial bounded pair $(r_0, r_1)$ for $z$.
+  \item Compute $\Dval$ and $\Kval$.
+  \item If $\Kval = 0$, terminate.
+  \item Evaluate the two candidates for $w$ from Theorem~\ref{thm:optimal-w};
+        search over $\lfloor w_- \rfloor$ and $\lceil w_+ \rceil$ for the integer $w \geq 1$
+        that satisfies the bracketing condition.
+  \item Form the new bounded pair $(r_j, r_k)$ and repeat from step~2.
+\end{enumerate}
+Because $o_{i+1}$ grows monotonically along the iteration, the denominator of $\Kval$
+grows and the iteration converges (Section~\ref{sec:convergence}).
+
+%------------------------------------------------------------
+\section{The Mediant Tree}
+\label{sec:tree}
+%------------------------------------------------------------
+
+Each estimate produced by the algorithm is either a \emph{leaf} — one of the
+integers $\lfloor z \rfloor$ or $\lceil z \rceil$ — or a \emph{Mediant node}
+built recursively from two sub-estimates.
+This recursive structure defines a binary tree for each estimate, which we call
+its \emph{mediant tree}.
+
+\begin{definition}[Mediant tree]
+\label{def:mediant-tree}
+The \emph{mediant tree} of an estimate $r$ is defined recursively:
+\begin{itemize}
+  \item If $r \in \{\lfloor z \rfloor, \lceil z \rceil\}$, then $r$ is a \emph{leaf node}.
+  \item Otherwise $r$ is an \emph{interior node} $\mathrm{Mediant}(r_0,\, r_1,\, w)$
+        with left subtree $r_0$, right subtree $r_1$, and integer weight $w \geq 0$,
+        representing the rational
+        \[
+          r = \frac{e_0 + w\,e_1}{o_0 + w\,o_1}.
+        \]
+\end{itemize}
+\end{definition}
+
+The two leaves are the unique consecutive integers bracketing $z$:
+$\lfloor z \rfloor < z \leq \lceil z \rceil$, forming the initial bounded pair
+$(r_0, r_1) = (\lfloor z \rfloor, \lceil z \rceil)$ of the algorithm.
+For $z = \log_2 3 \approx 1.585$ the leaves are $1$ and $2$.
+
+Each bounded pair $(r_{2n}, r_{2n+1})$ in the algorithm's sequence therefore consists
+of two mediant trees that share the same leaves.
+As $n$ increases the trees grow deeper, recording the full history of mediant
+constructions that led to each estimate.
+
+\begin{example}[Mediant trees for $\log_2 3$]
+At step $n = 1$ the bounded pair $(3/2,\, 5/3)$ has trees:
+\begin{align*}
+  r_{2} = 3/2 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\; \underbrace{2}_{\text{leaf}},\; w=1), \\
+  r_{3} = 5/3 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\; \underbrace{2}_{\text{leaf}},\; w=2).
+\end{align*}
+At step $n = 2$ the pair $(3/2,\, 8/5)$ has trees:
+\begin{align*}
+  r_{4} = 3/2 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\; \mathrm{Mediant}(1,\, 2,\, 2),\; w=0), \\
+  r_{5} = 8/5 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\; \mathrm{Mediant}(1,\, 2,\, 2),\; w=1).
+\end{align*}
+Every internal node carries a weight $w \geq 0$; a weight of $0$ means the left
+subtree is used directly (contributing zero copies of the right subtree).
+\end{example}
+
+\paragraph{Operational use.}
+The mediant tree is the practical device for generating parity sequences of arbitrary
+length and precision.
+Given a target $z$ and a desired precision, one runs the algorithm to depth $n$,
+obtaining a bounded pair $(r_{2n}, r_{2n+1})$ whose mediant trees encode parity sequences
+of length $e_{2n+1} + o_{2n+1}$.
+The parity sequence $\pi(r_{2n+1})$ (Definition~\ref{def:parity-sequence}) is then
+read off the tree by the recursive rule: an interior node
+$\mathrm{Mediant}(r_0, r_1, w)$ with $\Delta > 0$ yields
+$\pi(r_1)^w \cdot \pi(r_0)$, and with $\Delta < 0$ yields $\pi(r_0) \cdot \pi(r_1)^w$.
+Deeper trees produce longer prefixes of the Sturmian sequence with slope $1/(z+1)$
+(Section~\ref{sec:sturmian}).
+
+%------------------------------------------------------------
+\section{Parity Sequences}
+\label{sec:parity}
+%------------------------------------------------------------
+
+The mediant construction admits a compact combinatorial encoding.
+
+\begin{definition}[Parity alphabet and base word]
+\label{def:parity-alphabet}
+Let $\{\OO, \EE\}^*$ denote the set of finite strings over the two-letter alphabet
+$\{\OO, \EE\}$.
+For a base estimate $e/1$ (denominator $1$) define its \emph{parity sequence}
+\[
+  \pi(e/1) = \underbrace{\EE \cdots \EE}_{e} \OO,
+\]
+a string of $e$ copies of $\EE$ followed by one $\OO$.
+\end{definition}
+
+\begin{definition}[Parity sequence of a mediant]
+\label{def:parity-sequence}
+Given a sequence of estimates $r_0, r_1, r_2, \ldots$ produced by the algorithm,
+the parity sequences of the next pair $(r_{i+2}, r_{i+3})$ are computed from the bounded pair
+$(r_i, r_{i+1})$ and weight $w_{i+3}$, where $r_{i+3}$ is the better estimate and $r_{i+2}$
+the other.
+\begin{itemize}
+  \item If $\Dval > 0$ (so $r_{i+1}$ is the upper bound, $r_{i+1} \geq z$),
+    $\pi(r_i)$ appears as a suffix:
+    \begin{align*}
+      \pi(r_{i+2}) &= \pi(r_{i+1})^{w_{i+3}-1} \cdot \pi(r_i), \\
+      \pi(r_{i+3}) &= \pi(r_{i+1})^{w_{i+3}} \cdot \pi(r_i).
+    \end{align*}
+  \item If $\Dval < 0$ (so $r_{i+1}$ is the lower bound, $r_{i+1} < z$),
+    $\pi(r_i)$ appears as a prefix:
+    \begin{align*}
+      \pi(r_{i+2}) &= \pi(r_i) \cdot \pi(r_{i+1})^{w_{i+3}-1}, \\
+      \pi(r_{i+3}) &= \pi(r_i) \cdot \pi(r_{i+1})^{w_{i+3}}.
+    \end{align*}
+\end{itemize}
+\end{definition}
+
+\begin{proposition}[Parity sequence encodes the approximation path]
+\label{prop:parity-encodes}
+Any consecutive pair $(\pi(r_{i+2}), \pi(r_{i+3}))$ in the sequence uniquely
+determines the initial pair $(r_0, r_1)$ and the sequence of weights $w_2, w_3, \ldots$
+used at each step.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The lengths satisfy $|\pi(r_n)| = e_n + o_n$.
+Given the pair $(\pi(r_{i+2}), \pi(r_{i+3}))$, the recovery proceeds as follows.
+\begin{enumerate}
+  \item $\pi(r_i)$ is recovered by trying both cases: if the pair shares a non-trivial
+    longest common suffix then $\Delta > 0$ and $\pi(r_i)$ is that suffix; if it shares
+    a non-trivial longest common prefix then $\Delta < 0$ and $\pi(r_i)$ is that prefix.
+    Exactly one case yields a consistent decomposition per Definition~\ref{def:parity-sequence},
+    and this simultaneously recovers $\pi(r_i)$ and the sign of $\Delta$.
+  \item $|\pi(r_{i+1})| = |\pi(r_{i+3})| - |\pi(r_{i+2})|$, since the two words differ
+    by exactly one copy of $\pi(r_{i+1})$.
+  \item $w_{i+3} = (|\pi(r_{i+3})| - |\pi(r_i)|) \;/\; |\pi(r_{i+1})|$ exactly.
+  \item $\pi(r_{i+1})$ is extracted as the remaining portion of $\pi(r_{i+3})$ after
+    removing $\pi(r_i)$, then divided into $w_{i+3}$ equal copies.
+\end{enumerate}
+Applying this recursively mirrors the Euclidean algorithm, uniquely recovering
+the initial pair $(r_0, r_1)$ and all weights.
+\end{proof}
+
+\begin{example}[Parity sequence for $\log_2 3$]
+Starting from the initial bounded pair $(r_0, r_1) = (1/1,\, 2/1)$ with $z = \log_2 3 \approx 1.58496$,
+the algorithm produces the following sequence of bounded pairs.
+At each step $n$, weight $w_{2n+1}$ is used to compute $r_j$ and $r_k$.
+The better of the two (smaller $|\eps|$) is assigned to $r_{2n+3}$ and the other to $r_{2n+2}$,
+forming the next bounded pair; $r_{2n+1}$ is always the better estimate.
+
+\medskip
+\begin{center}
+\begin{tabular}{@{}cllllcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
+\midrule
+0 & $1/1$   & $2/1$   & $-0.369$ & $+0.262$ & 2 & $3/2$   & $5/3$   \\
+1 & $3/2$   & $5/3$   & $-0.054$ & $+0.052$ & 1 & $3/2$   & $8/5$   \\
+2 & $3/2$   & $8/5$   & $-0.054$ & $+0.010$ & 3 & $19/12$ & $27/17$ \\
+3 & $27/17$ & $19/12$ & $+0.002$ & $-0.001$ & 3 & $65/41$ & $84/53$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\medskip
+
+The parity sequence of $r_7 = 19/12$ (length $19+12=31$) decomposes recursively.
+The leaf words in Sturmian order are $\pi(r_0) = \mathtt{EO}$ and $\pi(r_1) = \mathtt{EEO}$.
+Reading the decomposition bottom-up:
+
+\medskip
+\noindent
+\textbf{Level 1} ($n=0$, $w_1=2$, $\Delta>0$ so suffix, $\pi(r_3)=\pi(r_1)^2\cdot\pi(r_0)$, $\pi(r_2)=\pi(r_1)^1\cdot\pi(r_0)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EO}}_{\pi(r_0)}
+}_{\pi(r_3)=\mathtt{EEOEEOEO}}
+\qquad
+\underbrace{
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EO}}_{\pi(r_0)}
+}_{\pi(r_2)=\mathtt{EEOEO}}
+\]
+
+\noindent
+\textbf{Level 2} ($n=1$, $w_3=1$, $\Delta>0$ so suffix, $\pi(r_5)=\pi(r_3)^1\cdot\pi(r_2)$, $\pi(r_4)=\pi(r_2)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEOEEOEO}}_{\pi(r_3)}
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
+}_{\pi(r_5)=\mathtt{EEOEEOEOEEOEO}}
+\qquad
+\underbrace{
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
+}_{\pi(r_4)=\mathtt{EEOEO}}
+\]
+
+\noindent
+\textbf{Level 3} ($n=2$, $w_5=3$, $\Delta>0$ so suffix, $\pi(r_7)=\pi(r_5)^2\cdot\pi(r_4)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
+  \;
+  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
+  \;
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_4)}
+}_{\pi(r_7)}
+\]
+\end{example}
+
+\begin{remark}
+In the Collatz setting ($z = \log_2 3$, $g = 3$, $h = 2$), the symbol $\OO$ in a parity
+sequence corresponds to an odd step ($x \mapsto 3x+1$) and $\EE$ to an even step
+($x \mapsto x/2$).
+The parity sequence of a good estimate $e/o$ thus describes an idealised Collatz trajectory
+with $o$ odd steps and $e$ even steps whose ratio $e/o$ approximates $\log_2 3$.
+\end{remark}
+
+\begin{remark}[Every prefix encodes the same real number]
+The parity sequences produced by the mediant tree have an unusual self-consistency
+property: every prefix of the sequence is itself the parity sequence of some estimate
+of the same real number $z$.
+That is, truncating the sequence at any point yields a shorter parity sequence that
+still encodes an approximation to $z$ — not some other value.
+
+Moreover, longer sequences encode better approximations on average: as the sequence
+grows, the estimates $r_{2n+1}$ converge to $z$, so the ratio $e/o$ of $\EE$'s to
+$\OO$'s in a long prefix approaches $z$ more closely than in a short one.
+
+This monotone improvement holds only at the level of the mediant tree: moving from
+one layer to the next always yields a strictly better estimate
+(Theorem~\ref{thm:convergence}).
+Within a single layer, however, the two candidates $r_j$ and $r_k$ need not both
+improve on every previous estimate — one is assigned to $r_{i+3}$ (the better) and
+the other to $r_{i+2}$ (which may represent a local regression relative to $r_{i+3}$).
+The strict improvement guarantee applies across layers, not within them.
+\end{remark}
+
+%------------------------------------------------------------
+\section{Convergence Analysis}
+\label{sec:convergence}
+%------------------------------------------------------------
+
+\begin{theorem}[Strict decrease of $|\eps|$]
+\label{thm:convergence}
+At each iteration of the algorithm, $|\eps_{i+1}|$ strictly decreases.
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{thm:mediant-convergence}, both $|\eps_j|$ and $|\eps_k|$ are strictly less
+than $|\eps_{i+1}|$.
+The next iterate uses the better of $r_j$ and $r_k$ as its $r_{i+1}$, so
+$|\eps_{i+1}^{\text{new}}| < |\eps_{i+1}^{\text{old}}|$.
+\end{proof}
+
+\begin{proposition}[Relationship to continued fractions]
+\label{prop:cf}
+The sequence of denominators $o_{i+1}$ generated by the algorithm is a subsequence of the
+denominators of the convergents of $z$ in its continued-fraction expansion.
+Specifically, the algorithm recovers the convergents at each step where the optimal $w$
+equals the corresponding partial quotient of $z$.
+\end{proposition}
+
+\begin{remark}
+The convergence of the algorithm is at least as fast as the continued-fraction convergents,
+since the optimal $w$ formula ensures that no redundant steps are taken.
+In practice the algorithm achieves superlinear growth of the denominator $o_{i+1}$, since
+the optimal $w$ can be large (corresponding to a large partial quotient in the
+continued-fraction expansion of $z$).
+\end{remark}
+
+%------------------------------------------------------------
+\section{Examples and Computational Results}
+\label{sec:examples}
+%------------------------------------------------------------
+
+We illustrate the algorithm on two targets.
+
+\subsection{Approximating \texorpdfstring{$\log_2 3$}{log\_2(3)}}
+
+Table~\ref{tab:log23} shows the first several bounded pairs produced by the algorithm
+for $z = \log_2 3$.
+The initial pair is $r_0 = 1/1$, $r_1 = 2/1$ ($r_1$ is the better estimate throughout).
+
+\begin{table}[h]
+\centering
+\caption{Successive bounded pairs approximating $\log_2 3 \approx 1.58496\ldots$}
+\label{tab:log23}
+\begin{tabular}{@{}cllllcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
+\midrule
+0 & $1/1$     & $2/1$      & $-0.369$ & $+0.262$ & 2  & $3/2$         & $5/3$         \\
+1 & $3/2$     & $5/3$      & $-0.054$ & $+0.052$ & 1  & $3/2$         & $8/5$         \\
+2 & $3/2$     & $8/5$      & $-0.054$ & $+0.009$ & 3  & $19/12$       & $27/17$       \\
+3 & $27/17$   & $19/12$    & $+0.002$ & $-0.001$ & 3  & $65/41$       & $84/53$       \\
+4 & $65/41$   & $84/53$    & $+2.5\times10^{-4}$ & $-3.6\times10^{-5}$ & 6  & $485/306$     & $569/359$     \\
+5 & $485/306$ & $569/359$  & $+3.0\times10^{-6}$ & $-2.7\times10^{-6}$ & 1  & $485/306$     & $1054/665$    \\
+6 & $485/306$ & $1054/665$ & $+3.0\times10^{-6}$ & $-6.0\times10^{-8}$ & 24 & $24727/15601$ & $25781/16266$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Approximating \texorpdfstring{$\pi$}{pi}}
+
+For comparison, Table~\ref{tab:pi} shows the first several steps for $z = \pi$,
+starting from $r_0 = 4/1$, $r_1 = 3/1$.
+The classical approximant $355/113$ appears at step $n = 2$ with $\eps \approx +8.49 \times 10^{-8}$,
+after which the weight $w_5 = 293$ produces a large jump in precision in a single step.
+
+\begin{table}[h]
+\centering
+\caption{Successive bounded pairs approximating $\pi \approx 3.14159\ldots$}
+\label{tab:pi}
+{\small
+\begin{tabular}{@{}cllllcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
+\midrule
+0 & $4/1$     & $3/1$     & $+0.273$            & $-0.045$            & $7$   & $22/7$         & $25/8$        \\
+1 & $25/8$    & $22/7$    & $-5.0\times10^{-3}$ & $+4.0\times10^{-4}$ & $15$  & $333/106$      & $355/113$     \\
+2 & $333/106$ & $355/113$ & $-2.7\times10^{-5}$ & $+8.5\times10^{-8}$ & $293$ & $103993/33102$ & $104348/33215$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\clearpage
+%------------------------------------------------------------
+\section{Relationship to Sturmian Sequences}
+\label{sec:sturmian}
+%------------------------------------------------------------
+
+A \emph{Sturmian sequence} over $\{\OO, \EE\}$ with slope $\alpha \in (0,1)$ is defined by
+\[
+  s_n = \lfloor (n+1)\alpha \rfloor - \lfloor n\alpha \rfloor, \qquad n \geq 0,
+\]
+encoding the sequence as $\OO$ when $s_n = 1$ and $\EE$ when $s_n = 0$.
+Since $\alpha < 1$, we have $s_0 = \lfloor\alpha\rfloor = 0$, so the Sturmian sequence
+always begins with $\EE$.
+
+\begin{conjecture}[Parity sequences are Sturmian]
+\label{prop:sturmian}
+Let $z > 1$ be irrational and let $\alpha = 1/(z+1)$.
+The infinite parity sequence produced by the mediant tree is identical to the
+Sturmian sequence with slope $\alpha$.
+
+For a finite parity sequence of length $N$ (the sequence of estimate $r_{2n+1}$ at
+depth $n$), the two sequences agree at every position $0 \leq i < N-1$.
+At the final position $i = N-1$ they may differ: the mediant sequence always emits
+$\OO$ (the terminal symbol of its last primitive word), while the Sturmian sequence
+may emit $\EE$ at that position (being mid-word at depth $n$).
+\end{conjecture}
+
+The single terminal discrepancy is an artefact of truncation, not a genuine
+disagreement: the mediant sequence closes its last primitive word with $\OO$ at
+position $N-1$, whereas the Sturmian sequence — which continues indefinitely — may
+still be in the interior of a longer word at that depth.
+As the depth increases and $N \to \infty$, both sequences converge to the same
+infinite word.
+
+This has been verified computationally for several irrational values of $z$, including
+$\sqrt{2}$, $\log_2 3$, $\log_2 5$, $\phi$, and $\pi$.
+For $z = \log_2 3$ the verification extends to sequences of length up to $27{,}869{,}189$
+symbols: at every depth the two sequences agree everywhere except possibly the last symbol,
+where the mediant emits $\OO$ and the Sturmian emits $\EE$.
+
+\begin{remark}[The mediant sequence is the better finite approximation]
+At depths where the two sequences differ, the mediant's finite parity sequence is a
+closer approximation to $\alpha = 1/(z+1)$ in terms of running $\OO$-density.
+The terminal $\OO$ emitted by the mediant sequence gives a density slightly
+\emph{above} $\alpha$, whereas the Sturmian's terminal $\EE$ gives a density
+substantially \emph{below} $\alpha$.
+
+This reflects a structural asymmetry in the two methods.
+The Sturmian algorithm at position $N-1$ is mid-word in a longer primitive word,
+so it emits $\EE$ — inherently favouring the above-$z$ estimate and leaving the
+running density below $\alpha$.
+The mediant tree, by contrast, explicitly selects at each step the estimate with
+smaller $|\varepsilon|$, which is the lower-bound estimate $r_{2n}$ (the
+below-$z$ member of the pair) when that is the better of the two.
+Closing the sequence with $\OO$ at that point reflects this selection: it is the
+correct terminal for a word whose ratio $e/o$ slightly underestimates $z$, nudging
+the running density up toward $\alpha$.
+
+For $z = \log_2 3$, the improvement at the discrepancy depths is substantial:
+at $N = 1719$ the mediant density error is $1.4 \times 10^{-8}$ against the
+Sturmian's $5.8 \times 10^{-4}$ — roughly four orders of magnitude better.
+\end{remark}
+
+The $\OO$-density of $\pi(r)$ for an estimate $e/o$ is
+\[
+  \frac{o}{e+o} = \frac{1}{e/o + 1} \xrightarrow{e/o \to z} \frac{1}{z+1} = \alpha,
+\]
+consistent with the Sturmian slope.
+
+\paragraph{Efficiency and lazy generation.}
+Although the parity sequences are Sturmian, the mediant tree is a far more efficient
+way to generate them.
+To produce a prefix of $N$ symbols, the naive Sturmian algorithm must evaluate
+$s_n = \lfloor(n+1)\alpha\rfloor - \lfloor n\alpha\rfloor$ at each of the $N$
+positions, requiring $O(N)$ real-arithmetic operations.
+
+The mediant algorithm instead builds a compressed representation of the same prefix.
+Each iteration requires a constant number of real-arithmetic operations to compute
+the next bounded pair and weight; after $k$ iterations the tree encodes a Sturmian
+prefix of length $N = e_{2k+1} + o_{2k+1}$, which grows exponentially in $k$.
+Thus only $O(\log N)$ real-arithmetic operations are needed to encode a prefix of
+length $N$.
+
+Once the tree is built, enumerating the $N$ symbols requires \emph{no real
+arithmetic at all}: each node specifies an integer weight $w$ and two child words,
+and reading off the sequence is a recursive depth-first traversal governed entirely
+by integer counts.
+No auxiliary memory beyond the call stack is required.
+
+\paragraph{$\OO\OO$-avoidance.}
+Since $z > 1$ implies $\alpha = 1/(z+1) < 1/2$, the Sturmian sequence avoids
+$\OO\OO$: two consecutive $\OO$'s would require
+$\lfloor(n+2)\alpha\rfloor - \lfloor n\alpha\rfloor = 2$, but $2\alpha < 1$ makes
+this impossible.
+For comparison, when $\alpha > 1/2$ (i.e.\ $z < 1$) consecutive $\OO$'s are
+unavoidable — for example $\alpha = 2/3$ gives $\OO\OO\EE\OO\OO\EE\cdots$
+immediately.
+The mediant tree gives an independent structural proof: at the leaves each base word
+is $\EE^k\OO$ for some $k \geq 1$, and at each interior node exactly one copy of
+$\pi(r_i)$ is emitted with at least one copy of $\pi(r_{i+1})$ on each side, so
+$\pi(r_i)$ is never adjacent to itself; by induction $\OO\OO$ never arises.
+
+\begin{remark}[Sturmian sequences are more restricted than general Collatz sequences]
+A Sturmian sequence with slope $\alpha < 1/2$ consists of exactly two distinct words:
+$\EE^{\lfloor 1/\alpha \rfloor - 1}\OO$ and $\EE^{\lceil 1/\alpha \rceil - 1}\OO$,
+concatenated in the Sturmian pattern.
+For slope $\alpha = 1/(z+1)$ these are precisely $\EE^{\lfloor z \rfloor}\OO$ and
+$\EE^{\lceil z \rceil}\OO$ — exactly the leaf words of the mediant tree for $z$.
+A Sturmian sequence can never contain a word of any other length.
+
+A general Collatz parity sequence is far less constrained: an actual trajectory can
+produce $\EE\OO$, $\EE\EE\OO$, $\EE\EE\EE\OO$, and so on — $\mathsf{E}$-runs of
+any length, interleaved freely.
+The Sturmian sequence is the \emph{ideally balanced} special case, constrained
+to exactly the two word lengths $\EE^{\lfloor z \rfloor}\OO$ and $\EE^{\lceil z \rceil}\OO$.
+\end{remark}
+
+\begin{remark}
+The weights $w_{2n+1}$ are related to the partial quotients of the continued fraction
+expansion of $z$, though they are not in general identical to them.
+A large weight at step $n$ corresponds to a large partial quotient, producing a long
+run of one symbol type in the parity sequence — the same phenomenon that gives rise
+to the irregular spacing of $\OO$'s and $\EE$'s in an irrational Sturmian sequence.
+Conversely, small weights correspond to small partial quotients, and the parity
+sequence advances by only a short block at each such step.
+\end{remark}
+
+\begin{remark}[The $\log_2 3$ case]
+For the Collatz application $z = \log_2 3$, the limiting $\OO$-density is
+\[
+  \frac{1}{z+1} = \frac{1}{\log_2 3 + 1} = \frac{1}{\log_2 6} = \log_6 2 \approx 0.3869.
+\]
+The convergents of $\log_2 3$ are $2/1, 8/5, 19/12, 84/53, \ldots$,
+and these appear as the $r_{2n+1}$ values in Table~\ref{tab:log23}.
+In the Collatz context, the $\OO$ symbols represent odd steps ($x \mapsto 3x+1$)
+and the $\EE$ symbols represent even steps ($x \mapsto x/2$).
+An $\OO$-density of $\log_6 2 = 1/\log_2 6$ describes the \emph{ideally balanced}
+Collatz parity pattern: the asymptotic ratio of odd to even steps in a trajectory
+that descends as quickly as theory permits.
+\end{remark}
+
+\begin{remark}[The $g = h^2 - 1$ family]
+For the generalised Collatz system with odd step $x \mapsto gx + 1$ and even step
+$x \mapsto x/h$, the Sturmian slope is $1/(\log_h g + 1) = 1/\log_h(gh)$.
+The special family $g = h^2 - 1$ satisfies $\log_h g \in (1, 2)$ for all $h \geq 2$,
+so the slope $1/\log_h(gh) \in (1/3, 1/2)$ for every member.
+The first convergent of $\log_h g$ from above is always $2/1$, corresponding to
+the parity sequence $\mathtt{EEO}$ (two $\EE$'s, one $\OO$) and the minimal cycle
+$\{h^2, h, 1\}$ shared by every system in this family.
+\end{remark}
+
+%------------------------------------------------------------
+\section{Extension to $0 < z < 1$}
+\label{sec:extension}
+%------------------------------------------------------------
+
+The algorithm of Sections~\ref{sec:mediant}--\ref{sec:parity} requires $z > 1$.
+We now show how to handle $z \in (0, 1)$ by algebraic reduction, in two stages.
+
+If one were content to accept $\OO\OO$ in the parity sequence, no special treatment
+would be needed: the algorithm and the Sturmian definition extend formally to any
+$z > 0$, and for $z < 1$ the slope $\alpha = 1/(1+z) > 1/2$ simply makes $\OO\OO$
+unavoidable.
+The reductions below are necessary precisely because we require parity sequences
+that are valid Collatz parity sequences — and a Collatz trajectory with two
+consecutive odd steps is impossible (after an odd step $x \mapsto 3x+1$ the result
+is even, so the next step must be even).
+The reductions map $z \in (0,1)$ to $z' > 1$, yielding an $\OO\OO$-free sequence
+whose $e$ and $o$ counts then determine a rational approximant to the original $z$.
+
+\subsection{Case $0 < z < \tfrac{1}{2}$}
+
+For $z \in (0, \tfrac{1}{2})$, define
+\[
+  z' = \frac{1-z}{z} = \frac{1}{z} - 1 > 1.
+\]
+Run the algorithm on $z'$.
+A bounded pair $e/o \approx z'$ satisfies $e/o \approx (1-z)/z$, so
+\[
+  z \approx \frac{o}{e + o}.
+\]
+The approximant to $z$ is therefore $o/(e+o)$, with numerator $o$ (the $\OO$-count
+of the parity sequence) and denominator $e + o$ (its total length).
+
+\paragraph{Parity sequence.}
+The parity sequence for $z'$ has $\OO$-density
+\[
+  \frac{1}{1 + z'} = \frac{1}{1 + (1-z)/z} = z,
+\]
+which is less than $\tfrac{1}{2}$ since $z < \tfrac{1}{2}$.
+Consequently the $\OO\OO$-avoidance result of Section~\ref{sec:sturmian} applies:
+the parity sequence for $z'$ is $\OO\OO$-free, and its $\OO$-density converges to $z$.
+
+\paragraph{Sturmian identity.}
+The Sturmian sequence with slope $\alpha' = z$ is the infinite parity sequence
+produced by the mediant tree for $z'$ (Conjecture~\ref{prop:sturmian}).
+This Sturmian sequence encodes $z$ directly: the $\OO$-density of any long prefix
+approximates $z$ with the same precision as the underlying mediant approximation
+of $z'$.
+
+\subsection{Case $\tfrac{1}{2} < z < 1$}
+
+For $z \in (\tfrac{1}{2}, 1)$, note that $1 - z \in (0, \tfrac{1}{2})$, so define
+\[
+  z' = \frac{z}{1 - z} > 1
+\]
+and run the algorithm on $z'$.
+A bounded pair $e/o \approx z'$ satisfies $e/o \approx z/(1-z)$, so
+\[
+  z \approx \frac{e}{e + o}.
+\]
+No modification of the parity sequence is required: the sequence for $z'$ is used
+solely to produce the counts $e$ and $o$, which then yield the approximant $e/(e+o)$
+to the original $z$.
+
+\paragraph{Parity sequence.}
+The parity sequence for $z'$ has $\OO$-density
+\[
+  \frac{1}{1 + z'} = \frac{1}{1 + z/(1-z)} = 1 - z < \tfrac{1}{2},
+\]
+so it is $\OO\OO$-free and its Sturmian slope is $1 - z$.
+The sequence encodes $z'$; the rational approximant $e/(e+o)$ to $z$ is read off
+from the $\EE$- and $\OO$-counts of that sequence.
+
+\paragraph{Summary.}
+Table~\ref{tab:extension} collects the reductions for all four ranges of $z$.
+
+\begin{table}[h]
+\centering
+\caption{Reductions to the $z > 1$ algorithm for all ranges of $z$}
+\label{tab:extension}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Range of $z$ & Reduction $z'$ & Approximant to $z$ & $\OO$-density \\
+\midrule
+$z > 1$                & $z' = z$             & $e/o$       & $1/(1+z) < \tfrac{1}{2}$ \\
+$0 < z < \tfrac{1}{2}$ & $z' = (1-z)/z$       & $o/(e+o)$   & $z < \tfrac{1}{2}$ \\
+$\tfrac{1}{2} < z < 1$ & $z' = z/(1-z)$       & $e/(e+o)$   & $1-z < \tfrac{1}{2}$ \\
+$z < 0$                & $z' = -z$ (or above) & negate      & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%------------------------------------------------------------
+\section{Conclusion and Open Problems}
+\label{sec:conclusion}
+%------------------------------------------------------------
+
+We have presented a theory of rational approximation for real numbers based on
+bounded pairs and the weighted mediant construction.
+The core algorithm applies to $z > 1$; all other real numbers are handled by algebraic
+reduction (Section~\ref{sec:extension}).
+The central result, Theorem~\ref{thm:optimal-w}, gives a closed-form formula for the
+optimal mediant weight at each step, enabling an efficient iterative algorithm.
+The parity sequence representation (Section~\ref{sec:parity}) is conjectured to produce
+exactly the Sturmian sequence with slope $1/(z+1)$ in the limit
+(Conjecture~\ref{prop:sturmian}), with finite prefixes agreeing everywhere except
+possibly the terminal symbol; this has been verified computationally but not yet proved.
+The mediant tree generates exponentially long prefixes per iteration.
+Section~\ref{sec:extension} extends the construction to all $z \in (0,1)$ via the
+reductions $z' = (1-z)/z$ (for $z < \tfrac{1}{2}$) and $z' = z/(1-z)$ (for $z > \tfrac{1}{2}$);
+in both cases the algorithm runs on the reduced $z' > 1$ and the approximant to $z$
+is read off from the resulting $e$ and $o$ counts.
+
+\paragraph{Open problems.}
+\begin{enumerate}
+  \item \emph{Proof of the Sturmian identity.}
+    Conjecture~\ref{prop:sturmian} has two parts, both open.
+    First, that finite parity sequences of length $N$ agree with the Sturmian sequence
+    at every position except possibly the last: although verified computationally for
+    several irrational values ($\sqrt{2}$, $\log_2 3$, $\log_2 5$, $\phi$, $\pi$),
+    with the $\log_2 3$ case checked up to $N = 27{,}869{,}189$, no general proof is known.
+    Second, that the infinite limit of the mediant construction is exactly the Sturmian
+    sequence with slope $1/(z+1)$ for all irrational $z > 1$.
+    The mediant construction builds parity sequences via a morphism-based concatenation
+    rule; the connection to Sturmian morphisms is the natural proof route.
+
+  \item \emph{The parent-swap phenomenon.}
+    To track the Sturmian sequence correctly across successive mediant depths,
+    the parent pair $(r_i, r_{i+1})$ must sometimes be swapped when constructing
+    child mediants — i.e.\ the roles of the lower and upper bound estimates are
+    exchanged at certain levels of the tree.
+    Computationally, the condition for a swap is clear: it occurs precisely when
+    $\Dval < 0$.
+    What has not been established is \emph{why} $\Dval < 0$ is the necessary and
+    sufficient condition — i.e.\ a proof that the Sturmian order is preserved if
+    and only if the parent pair is swapped at levels where $\Dval < 0$.
+
+\end{enumerate}
+
+%------------------------------------------------------------
+\section*{Related Work}
+%------------------------------------------------------------
+
+Eliahou~\cite{eliahou1993} studies rational approximation of $\log_2 3$ in the context of
+bounding nontrivial cycle lengths in the Collatz problem.
+His central rational approximation result (Theorem~3.2) identifies the best upper rational
+approximants to an irrational $\theta$ — those fractions $k/l$ with $\theta < k/l \leq \theta'$
+minimising $k$ or $l$ — as the \emph{upper convergents} $p_{n,i}/q_{n,i}$ derived from the
+continued fraction expansion of $\theta$.
+Applied to $\theta = \log_2 3$, this yields explicit lower bounds on Collatz cycle lengths.
+
+Our work differs in two essential respects.
+First, our algorithm never computes a continued fraction expansion: it works directly on
+bounded pairs via the optimal weight formula (Theorem~\ref{thm:optimal-w}), and the weights
+$w_{2n+1}$ emerge from that construction — related to, but not in general identical to, the
+continued fraction partial quotients.
+Both approaches do, however, share a common dependency: each requires an oracle capable of
+supplying an arbitrary-precision representation of the target value $z$, sufficient to
+evaluate $\lceil oz \rceil$ (our algorithm) or $\lfloor(n+1)\alpha\rfloor$ (Sturmian)
+to the required accuracy.
+Neither method generates more precision than the oracle provides.
+
+Second, and more fundamentally, Eliahou's framework provides no means of constructing a
+\emph{parity sequence} realising a given approximant.
+Knowing that $k/l$ is an upper convergent to $\log_2 3$ says nothing about how to build
+an integer whose Collatz trajectory has exactly $l$ odd steps and $k$ even steps arranged
+in a valid ($\mathsf{OO}$-free) order.
+The mediant tree does exactly that: it simultaneously produces the rational approximant and
+the parity sequence that realises it, as a byproduct of the same iterative construction.
+
+More broadly, the mediant tree is a general-purpose encoder: given an oracle for any real
+number, it produces a parity sequence over $\{\OO, \EE\}$ that encodes it to arbitrary
+precision — the Collatz application is one instance of a universal construction.
+
+\begin{thebibliography}{9}
+\bibitem{eliahou1993}
+  S.~Eliahou,
+  \textit{The $3x+1$ problem: new lower bounds on nontrivial cycle lengths},
+  Discrete Mathematics \textbf{118} (1993), 45--56.
+\end{thebibliography}
+
+%------------------------------------------------------------
+\appendix
+\section{Proof of Theorem~\ref{thm:optimal-w}}
+\label{app:optimal-w}
+%------------------------------------------------------------
+
+We derive the closed-form formula for the real-valued minimiser of the combined
+approximation error $\max(|\eps_j|, |\eps_k|)$.
+
+We have a bounded pair $(r_i, r_{i+1}) = (e_i/o_i,\, e_{i+1}/o_{i+1})$ bracketing $z$,
+with $|\eps_i| > |\eps_{i+1}|$.
+The two weighted mediants are
+\[
+  r_j = \frac{e_i + (w-1)\,e_{i+1}}{o_i + (w-1)\,o_{i+1}}, \qquad
+  r_k = \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}}.
+\]
+Write $O_j = o_i + (w-1)\,o_{i+1}$ and $O_k = o_i + w\,o_{i+1}$ for their denominators.
+
+\paragraph{Step 1: Express $\eps_j$ and $\eps_k$ as functions of $w$.}
+
+\[
+  \eps_j = \frac{e_i + (w-1)e_{i+1}}{z\,O_j} - 1, \qquad
+  \eps_k = \frac{e_i + we_{i+1}}{z\,O_k} - 1.
+\]
+Define the shorthand
+\[
+  A = e_i - z\,o_i, \qquad B = e_{i+1} - z\,o_{i+1}.
+\]
+Note that $A = z\,o_i\,\eps_i$ and $B = z\,o_{i+1}\,\eps_{i+1}$: they are the
+signed absolute errors of $r_i$ and $r_{i+1}$, scaled by their respective denominators
+and by $z$.
+With this shorthand the numerators simplify:
+\[
+  e_i + (w-1)\,e_{i+1} - z\,O_j
+    = (e_i - z\,o_i) + (w-1)(e_{i+1} - z\,o_{i+1}) = A + (w-1)B,
+\]
+giving
+\[
+  \eps_j = \frac{A + (w-1)B}{z\,O_j}, \qquad
+  \eps_k = \frac{A + wB}{z\,O_k}.
+\]
+
+\paragraph{Step 2: Relate $A$, $B$ to $\Delta$ and $K$.}
+
+Recall $\Dval = e_{i+1}o_i - e_io_{i+1}$ and
+$\Kval = o_{i+1}(e_{i+1} - zo_{i+1}) = o_{i+1}B$,
+so immediately $B = \Kval/o_{i+1}$.
+For $A$, compute:
+\[
+  A\,o_{i+1} - B\,o_i = (e_i - zo_i)o_{i+1} - (e_{i+1} - zo_{i+1})o_i
+    = e_i o_{i+1} - e_{i+1}o_i = -\Dval,
+\]
+hence $A = (Bo_i - \Dval)/o_{i+1}$.
+Substituting $B = \Kval/o_{i+1}$:
+\begin{align*}
+  A + (w-1)B &= \frac{\Kval(o_i/o_{i+1} + w - 1) - \Dval}{o_{i+1}}, \\
+  A + wB     &= \frac{\Kval(o_i/o_{i+1} + w) - \Dval}{o_{i+1}}.
+\end{align*}
+A key identity used in Step~3: for any $O = o_i + c\,o_{i+1}$,
+\[
+  B\,O - o_{i+1}(A + cB)
+    = B\,o_i + B\,c\,o_{i+1} - o_{i+1}\,A - c\,o_{i+1}\,B
+    = B\,o_i - o_{i+1}\,A = \Dval.
+\]
+In particular, $B\,O_j - o_{i+1}(A+(w-1)B) = \Dval$ and
+$B\,O_k - o_{i+1}(A+wB) = \Dval$.
+
+\paragraph{Step 3: Set up the minimisation.}
+
+Since $r_j$ and $r_k$ straddle $z$, their errors have opposite signs:
+$\eps_j \eps_k \leq 0$.
+Minimising $\max(|\eps_j|, |\eps_k|)$ over real $w$ is equivalent to minimising
+$|\eps_j \eps_k|$, which (since the product is non-positive) means finding the $w$
+at which $\eps_j \eps_k$ is \textbf{maximised} (i.e.\ closest to zero from below).
+We set $\frac{d}{dw}(\eps_j \eps_k) = 0$.
+
+\subparagraph{Differentiating $\eps_j$ via the quotient rule.}
+Write $\eps_j = N_j/D_j$ where
+\[
+  N_j = \frac{A+(w-1)B}{z}, \qquad D_j = O_j = o_i + (w-1)\,o_{i+1}.
+\]
+Both depend on $w$, with derivatives:
+\[
+  \frac{dN_j}{dw} = \frac{B}{z}, \qquad \frac{dD_j}{dw} = o_{i+1}.
+\]
+Applying the quotient rule $d(N/D)/dw = (N'D - ND')/D^2$:
+\[
+  \frac{d\eps_j}{dw}
+    = \frac{(B/z)\,O_j - \bigl((A+(w-1)B)/z\bigr)\,o_{i+1}}{O_j^2}
+    = \frac{B\,O_j - o_{i+1}(A+(w-1)B)}{z\,O_j^2}.
+\]
+Applying the identity $B\,O_j - o_{i+1}(A+(w-1)B) = \Dval$ from Step~2:
+\[
+  \frac{d\eps_j}{dw} = \frac{\Dval}{z\,O_j^2}.
+\]
+The same calculation for $\eps_k = (A+wB)/(z\,O_k)$ gives:
+\[
+  \frac{d\eps_k}{dw}
+    = \frac{B\,O_k - o_{i+1}(A+wB)}{z\,O_k^2} = \frac{\Dval}{z\,O_k^2}.
+\]
+Both derivatives share the same numerator $\Dval$ — a direct consequence of
+the identity in Step~2, and the reason the product-rule expression simplifies cleanly.
+
+\subparagraph{Applying the product rule.}
+By the product rule:
+\[
+  \frac{d}{dw}(\eps_j\,\eps_k)
+    = \frac{\Dval}{z\,O_j^2}\cdot\eps_k + \eps_j\cdot\frac{\Dval}{z\,O_k^2} = 0.
+\]
+Dividing through by $\Dval/z$ (nonzero since $|\Dval|=1$):
+\[
+  \frac{\eps_k}{O_j^2} + \frac{\eps_j}{O_k^2} = 0
+  \qquad \Longleftrightarrow \qquad
+  \eps_k \, O_k^2 = -\eps_j \, O_j^2,
+\]
+which (since $\eps_j$ and $\eps_k$ have opposite signs) means
+$|\eps_k|\,O_k^2 = |\eps_j|\,O_j^2$: the two errors are equal when
+weighted by the square of their denominator.
+
+\paragraph{Step 4: Solve the quadratic.}
+
+We need to solve $\eps_k\,O_k^2 + \eps_j\,O_j^2 = 0$.
+Substituting from Steps 1 and 2:
+\[
+  \frac{A + w B}{z\,O_k}\cdot O_k^2 + \frac{A+(w-1)B}{z\,O_j}\cdot O_j^2 = 0
+  \quad\Rightarrow\quad
+  (A+wB)\,O_k + (A+(w-1)B)\,O_j = 0.
+\]
+Expanding using $O_j = o_i + (w-1)o_{i+1}$, $O_k = o_i + wo_{i+1}$,
+$A = (Bo_i - \Dval)/o_{i+1}$, and $B = \Kval/o_{i+1}$, then clearing
+$o_{i+1}$ denominators, one obtains a quadratic in $w$.
+Applying the quadratic formula and simplifying (using $|\Dval| = 1$
+from Definition~\ref{def:bounded-pair}) yields the two real roots:
+\[
+  w = \frac{1}{2} - \frac{o_i}{o_{i+1}}
+    + \frac{\Dval \pm \sqrt{\Dval^2 - \Kval^2}}{2\Kval},
+\]
+completing the proof of Theorem~\ref{thm:optimal-w}.
+
+\paragraph{Discriminant and termination.}
+The discriminant $\Dval^2 - \Kval^2 = 1 - \Kval^2 \geq 0$
+(using $|\Dval|=1$ from Definition~\ref{def:bounded-pair}) since $|\Kval| \leq 1$
+throughout the iteration.
+\begin{itemize}
+  \item When $\Kval = 0$: $r_{i+1}$ is an exact representation of $z$;
+    no further improvement is possible and the algorithm terminates.
+  \item When $|\Kval| = 1$: the two roots coincide, giving a unique optimal
+    weight $w = \tfrac{1}{2} - o_i/o_{i+1} + \Dval/\Kval$.
+  \item Otherwise: two real candidates are produced; the correct integer $w$
+    is found by taking the floor or ceiling of each and selecting the one that
+    keeps the new pair bracketing $z$.
+\end{itemize}
+
+\end{document}

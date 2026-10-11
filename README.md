@@ -10,6 +10,21 @@ Research notes and papers on the Collatz conjecture.
 
 ## Papers
 
+### Paper 76 — Using Mediant Trees to Transduce Rational Approximations of Real Numbers *(working paper)*
+[PDF](https://wildducktheories.github.io/collatz/papers/76-rational-approximations/76-rational-approximations.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/76-rational-approximations/76-rational-approximations.tex)
+
+Given an oracle for a real number $z$, constructs a mediant tree of increasingly precise
+rational approximations via weighted mediants, with an optimal integer weight given by a
+closed-form formula. The mediant tree is then converted into a parity sequence over
+$\{\mathsf{O}, \mathsf{E}\}$, conjectured to agree with the Sturmian sequence of slope
+$1/(1+z)$ at every position except possibly the last symbol of each finite prefix
+(verified for $\sqrt{2}$, $\log_2 3$, $\log_2 5$, $\varphi$, $\pi$). Also extends both
+algorithms to real numbers $z \in (0,1)$ and $z < 0$.
+
+Companion visualisation: [Mediant Parity app](https://wildducktheories.github.io/collatz/apps/mediant-parity/dist/).
+
+---
+
 ### Paper 64 — Rigidity of the Syracuse Transition Matrix *(working paper)*
 [PDF](https://wildducktheories.github.io/collatz/papers/64-transitions/64-transitions.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/64-transitions/64-transitions.tex)
 
@@ -147,6 +162,19 @@ Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for 
 ---
 
 ## Apps
+
+### Mediant Parity Sequences
+[Launch](https://wildducktheories.github.io/collatz/apps/mediant-parity/dist/) | [Source](apps/mediant-parity/)
+
+3D visualisation of mediant tree parity sequences alongside the Sturmian sequence.
+Polar coordinates: angle = outer mediant index, radius = mediant shell, height = sequence position.
+For each outer mediant, chains of nodes walk inward through ancestor shells to the Sturmian core (r=0).
+Red = O (odd), green = E (even); the core uses lighter shades so mismatches with the innermost shell
+are immediately visible. Select mode (S key) picks a node and highlights its full chain to the core;
+H dims all other planes for an unobstructed view; info panel shows running E/O ratios vs z and
+Sturmian agreement at the selected point. Companion to Paper 76.
+
+---
 
 ### Syracuse Stack
 [Launch](https://wildducktheories.github.io/collatz/apps/syracuse-stack/dist/) | [Source](apps/syracuse-stack/)
