@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mediant Parity Sequences</title>
+    <style>*{box-sizing:border-box;margin:0;padding:0}body{color:#eee;background:#111;font-family:monospace;overflow:hidden}#canvas{display:block}#hud{background:#000000b3;border:1px solid #444;border-radius:6px;min-width:220px;padding:12px 16px;font-size:13px;line-height:2;position:fixed;top:16px;left:16px}#hud .label{color:#888}#hud .val{color:#eee;font-weight:700}#hud .odd{color:#f44336}#hud .even{color:#4caf50}#controls{background:#000000b3;border:1px solid #444;border-radius:6px;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px;padding:10px 20px;font-size:13px;display:flex;position:fixed;bottom:16px;left:50%;transform:translate(-50%)}#controls label{color:#aaa}#controls select,#controls input[type=text],#controls input[type=number]{color:#eee;background:#222;border:1px solid #555;border-radius:4px;padding:4px 8px;font-family:monospace;font-size:13px}#controls button{color:#eee;cursor:pointer;background:#333;border:1px solid #555;border-radius:4px;padding:5px 12px;font-size:13px}#controls button:hover{background:#444}#btn-select.active{color:#ff0;background:#555;border-color:#ff0}#navbar{font-size:12px;position:fixed;top:16px;right:16px}#navbar a{color:#aaa;text-decoration:none}#navbar a:hover{color:#eee}#z-custom,#log-params,#sqrt-param{display:none}</style>
+    <script type="module" crossorigin src="/collatz/apps/mediant-parity/dist/assets/index-wJwp3ym1.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">
+      <div><span class="label">z = </span><span class="val" id="hud-z">—</span></div>
+      <div><span class="label">mediants = </span><span class="val" id="hud-n">—</span></div>
+      <div><span class="label">sequence length = </span><span class="val" id="hud-len">—</span></div>
+      <div><span class="label">max radius = </span><span class="val" id="hud-r">—</span></div>
+      <div style="margin-top:8px; font-size:12px; line-height:1.8;">
+        <span class="odd">■ O (odd)</span>&nbsp;&nbsp;
+        <span class="even">■ E (even)</span>
+      </div>
+      <div style="margin-top:4px; font-size:11px; color:#666;">
+        drag = rotate &nbsp;|&nbsp; scroll = zoom
+      </div>
+      <div id="info-panel" style="display:none; margin-top:10px; border-top:1px solid #444; padding-top:8px; font-size:12px; line-height:1.9;">
+        <div><span class="label">pos j = </span><span class="val" id="info-j">—</span></div>
+        <div><span class="label">outer mediant = </span><span class="val" id="info-wi">—</span></div>
+        <div><span class="label">sym at j = </span><span class="val" id="info-sym">—</span></div>
+        <div><span class="label">Sturmian at j = </span><span class="val" id="info-sturmian">—</span></div>
+        <div><span class="val" id="info-match">—</span></div>
+        <div style="margin-top:4px;"><span class="label">E/O ratio (mediant) = </span><span class="val" id="info-ratio-med">—</span></div>
+        <div><span class="label">E/O ratio (Sturmian) = </span><span class="val" id="info-ratio-stur">—</span></div>
+        <div><span class="label">z ≈ </span><span class="val" id="info-z">—</span></div>
+      </div>
+    </div>
+    <div id="controls">
+      <label>z:
+        <select id="z-type">
+          <option value="log">log_h(g)</option>
+          <option value="pi">π</option>
+          <option value="phi">φ</option>
+          <option value="sqrt">√n</option>
+          <option value="custom">decimal</option>
+        </select>
+      </label>
+      <span id="log-params">
+        <label>h: <input type="number" id="log-h" value="2" min="2" max="20" style="width:50px"/></label>
+        <label>g: <input type="number" id="log-g" value="3" min="2" max="100" style="width:50px"/></label>
+      </span>
+      <span id="sqrt-param">
+        <label>n: <input type="number" id="sqrt-n" value="2" min="2" max="1000" style="width:60px"/></label>
+      </span>
+      <span id="z-custom">
+        <label>value: <input type="text" id="z-value" value="1.6180339887" style="width:140px"/></label>
+      </span>
+      <label>sequence length:
+        <input type="number" id="seq-len" value="200" min="10" max="5000" style="width:70px"/>
+      </label>
+      <button id="btn-rebuild">Rebuild</button>
+      <button id="btn-select">Select [S]</button>
+    </div>
+    <div id="navbar">
+      <a href="https://github.com/wildducktheories/collatz" target="_blank">Collatz</a>
+    </div>
+  </body>
+</html>
