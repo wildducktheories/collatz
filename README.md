@@ -10,16 +10,29 @@ Research notes and papers on the Collatz conjecture.
 
 ## Papers
 
-### Paper 76 — Using Mediant Trees to Transduce Rational Approximations of Real Numbers *(working paper)*
+### Paper 77 — Mediants and Collatz: Constructing Generalised Collatz Trajectories via Rational Approximation *(working paper)*
+[PDF](https://wildducktheories.github.io/collatz/papers/77-mediants-and-collatz/77-mediants-and-collatz.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/77-mediants-and-collatz/77-mediants-and-collatz.tex)
+
+Applies the mediant tree of Paper 76 to generalised Collatz systems $(g, h)$ with odd
+step $x \mapsto gx + q$ and even step $x \mapsto x/h$. A mediant word over
+$\{\mathsf{O}, \mathsf{E}\}$ realising a good rational approximant to $\log_h g$ is
+converted into a concrete starting integer $x_0$ via a modular-arithmetic pipeline.
+Shows that the canonical greedy parity-sequence algorithm produces exactly the Sturmian
+word for slope $1/(1+\log_h g)$, and compares with Eliahou's continued-fraction approach
+to Collatz cycle bounds.
+
+---
+
+### Paper 76 — Rational Approximations via the Mediant Tree *(working paper)*
 [PDF](https://wildducktheories.github.io/collatz/papers/76-rational-approximations/76-rational-approximations.pdf) | [Source](https://wildducktheories.github.io/collatz/papers/76-rational-approximations/76-rational-approximations.tex)
 
-Given an oracle for a real number $z$, constructs a mediant tree of increasingly precise
-rational approximations via weighted mediants, with an optimal integer weight given by a
-closed-form formula. The mediant tree is then converted into a parity sequence over
-$\{\mathsf{O}, \mathsf{E}\}$, conjectured to agree with the Sturmian sequence of slope
-$1/(1+z)$ at every position except possibly the last symbol of each finite prefix
-(verified for $\sqrt{2}$, $\log_2 3$, $\log_2 5$, $\varphi$, $\pi$). Also extends both
-algorithms to real numbers $z \in (0,1)$ and $z < 0$.
+Given an oracle for a real number $\theta > 1$, constructs a mediant tree of increasingly
+precise rational approximants via weighted mediants, with the optimal integer weight given
+by a closed-form formula. Proves that the mediant word encoding the approximation path is
+identical to the Sturmian word with slope $1/(1+\theta)$ at all interior positions, with
+the terminal symbol of each finite prefix fully characterised by the sign of $\Delta$.
+Also establishes two structural invariants (universal $\mathsf{EE}$-prefix and palindrome
+interior), and extends the construction to all real $\theta \notin \{0, 1\}$.
 
 Companion visualisation: [Mediant Parity app](https://wildducktheories.github.io/collatz/apps/mediant-parity/dist/).
 

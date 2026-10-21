@@ -1,0 +1,441 @@
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{draftwatermark}
+\SetWatermarkText{DRAFT}
+\SetWatermarkScale{1.5}
+\SetWatermarkColor[gray]{0.85}
+
+\geometry{margin=1in}
+
+%------------------------------------------------------------
+% Theorem environments
+%------------------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\theoremstyle{plain}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+%------------------------------------------------------------
+% Notation macros
+%------------------------------------------------------------
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\OO}{\mathsf{O}}
+\newcommand{\EE}{\mathsf{E}}
+
+%------------------------------------------------------------
+% Hyperref setup
+%------------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+}
+
+\title{Mediants and Collatz:\\
+  Constructing Generalised Collatz Trajectories\\
+  via Rational Approximation}
+\author{Jon Seymour}
+\date{2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We describe an application of the mediant tree algorithm of~\cite{paper76} to the
+construction of generalised Collatz trajectories.
+Given a generalised Collatz system $(g, h)$ with odd step $x \mapsto gx + q$ and
+even step $x \mapsto x/h$, a parity sequence realising a good rational approximant
+to $\theta = \log_h g$ is produced directly by the mediant tree as a mediant word
+over $\{\OO, \EE\}$.
+We show how to convert such a mediant word into a concrete starting integer $x_0$
+via a standard modular-arithmetic pipeline, and explain why the canonical greedy
+parity-sequence algorithm produces exactly the Sturmian word for slope
+$1/(1+\log_h g)$.
+We compare our approach to Eliahou's continued-fraction bounding
+method~\cite{eliahou1993}, and note that the mediant tree simultaneously produces
+both the rational approximant and a concrete trajectory realising it --- a capability
+absent from Eliahou's framework.
+\end{abstract}
+
+\tableofcontents
+
+%------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+%------------------------------------------------------------
+
+A \emph{generalised Collatz sequence} is defined by a pair $(g, h)$ with $g, h \geq 2$
+and $\gcd(g, h) = 1$: an odd element $x$ is mapped to $gx + q$ and an even element
+$x$ is divided by $h$.
+The standard Collatz sequence corresponds to $g = 3$, $h = 2$, $q = 1$.
+The parity structure of a trajectory --- the sequence of odd and even steps --- is
+governed by $\theta = \log_h g$: a long-descending trajectory must have the ratio
+of even to odd steps approximate $\theta$ from above.
+
+The companion paper~\cite{paper76} develops the \emph{mediant tree}, an algorithm
+that constructs increasingly precise rational approximants to any real $\theta > 1$
+together with a binary string over $\{\OO, \EE\}$ --- the \emph{mediant word} ---
+that encodes the approximation path.
+The mediant word is proven to be identical to the Sturmian word with slope
+$1/(1+\theta)$ at all interior positions, establishing a tight connection between
+rational approximation and combinatorics on words.
+
+The present paper describes the Collatz application that originally motivated
+the development of~\cite{paper76}.
+The main contributions are:
+\begin{enumerate}
+  \item A pipeline (Section~\ref{sec:pipeline}) for converting a mediant word into
+    a concrete starting integer $x_0$ whose generalised Collatz trajectory follows
+    the prescribed parity pattern for exactly $e + o$ steps.
+  \item A description (Section~\ref{sec:greedy}) of the greedy parity-sequence
+    algorithm and a proof that it produces the Sturmian word for slope
+    $1/(1+\log_h g)$.
+  \item A discussion (Section~\ref{sec:eliahou}) of the relationship to Eliahou's
+    work on rational approximation of $\log_2 3$ in the context of Collatz cycle
+    bounds.
+\end{enumerate}
+
+\paragraph{Organisation.}
+Section~\ref{sec:prelim} recalls the key definitions and results from~\cite{paper76}.
+Section~\ref{sec:collatz} introduces generalised Collatz sequences and parity
+sequences.
+Section~\ref{sec:pipeline} presents the step-by-step pipeline from mediant word
+to Collatz trajectory.
+Section~\ref{sec:greedy} describes the greedy algorithm and its Sturmian
+interpretation.
+Section~\ref{sec:not-sturmian} discusses why general Collatz trajectories are not
+Sturmian.
+Section~\ref{sec:eliahou} compares with Eliahou's approach.
+
+%------------------------------------------------------------
+\section{Preliminaries}
+\label{sec:prelim}
+%------------------------------------------------------------
+
+We recall the definitions and results from~\cite{paper76} that are used in this
+paper.
+All notation is consistent with that reference.
+
+A \emph{ratio} is a pair $(e, o) \in \NN^2$ with $\gcd(e, o) = 1$, written $e/o$.
+Given a real $\theta > 1$, a ratio $r = e/o$ is a \emph{good estimate} of $\theta$
+if $|e - \theta o| < 1$.
+Two good estimates $r_i = e_i/o_i$ and $r_{i+1} = e_{i+1}/o_{i+1}$ form a
+\emph{bounded pair} $(r_i, r_{i+1})$ if they bracket $\theta$ and satisfy
+$\Delta(r_i, r_{i+1}) := e_{i+1} o_i - e_i o_{i+1} = \pm 1$.
+
+Given a bounded pair $(r_i, r_{i+1})$ and a weight $w \geq 1$, the
+\emph{weighted mediant} is
+\[
+  \mathrm{Mediant}(r_i, r_{i+1}, w) = \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}}.
+\]
+The \emph{optimal weight} $w^*$ is the unique integer such that the pair
+$\bigl(\mathrm{Mediant}(r_i, r_{i+1}, w^*-1),\, \mathrm{Mediant}(r_i, r_{i+1}, w^*)\bigr)$
+brackets $\theta$; it is given in closed form by Theorem~8.1 of~\cite{paper76}.
+
+The \emph{mediant word} $\pi(r)$ of a ratio $r$ produced by the mediant tree is a
+string over $\{\OO, \EE\}$ of length $e + o$ encoding the sequence of weighted-mediant
+choices made to reach $r$ from the initial bounded pair.
+It is a lower Christoffel word (Lemma~9.3 of~\cite{paper76}), begins with $\EE\EE$
+for every non-leaf estimate (Theorem~12.4 of~\cite{paper76}), and is identical to
+the Sturmian word for slope $1/(1+\theta)$ at all interior positions
+(Theorem~12.6 of~\cite{paper76}).
+
+%------------------------------------------------------------
+\section{Generalised Collatz Sequences and Parity Sequences}
+\label{sec:collatz}
+%------------------------------------------------------------
+
+A \emph{generalised Collatz sequence} uses an odd step $x \mapsto gx + q$ and an
+even step $x \mapsto x/h$, where $g, h \in \NN$ with $g, h \geq 2$ and
+$\gcd(g, h) = 1$, and $q \in \ZZ$ with $q \neq 0$.
+The parity sequence structure depends only on $g$ and $h$ through
+$\theta = \log_h g$; the value of $q$ affects only the concrete starting
+residue $x_0$ (Step~4 of the pipeline in Section~\ref{sec:pipeline}).
+A \emph{parity sequence} is a string over $\{\OO, \EE\}$ recording the sequence
+of odd and even steps along a trajectory; $\OO$ denotes an odd step and $\EE$ an
+even step.
+
+For a trajectory to descend on average, the ratio of even steps to odd steps must
+exceed $\log_h g$: if a segment of length $e + o$ has $e$ even steps and $o$ odd
+steps, the net effect is multiplication by $g^o / h^e$, which is less than $1$ iff
+$e/o > \log_h g$.
+The boundary case $e/o = \lceil o\log_h g \rceil / o$ is a good estimate of
+$\log_h g$, and corresponds to the upper-bound condition
+\[
+  h^{e-1} < g^o < h^e.
+\]
+A parity sequence realising a good estimate $e/o$ must therefore have exactly $o$
+copies of $\OO$ and $e$ copies of $\EE$, with no two consecutive $\OO$'s.
+$\OO\OO$-avoidance holds on three independent grounds: it is a property of Sturmian
+sequences with $\alpha < 1/2$ (equivalently $\theta > 1$); it holds for $h = 2$
+trajectories when $q$ is odd and $\gcd(g, h) = 1$; and it is maintained by the
+mediant word generator by construction.
+By contrast, for $h \neq 2$ arbitrary trajectories need not be $\OO\OO$-free.
+Every $\OO\OO$-free parity sequence can be realised as a $gx + q$, $x/h$
+trajectory for some $q$ determined by the sequence~\cite{paper71}.
+
+%------------------------------------------------------------
+\section{From Mediant Word to Collatz Trajectory: the Pipeline}
+\label{sec:pipeline}
+%------------------------------------------------------------
+
+The mediant tree applies to any real $\theta > 1$, not only to logarithms.
+The following pipeline converts a mediant word into a concrete Collatz starting
+integer for any $(g, h)$ with $\theta = \log_h g$.
+
+\medskip
+\noindent\textbf{Step 1: Choose a real $\theta$ and an initial bounded pair.}
+Select any real $\theta > 1$ and a Farey-adjacent bounded pair $(r_0, r_1)$ with
+$r_0 < \theta < r_1$.
+For the standard Collatz system take $\theta = \log_2 3$; for the generalised
+system $(g, h)$ take $\theta = \log_h g$.
+The construction applies equally to any irrational $\theta$ (e.g.\ $\pi$,
+$\sqrt{2}$), in which case it produces rational approximants without a Collatz
+interpretation.
+
+\medskip
+\noindent\textbf{Step 2: Run the mediant tree.}
+Apply the optimal weight formula (Theorem~8.1 of~\cite{paper76}) to produce a
+sequence of mediant words $\pi(r_{2n+1})$ of increasing length.
+At level $n$, the word $\pi(r_{2n+1})$ has $o_{2n+1}$ odd steps and $e_{2n+1}$
+even steps, and $e_{2n+1}/o_{2n+1}$ is a good estimate of $\theta$ satisfying
+$h^{e-1} < g^o < h^e$ (upper bound) or $h^e < g^o < h^{e+1}$ (lower bound).
+
+\medskip
+\noindent\textbf{Step 3: Derive the path identity.}
+For a chosen mediant word $\sigma = \pi(r_{2n+1})$, the function
+\texttt{path\_identity($\sigma$)} constructs the \emph{basic path identity}
+\[
+  h^e\,x_n = g^o\,x_0 + q\,K(g, h),
+\]
+where $x_0$ is the starting value, $x_n$ is the value after $n = e + o$ steps
+following $\sigma$, and $K(g,h)$ is the \emph{carry polynomial} --- a polynomial
+in $g$ and $h$ whose coefficients record the cumulative effect of the additive
+terms along the trajectory, with $q$ scaling the carry to the chosen additive
+constant.
+This identity holds for \emph{every} $x_0$; it is a universal statement about the
+linear map defined by $\sigma$.
+Adding $g^o h^{e+1} t$ to both sides for any integer $t$ gives the equivalent
+\emph{shifted path identity}
+\[
+  h^e\bigl(x_n + g^o h\, t\bigr) = g^o\bigl(x_0 + h^{e+1} t\bigr) + q\,K(g, h),
+\]
+which makes explicit that the family of valid $(x_0, x_n)$ pairs forms an
+arithmetic progression with step $(h^{e+1}, g^o h)$, motivating the modulus
+$h^{e+1}$ in Step~4.
+
+\medskip
+\noindent\textbf{Step 4: Instantiate to concrete $(g, h)$ and solve for $x_0$.}
+The function \texttt{path\_identity\_params($\sigma$, $g$, $h$)} substitutes the
+concrete multiplier and base, computes $K$, and solves
+\[
+  x_0 \;\equiv\; -q\,K \cdot (g^o)^{-1} \pmod{h^{e+1}}
+\]
+for the canonical starting residue $x_0 \in [0, h^{e+1})$ whose trajectory follows
+$\sigma$ for exactly $o + e$ steps.
+The modulus is $h^{e+1}$ rather than $h^e$ because the word ends in $\OO$: after
+all $e$ halvings the final odd step imposes one additional divisibility condition
+on $x_0$.
+For $h = 2$ (the standard Collatz system) this residue is unique; for $h \geq 3$
+there may be multiple valid starting residues modulo $h^{e+1}$, and the formula
+gives the canonical (smallest non-negative) representative.
+
+\medskip
+\noindent\textbf{Step 5: Read off the approximation data.}
+The output tuple $(o,\, e,\, e/o,\, x_0)$ encodes:
+\begin{itemize}
+  \item $e/o$ --- a rational approximant to $\theta$, with $e/(o+e)$ and $o/(o+e)$
+    the even and odd step densities;
+  \item $x_0$ --- the canonical starting residue $(\bmod\; h^{e+1})$ whose $gx+q$
+    trajectory realises the mediant word $\sigma$ for exactly $o + e$ steps.
+\end{itemize}
+Setting $t = 0$ gives $x_n = (g^o x_0 + qK) / h^e$, which is also determined by
+$x_0$.
+As $n \to \infty$ the ratio $e_{2n+1}/o_{2n+1}$ converges to $\theta$, with
+convergence rate governed by the continued-fraction expansion of $\theta$.
+
+\medskip
+\noindent\textbf{Remark.}
+Evaluating the Collatz iteration from $x_0$ is \emph{not} an efficient way to
+generate the parity sequence: it requires arithmetic with integers of size
+$O(h^e)$, which grows exponentially in the word length.
+The parity sequence itself is produced directly and efficiently by the mediant
+tree, with no large integer arithmetic.
+The value of $x_0$ lies in establishing that a concrete Collatz trajectory
+realising the sequence exists --- not in using it to regenerate the sequence.
+
+\medskip
+\noindent\textbf{Remark (residue constraint).}
+To the extent that a $3x+1$ trajectory matches a factor of the Sturmian word for
+$\theta = \log_2 3$, every odd element of the trajectory is congruent to $1$ or
+$3$ modulo~$8$.
+This is a consequence of the Sturmian alphabet being $\{\EE\OO, \EE\EE\OO\}$:
+an odd step from a residue $r \equiv 1 \pmod{8}$ produces $v_2(3r+1) = 2$ even
+steps (an $\EE\EE\OO$ block), while $r \equiv 3 \pmod{8}$ produces
+$v_2(3r+1) = 1$ even step (an $\EE\OO$ block); residue $5 \pmod{8}$ forces the
+parity sequence $\OO\EE\EE\EE\cdots$, and residue $7 \pmod{8}$ forces the parity
+sequence $\OO\EE\OO\EE\OO$; neither pattern occurs in the Sturmian word for
+$\log_2 3$, so neither residue can appear in a trajectory matching it.
+A full account is given in~\cite{paper33}.
+
+%------------------------------------------------------------
+\section{The Greedy Parity Sequence Algorithm}
+\label{sec:greedy}
+%------------------------------------------------------------
+
+For any generalised Collatz system $(g, h)$ with $g, h \geq 2$ and $\gcd(g,h)=1$,
+there is a simple greedy algorithm that generates the idealised parity sequence
+using only integer arithmetic --- no floating-point evaluation of $\log_h g$ is
+required.
+Let $\mathit{short} = \lfloor\log_h g\rfloor$ and
+$\mathit{long} = \mathit{short} + 1$ (the two possible $\EE$-run lengths, since
+$\log_h g \in (\mathit{short}, \mathit{long})$).
+
+\begin{verbatim}
+def collatz_log_h_of_g(g=3, h=2):
+    e=o=0
+    short=math.floor(math.log(g, h))
+    long=short+1
+    while True:
+        if g**(o+1) < h**(e+short):
+            yield from 'E' * short
+            yield 'O'
+            e+=short
+            o+=1
+        else:
+            yield from 'E' * long
+            yield 'O'
+            e+=long
+            o+=1
+\end{verbatim}
+
+The condition $g^{o+1} < h^{e+\mathit{short}}$ is a pure integer comparison
+equivalent to $(o+1)\log_h g < e + \mathit{short}$, i.e.\ appending a
+\emph{short} block $\EE^{\mathit{short}}\OO$ is sufficient to keep the ratio
+$e/o$ above $\log_h g$; otherwise a \emph{long} block $\EE^{\mathit{long}}\OO$
+is needed.
+This is exactly the Beatty/Sturmian greedy rule: at each $\OO$ step the algorithm
+selects the shorter run when the fractional part of $(o+1)\log_h g$ is already
+covered by the accumulated $e$, and the longer run otherwise.
+
+The resulting sequence is the Sturmian word for slope
+$\alpha = 1/(1 + \log_h g)$, as verified by the identity
+$s_n = \lfloor(n+1)\alpha\rfloor - \lfloor n\alpha\rfloor$ for all $n$.
+
+For the standard case $g = 3$, $h = 2$ the first 60 symbols are:
+\[
+  \mathtt{EEOEEOEOEEOEOEEOEEOEOEEOEOEEOEEOEOEEOEOEEOEOEEOEEOEOEEOEOEEO},
+\]
+with $\OO$-density converging to $1/(1+\log_2 3) = \log_6 2 \approx 0.387$ ---
+the \emph{ideally balanced} parity pattern, descending as quickly as theory
+permits.
+For $g = 5$, $h = 2$ ($\mathit{short} = 2$, $\mathit{long} = 3$, since
+$\log_2 5 \approx 2.322$) the first 60 symbols are:
+\[
+  \mathtt{EEEOEEOEEOEEEOEEOEEOEEEOEEOEEOEEEOEEOEEOEEEOEEOEEOEEEOEEOEEO},
+\]
+with $\OO$-density converging to $1/(1+\log_2 5) \approx 0.301$.
+The $5x+1$ system has known non-trivial cycles; the mediant word describes the
+idealised parity pattern of a trajectory that descends at the asymptotically
+optimal rate for that system.
+
+%------------------------------------------------------------
+\section{General Collatz Sequences are not Sturmian}
+\label{sec:not-sturmian}
+%------------------------------------------------------------
+
+The Sturmian word for slope $\alpha = 1/(1+\theta)$ consists of exactly two block
+types: $\EE^{\lfloor\theta\rfloor}\OO$ and $\EE^{\lceil\theta\rceil}\OO$,
+interleaved in the Sturmian pattern.
+These are precisely the leaf words of the mediant tree for $\theta$.
+A Sturmian word can never contain a block of any other length.
+
+A general Collatz trajectory is far less constrained: an actual orbit can produce
+$\EE$-runs of any length, interleaved freely.
+The mediant word (equivalently, the Sturmian word) is the \emph{ideally balanced}
+special case.
+
+Moreover, even among trajectories that approximate $\log_h g$ closely, the
+Sturmian alphabet $\{\EE^{\lfloor\theta\rfloor}\OO,\, \EE^{\lceil\theta\rceil}\OO\}$
+is not the only primitive alphabet that can arise.
+For example, the known non-trivial cycles of the $5x+1$ system have alphabets
+$\{\EE\OO, \EE\EE\EE\EE\OO\}$, $\{\EE\OO, \EE\EE\EE\EE\EE\OO\}$, and
+$\{\EE\OO, \EE\EE\EE\OO\}$ --- each containing the block $\EE\OO$ of length $2$,
+which does not appear in the Sturmian alphabet $\{\EE\EE\OO, \EE\EE\EE\OO\}$ at
+all.
+The mediant tree generates parity sequences over the Sturmian alphabet only; it
+produces the optimal approximation to $\theta$ but does not exhaust all primitive
+alphabets whose $e/o$ ratio approximates $\theta$.
+
+%------------------------------------------------------------
+\section{Relationship to Eliahou's Work}
+\label{sec:eliahou}
+%------------------------------------------------------------
+
+Eliahou~\cite{eliahou1993} studies rational approximation of $\log_2 3$ in the
+context of bounding nontrivial cycle lengths in the Collatz problem.
+His approach identifies best upper rational approximants via the continued-fraction
+expansion of $\log_2 3$, yielding explicit lower bounds on Collatz cycle lengths.
+
+Our work differs in two respects.
+First, our algorithm constructs approximants directly from bounded pairs via the
+optimal weight formula (Theorem~8.1 of~\cite{paper76}), with no continued-fraction
+computation; the connection to continued fractions is a consequence of the Sturmian
+identity.
+Second, and more fundamentally, Eliahou's framework gives no means of constructing
+a parity sequence realising a given approximant.
+The mediant tree simultaneously produces the rational approximant and the mediant
+word that realises it, as a byproduct of the same construction.
+
+Where Eliahou's work illuminates the relationship between Collatz trajectories and
+good rational approximations of $\log_2 3$ specifically, the present work
+generalises in both directions: the mediant tree constructs good rational
+approximants to \emph{any} real $\theta$ (see~\cite{paper76}), and the pipeline
+of Section~\ref{sec:pipeline} produces a concrete $gx+q$ trajectory (for any
+$g, h \geq 2$ with $\gcd(g,h)=1$ and $q \neq 0$) realising each approximant.
+The result is that every sufficiently good rational approximation to any real
+number is realisable by a constructible generalised Collatz trajectory.
+
+%------------------------------------------------------------
+\begin{thebibliography}{9}
+
+\bibitem{paper76}
+  J.~Seymour,
+  \textit{Rational Approximations via the Mediant Tree},
+  \texttt{https://github.com/wildducktheories/collatz}, Paper~76 (2026).
+
+\bibitem{eliahou1993}
+  S.~Eliahou,
+  \textit{The $3x+1$ problem: new lower bounds on nontrivial cycle lengths},
+  Discrete Mathematics \textbf{118} (1993), 45--56.
+
+\bibitem{paper71}
+  J.~Seymour,
+  \textit{The Structural Polynomial of a Parity Sequence},
+  \texttt{https://github.com/wildducktheories/collatz}, Paper~71 (2026).
+
+\bibitem{paper33}
+  J.~Seymour,
+  \textit{A Regular Expression Language for the Collatz Graph},
+  \texttt{https://github.com/wildducktheories/collatz}, Paper~33 (2026).
+
+\end{thebibliography}
+
+\end{document}
