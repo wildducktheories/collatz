@@ -73,6 +73,18 @@
 \newcommand{\Kval}{K}
 \newcommand{\Dval}{\Delta}
 \newcommand{\tgt}{\theta}
+\newcommand{\wplus}{w^{+}}
+\newcommand{\wminus}{w^{-}}
+\newcommand{\rplus}{r_{+}}
+\newcommand{\rminus}{r_{-}}
+\newcommand{\eplus}{e_{+}}
+\newcommand{\eminus}{e_{-}}
+\newcommand{\odenp}{o_{+}}
+\newcommand{\odenm}{o_{-}}
+\newcommand{\epsplus}{\eps_{+}}
+\newcommand{\epsminus}{\eps_{-}}
+\newcommand{\lamplus}{\lam_{+}}
+\newcommand{\lamminus}{\lam_{-}}
 
 %------------------------------------------------------------
 \title{Mediant Trees for Rational Approximation and Sturmian Word Generation}
@@ -89,16 +101,15 @@ Given an oracle for a real number $\theta$ of sufficient precision, we present f
 contributions.
 First, an algorithm that constructs a \emph{mediant tree} of increasingly precise rational
 approximations to $\theta$: starting from a Farey-adjacent bounded pair bracketing $\theta$,
-each iteration applies a weighted mediant step with an optimal integer weight $w^*$ given by
+each iteration applies a weighted mediant step with an optimal integer weight $\wplus$ given by
 a closed-form formula (Theorem~\ref{thm:optimal-w}).
-The resulting weights naturally track the partial quotients of $\theta$, allowing the
-algorithm to inherit superlinear denominator growth without a separate proof
-(Remark~\ref{rem:cf}).
+The denominator structure mirrors the classical continued-fraction recurrence
+(Section~\ref{sec:convergence}), though a proof of superlinear growth remains open.
 Second, a Sturmian transduction that converts the mediant tree into a \emph{mediant word}
 --- a string over $\{\OO, \EE\}$ encoding the full approximation path --- and establishes
 that this word is identical to the Sturmian word with slope $1/(1+\theta)$ at all interior
-positions, with the terminal symbol of each finite prefix fully characterised by the sign of
-$\Delta$ (Theorem~\ref{prop:sturmian}).
+positions, with the terminal symbol of each finite prefix fully characterised by whether
+$r$ is an overestimate or underestimate of $\theta$ (Theorem~\ref{prop:sturmian}).
 Third, we prove two structural invariants of mediant words: every non-leaf word begins
 with $\EE\EE$ (Theorem~\ref{prop:EE-prefix}), and the interior slice
 $\pi(r)[1{:}L{-}1]$ of any mediant word of length $L \geq 2$ is a palindrome
@@ -121,17 +132,20 @@ convergents --- the fractions closest to the target with bounded denominator.
 Sturmian words, introduced by Morse and Hedlund~\cite{morse1940}, give a
 combinatorial counterpart: the infinite binary sequence $s_n = \lfloor(n+1)\alpha\rfloor -
 \lfloor n\alpha\rfloor$ with slope $\alpha \in (0,1)$ is the unique balanced aperiodic
-sequence with $\mathsf{O}$-density $\alpha$, and its finite prefixes are the \emph{central
-words} studied by de Luca~\cite{deluca1997}.
+sequence with $\mathsf{O}$-density $\alpha$.
 
 The present paper makes three contributions to this classical picture.
 \begin{enumerate}
   \item \textbf{Optimal weight formula.}
     We introduce the \emph{bounded-pair} framework, in which two Farey-adjacent rational
     estimates bracket $\theta$ from above and below.
-    At each step a weighted mediant is applied; Theorem~\ref{thm:optimal-w} gives a
-    closed-form expression for the optimal integer weight $w$, enabling efficient iteration
-    with no redundant steps.
+    Each weighted mediant step is a run of $w$ steps in the Stern--Brocot tree in the
+    same direction --- the classical construction (see Graham, Knuth and
+    Patashnik~\cite{gkp1994}).
+    What is new is Theorem~\ref{thm:optimal-w}: a closed-form expression for the unique
+    \emph{optimal} integer weight $\wplus$ --- the one whose mediants straddle $\theta$
+    --- derived from a sign-change bracket on the linear error function, enabling
+    efficient iteration with no redundant steps.
   \item \textbf{Mediant word representation.}
     The mediant tree can be encoded as a string over $\{\OO, \EE\}$, the
     \emph{mediant word} (Section~\ref{sec:parity}).
@@ -141,10 +155,17 @@ The present paper makes three contributions to this classical picture.
     Sturmian word with slope $1/(1+\theta)$
     (Theorem~\ref{prop:sturmian}), agreeing at every position except possibly the last
     symbol of each finite prefix.
-    Consequently the mediant tree is an $O(\log N)$ compressed transducer for the
-    Sturmian word: it encodes a prefix of length $N$ using only $O(\log N)$
-    real-arithmetic operations, after which the symbols are enumerated by a purely
-    integer recursive traversal.
+    The identification of Christoffel words with Sturmian prefixes is classical
+    (Lothaire~\cite{lothaire2002}); the novelty is the direct proof via the mediant
+    construction and the precise last-letter criterion.
+  \item \textbf{Compressed transducer.}
+    Each iterate produced by the algorithm is a Stern--Brocot semi-convergent --- the
+    unique bracketing fraction achievable in one step from the current bounded pair.
+    The mediant tree is therefore a \emph{compressed transducer} for the Sturmian word:
+    the approximation path (empirically $O(\log N)$ integer-arithmetic steps; a formal
+    bound remains open) encodes the entire construction history, after which the $N$
+    symbols are enumerated by a purely integer recursive traversal with no further
+    real arithmetic.
 \end{enumerate}
 
 The algorithm requires an oracle for $\theta$ --- a means of evaluating
@@ -155,8 +176,8 @@ word over $\{\OO, \EE\}$, making it a universal encoder from reals to binary wor
 
 \paragraph{Organisation.}
 Part~I (Sections~\ref{sec:background-sb}--\ref{sec:background-deluca}) collects
-background on the Stern--Brocot tree, Farey sequences, Sturmian words, and de~Luca
-central words.
+background on the Stern--Brocot tree, Farey sequences, Sturmian words, and Christoffel
+words.
 Part~II develops the algorithm and its theory:
 Section~\ref{sec:definitions} introduces the core definitions;
 Section~\ref{sec:mediant} develops the mediant construction and straddling inequality;
@@ -265,24 +286,15 @@ Conversely, when $\alpha > 1/2$ (i.e.\ $\theta < 1$), consecutive $\OO$'s are
 unavoidable.
 
 \paragraph{Sturmian morphisms.}
-Sturmian words are invariant under the two \emph{Sturmian morphisms}
+The two \emph{Sturmian morphisms}
 $\sigma_E\colon \EE \mapsto \EE,\; \OO \mapsto \EE\OO$ and
-$\sigma_O\colon \EE \mapsto \OO\EE,\; \OO \mapsto \OO$.
+$\sigma_O\colon \EE \mapsto \OO\EE,\; \OO \mapsto \OO$
+map Sturmian words to Sturmian words (of a different slope in general).
 
 %------------------------------------------------------------
 \section{Christoffel Words}
 \label{sec:background-deluca}
 %------------------------------------------------------------
-
-De Luca~\cite{deluca1997} identified a distinguished class of \emph{central words}
-as the palindromic cores of Sturmian prefixes.
-
-\begin{definition}[Central word]
-\label{def:central-word}
-A finite word $w$ over $\{\OO, \EE\}$ is a \emph{central word} if both $w\EE\OO$ and
-$w\OO\EE$ are Sturmian words.
-Every central word is a palindrome.
-\end{definition}
 
 \begin{definition}[Christoffel words]
 \label{def:christoffel}
@@ -295,7 +307,7 @@ with $\OO$-positions given by
 \]
 The \emph{upper Christoffel word} $\mathrm{Ch}^+(e, o)$ is the reverse of
 $\mathrm{Ch}^-(e, o)$: it ends in $\EE$ instead of $\OO$.
-Both words share the same central palindrome $U$ as their interior: $\mathrm{Ch}^-(e,o) = \EE \cdot U \cdot \OO$
+Both words share the same palindromic interior $U$: $\mathrm{Ch}^-(e,o) = \EE \cdot U \cdot \OO$
 and $\mathrm{Ch}^+(e,o) = \OO \cdot U \cdot \EE$
 (Berstel~\cite{berstel2009}, Chapter~1).
 
@@ -342,23 +354,32 @@ for floor and ceiling.
 \label{rem:rationality}
 Most of the combinatorial claims in these sections --- the Christoffel word structure
 (Lemma~\ref{lem:branch-standard-pair}), the palindrome invariant
-(Proposition~\ref{prop:palindrome}), and the $\EE\EE$-prefix theorem
-(Proposition~\ref{prop:EE-prefix}) --- hold for all real $\theta > 1$, rational or not.
+(Theorem~\ref{prop:palindrome}), and the $\EE\EE$-prefix theorem
+(Theorem~\ref{prop:EE-prefix}) --- hold for all real $\theta > 1$, rational or not.
 The Sturmian identity (Theorem~\ref{prop:sturmian}) and the last-letter theorem
 (Theorem~\ref{thm:last-sturmian}) require $\theta$ to be irrational, since the
 Sturmian word is only well-defined for irrational slope $\alpha = 1/(1+\theta)$.
-The uniqueness of $w^*$ (Theorem~\ref{thm:optimal-w}) also requires irrationality: for
-rational $\theta$, $-A/B$ can be an integer, but in that case $\Kval = 0$ and the
-algorithm terminates before $w^*$ is needed.
-Near rational $\theta$ the algorithm terminates in finitely many steps (at the step
+The uniqueness of $\wplus$ (Theorem~\ref{thm:optimal-w}) also requires irrationality.
+The formula $\wplus = \lfloor -A/B \rfloor + 1$ rests on $-A/B$ being non-integer: the strict
+bracketing condition $(A+(w-1)B)(A+wB) < 0$ holds for exactly one integer $w$ iff $-A/B$
+is not an integer.
+For rational $\theta$, $-A/B$ can be an integer $\wminus$, in which case no integer
+satisfies the strict condition: weights $\wminus$ and $\wplus = \wminus + 1$ give product
+zero, and all others give a positive product.
+The mediant at weight $\wminus$ equals $\theta$ exactly.
+Step~4 of the algorithm then computes $\wplus = \wminus + 1$, forming a pair whose
+first member is $\theta$ exactly; $\Kval = 0$ is detected at the next pass through
+step~3, at which point the algorithm terminates.
+For rational $\theta$ the algorithm terminates in finitely many steps (at the step
 where $\Kval = 0$, i.e.\ where $r_{i+1}$ is an exact representation of $\theta$);
-all claims hold for every iterate up to termination.
+all claims except Theorems~\ref{thm:last-sturmian}, \ref{prop:sturmian}
+and Corollary~\ref{cor:mismatch} hold for every iterate up to termination.
 \end{remark}
 
 \begin{definition}[Ratio]
 \label{def:ratio}
-A \emph{ratio} is a 2-tuple $r = (e, o) \in \NN^2$, representing the rational number
-$e/o$.
+A \emph{ratio} is a 2-tuple $r = (e, o) \in \NN^2$ with $\gcd(e, o) = 1$,
+representing the rational number $e/o$.
 A ratio $r = (e, o)$ is a \emph{rational estimate} of $\theta$ when used in that context.
 \end{definition}
 
@@ -464,7 +485,7 @@ and satisfy the Farey adjacency condition qualify, regardless of how they were f
 The mediant construction (Section~\ref{sec:mediant}) provides a canonical way to
 \emph{generate} bounded pairs, but the concept is wider.
 The invariants $\Dval$ and $\Kval$ belong to the pair itself; the Christoffel word
-structure (Section~\ref{sec:christoffel}) is a property of how the pair was reached via
+structure (Section~\ref{sec:background-deluca}) is a property of how the pair was reached via
 the mediant tree.
 In particular, $\Dval = \pm 1$ and $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$
 hold for any bounded pair, while the palindromic interior of $\pi(r)$ is a certificate
@@ -485,44 +506,53 @@ Let $(r_i, r_{i+1})$ be a bounded pair for $\theta$ with $|\eps_i| > |\eps_{i+1}
 let $w \geq 1$ be a positive integer such that
 $(\mathrm{Mediant}(r_i, r_{i+1}, w-1),\, \mathrm{Mediant}(r_i, r_{i+1}, w))$
 brackets $\theta$.
-Write $r_{w-1} = \mathrm{Mediant}(r_i, r_{i+1}, w-1)$ and
-$r_w = \mathrm{Mediant}(r_i, r_{i+1}, w)$ for these two candidates.
+Write $\rminus = \mathrm{Mediant}(r_i, r_{i+1}, w-1)$ and
+$\rplus = \mathrm{Mediant}(r_i, r_{i+1}, w)$ for these two candidates.
 Then
 \[
-  |\eps_{w-1}| \leq |\eps_i| \qquad \text{and} \qquad |\eps_w| < |\eps_{i+1}| < |\eps_i|.
+  |\epsminus| \leq |\eps_i| \qquad \text{and} \qquad |\epsplus| < |\eps_{i+1}| < |\eps_i|.
 \]
-(When $w = 1$, $r_{w-1} = r_i$ exactly so $|\eps_{w-1}| = |\eps_i|$; otherwise
-$|\eps_{w-1}| < |\eps_i|$.)
-Moreover $(r_{w-1}, r_w)$ is itself a bounded pair.
+(When $w = 1$, $\rminus = r_i$ exactly so $|\epsminus| = |\eps_i|$; otherwise
+$|\epsminus| < |\eps_i|$.)
+Moreover $|\eplus\,\odenm - \eminus\,\odenp| = 1$, so $(\rminus, \rplus)$ is Farey-adjacent.
 The two mediants are assigned as $r_{i+2}$ and $r_{i+3}$, where $r_{i+3}$ is
 whichever has the smaller $|\eps|$ (the better estimate), and $r_{i+2}$ takes the other.
-Since $r_w$ always satisfies $|\eps_w| < |\eps_{i+1}|$, we have
+Since $\rplus$ always satisfies $|\epsplus| < |\eps_{i+1}|$, we have
 $|\eps_{i+3}| < |\eps_{i+1}|$ regardless of which candidate is assigned to $r_{i+3}$.
 \end{theorem}
 
 \begin{proof}
-The denominators satisfy $o_{w-1} = o_i + (w-1)o_{i+1} < o_i + w\,o_{i+1} = o_w$, so
-$r_{w-1}$ and $r_w$ are distinct.
-The ratio $\lam_{w-1}$ is a weighted combination of $\lam_i$ and $\lam_{i+1}$:
+The denominators satisfy $\odenm = o_i + (w-1)o_{i+1} < o_i + w\,o_{i+1} = \odenp$, so
+$\rminus$ and $\rplus$ are distinct.
+The ratio $\lamminus$ is a weighted combination of $\lam_i$ and $\lam_{i+1}$:
 \[
-  \lam_{w-1} = \frac{o_i\,\lam_i + (w-1)o_{i+1}\,\lam_{i+1}}{o_i + (w-1)o_{i+1}}.
+  \lamminus = \frac{o_i\,\lam_i + (w-1)o_{i+1}\,\lam_{i+1}}{o_i + (w-1)o_{i+1}}.
 \]
-When $w = 1$ this gives $\lam_{w-1} = \lam_i$ exactly, so $|\eps_{w-1}| = |\eps_i|$.
-When $w \geq 2$, $\lam_{w-1}$ is a strict convex combination of $\lam_i$ and $\lam_{i+1}$,
-lying strictly between them, so $|\lam_{w-1} - 1| < |\lam_i - 1|$, i.e.\ $|\eps_{w-1}| < |\eps_i|$.
-For $r_w$ (weight $w \geq 1$), the combination is always strict, so
-$|\lam_w - 1| < |\lam_i - 1|$ and $|\lam_w - 1| < |\lam_{i+1} - 1|$,
-i.e.\ $|\eps_w| < |\eps_{i+1}| < |\eps_i|$.
-The Farey adjacency condition for $(r_{w-1}, r_w)$ follows by direct expansion:
+When $w = 1$ this gives $\lamminus = \lam_i$ exactly, so $|\epsminus| = |\eps_i|$.
+When $w \geq 2$, $\rminus$ lies strictly between $r_i$ and $r_{i+1}$.
+Write $f(t) = A + tB$ where $A = e_i - \theta o_i$ and $B = e_{i+1} - \theta o_{i+1}$
+are the scaled errors of $r_i$ and $r_{i+1}$; then $f(w) = \eplus - \theta\,\odenp$.
+From the bracketing hypothesis $f(w-1)f(w) < 0$ it follows that $B \neq 0$
+(otherwise $f$ would be constant and could not change sign), and that the zero
+$c = -A/B$ of $f$ lies in $(w-1, w)$.
+Thus $f(w-1)$ has the sign of $A$ (the side of $r_i$) and $f(w)$ has the sign of $B$
+(the side of $r_{i+1}$).
+Since the bracketing condition places $\rminus$ on the same side of $\theta$ as $r_i$,
+the ratio $\rminus/\theta$ lies between $r_i/\theta$ and $1$,
+so $|\lamminus - 1| < |\lam_i - 1|$, i.e.\ $|\epsminus| < |\eps_i|$.
+For $\rplus$ (weight $w \geq 1$), the bracketing condition places $\rplus$ on the same side
+of $\theta$ as $r_{i+1}$, so $\rplus/\theta$ lies between $r_{i+1}/\theta$ and $1$,
+giving $|\lamplus - 1| < |\lam_{i+1} - 1|$, i.e.\ $|\epsplus| < |\eps_{i+1}| < |\eps_i|$.
+The Farey adjacency condition for $(\rminus, \rplus)$ follows by direct expansion:
 \begin{align*}
-  e_w o_{w-1} - e_{w-1} o_w
+  \eplus\,\odenm - \eminus\,\odenp
     &= (e_i + w\,e_{i+1})(o_i + (w-1)o_{i+1})
      - (e_i + (w-1)e_{i+1})(o_i + w\,o_{i+1}) \\
     &= \bigl[(w-1) - w\bigr]e_i\,o_{i+1}
      + \bigl[w - (w-1)\bigr]e_{i+1}\,o_i \\
     &= -e_i\,o_{i+1} + e_{i+1}\,o_i = \Dval,
 \end{align*}
-so $|e_w o_{w-1} - e_{w-1} o_w| = |\Dval| = 1$, and the Farey adjacency of $(r_{w-1}, r_w)$
+so $|\eplus\,\odenm - \eminus\,\odenp| = |\Dval| = 1$, and the Farey adjacency of $(\rminus, \rplus)$
 is inherited directly from that of $(r_i, r_{i+1})$.
 \end{proof}
 
@@ -530,16 +560,16 @@ is inherited directly from that of $(r_i, r_{i+1})$.
 \label{cor:straddling}
 Under the conditions of Theorem~\ref{thm:mediant-convergence},
 \[
-  \eps_{w-1}\,\eps_w < 0 \qquad \text{and} \qquad |\eps_{w-1}||\eps_w| < |\eps_i|\,|\eps_{i+1}|.
+  \epsminus\,\epsplus < 0 \qquad \text{and} \qquad |\epsminus||\epsplus| < |\eps_i|\,|\eps_{i+1}|.
 \]
 \end{corollary}
 
 \begin{proof}
-The first inequality holds because $r_{w-1}$ and $r_w$ straddle $\theta$, so their errors
+The first inequality holds because $\rminus$ and $\rplus$ straddle $\theta$, so their errors
 have opposite signs.
-For the second: $|\eps_{w-1}| \leq |\eps_i|$ and $|\eps_w| < |\eps_{i+1}|$
+For the second: $|\epsminus| \leq |\eps_i|$ and $|\epsplus| < |\eps_{i+1}|$
 (Theorem~\ref{thm:mediant-convergence}), so
-$|\eps_{w-1}||\eps_w| \leq |\eps_i||\eps_w| < |\eps_i|\,|\eps_{i+1}|$.
+$|\epsminus||\epsplus| \leq |\eps_i||\epsplus| < |\eps_i|\,|\eps_{i+1}|$.
 \end{proof}
 
 %------------------------------------------------------------
@@ -549,11 +579,9 @@ $|\eps_{w-1}||\eps_w| \leq |\eps_i||\eps_w| < |\eps_i|\,|\eps_{i+1}|$.
 
 A key question is: for which integer $w \geq 1$ do the two consecutive weighted mediants
 \[
-  r_j = \mathrm{Mediant}(r_i, r_{i+1}, w-1), \qquad r_k = \mathrm{Mediant}(r_i, r_{i+1}, w)
+  \rminus = \mathrm{Mediant}(r_i, r_{i+1}, w-1), \qquad \rplus = \mathrm{Mediant}(r_i, r_{i+1}, w)
 \]
-straddle $\theta$, i.e.\ satisfy the bracketing condition $(\lam_j - 1)(\lam_k - 1) \leq 0$?
-(Here $r_j$ and $r_k$ are local names for the two candidates at weights $w-1$ and $w$;
-they are used only within this section and Section~\ref{app:optimal-w}.)
+straddle $\theta$, i.e.\ satisfy the bracketing condition $(\lamminus - 1)(\lamplus - 1) < 0$?
 
 Writing $A = e_i - \theta\,o_i$ and $B = e_{i+1} - \theta\,o_{i+1}$ for the scaled
 errors, the bracketing condition becomes $(A + (w-1)B)(A + wB) < 0$.
@@ -573,11 +601,11 @@ Let $(r_i, r_{i+1})$ be a bounded pair bracketing $\theta$, with
   A = e_i - \theta\,o_i, \qquad B = e_{i+1} - \theta\,o_{i+1},
 \]
 and set $\Dval = e_{i+1}o_i - e_i o_{i+1}$, $\Kval = o_{i+1} B$.
-Then the unique integer $w \geq 1$ for which $r_j = \mathrm{Mediant}(r_i, r_{i+1}, w-1)$
-and $r_k = \mathrm{Mediant}(r_i, r_{i+1}, w)$ satisfy the bracketing condition
-$(\lam_j - 1)(\lam_k - 1) \leq 0$ is
+Then the unique integer $w \geq 1$ for which $\rminus = \mathrm{Mediant}(r_i, r_{i+1}, w-1)$
+and $\rplus = \mathrm{Mediant}(r_i, r_{i+1}, w)$ satisfy the bracketing condition
+$(\lamminus - 1)(\lamplus - 1) < 0$ is
 \[
-  w^* = \left\lfloor \frac{-A}{B} \right\rfloor + 1
+  \wplus = \left\lfloor \frac{-A}{B} \right\rfloor + 1
       = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_i}{o_{i+1}} \right\rfloor + 1.
 \]
 A derivation is given in Appendix~\ref{app:optimal-w}.
@@ -586,9 +614,39 @@ A derivation is given in Appendix~\ref{app:optimal-w}.
 When $\Kval = 0$, $r_{i+1}$ is an exact rational representation of $\theta$
 and no further improvement is possible; the algorithm terminates.
 
+\begin{corollary}[Children at $\wplus$ form a bounded pair]
+\label{cor:children-bounded-pair}
+Under the conditions of Theorem~\ref{thm:optimal-w}, the two children
+$\rminus = \mathrm{Mediant}(r_i, r_{i+1}, \wminus)$ and
+$\rplus = \mathrm{Mediant}(r_i, r_{i+1}, \wplus)$ form a bounded pair.
+\end{corollary}
+
+\begin{proof}
+Farey adjacency $|\eplus\odenm - \eminus\odenp| = 1$ follows from
+Theorem~\ref{thm:mediant-convergence}.
+It remains to show both children are good estimates.
+Write $f(w) = A + wB$ so that $f(w) = e_w - \theta o_w$ (the scaled error of $r_w$).
+The bracketing condition $f(\wminus)\,f(\wplus) < 0$ means the two values have opposite signs,
+so
+\[
+  |f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm
+  = |f(\wminus)\,\odenp - f(\wplus)\,\odenm|
+  = |\eminus\,\odenp - \eplus\,\odenm|
+  = |\Dval| = 1.
+\]
+Both terms on the left are in fact positive: since $\theta$ is irrational
+(Remark~\ref{rem:rationality}), $f(w) \neq 0$ for all integers $w$, so $|f(\wminus)|$
+and $|f(\wplus)|$ are both nonzero; and $\odenm, \odenp \geq 1$.
+Since two positive terms sum to $1$, each is strictly less than $1$,
+i.e.\ $|\eminus - \theta \odenm| < 1$ and $|\eplus - \theta \odenp| < 1$,
+confirming both children are good estimates.
+Moreover, $|\Dval| = 1$ directly gives $\gcd(\eplus, \odenp) = \gcd(\eminus, \odenm) = 1$,
+so the children are ratios in lowest terms.
+\end{proof}
+
 \subsection*{The continuous optimum and the discrete formula coincide}
 
-To see why $w^*$ is the natural choice, consider treating $w$ as a real variable
+To see why $\wplus$ is the natural choice, consider treating $w$ as a real variable
 and finding the stationary point of the error product $f(w-1)\,f(w)$, where
 $f(w) = A + wB$.
 Differentiating with respect to $w$ and setting the derivative to zero:
@@ -598,30 +656,31 @@ Differentiating with respect to $w$ and setting the derivative to zero:
 \]
 Solving gives the unique real critical point
 \[
-  w_0 = \tfrac{1}{2} - \frac{A}{B} = c + \tfrac{1}{2},
+  w^* = \tfrac{1}{2} - \frac{A}{B} = c + \tfrac{1}{2},
 \]
 where $c = -A/B > 0$.
 The product $f(w-1)\,f(w)$ has roots at $w = c$ (where $f(w)=0$) and $w = c+1$
-(where $f(w-1)=0$), and $w_0 = c + \tfrac{1}{2}$ is their midpoint — the unique
+(where $f(w-1)=0$), and $w^* = c + \tfrac{1}{2}$ is their midpoint — the unique
 real maximum of $|f(w-1)\,f(w)|$ between the roots.
 The unique integer $w$ for which $f(w-1)$ and $f(w)$ have opposite signs
-satisfies $c < w < c+1$, i.e.\ $w = \lfloor c \rfloor + 1 = w^*$.
-Since $w_0 = c + \tfrac{1}{2}$ also lies in $(c,\, c+1)$, and $w^*$ is the unique integer
-in that interval, $w^*$ is the nearest integer to $w_0$: both the continuous stationary
-point and the sign-change bracket single out the same $w^*$.
+satisfies $c < w < c+1$, i.e.\ $w = \lfloor c \rfloor + 1 = \wplus$.
+Since $w^* = c + \tfrac{1}{2}$ also lies in $(c,\, c+1)$, and $\wplus$ is the unique integer
+in that interval, $\wplus$ is the nearest integer to $w^*$: both the continuous stationary
+point and the sign-change bracket single out the same $\wplus$.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.95\textwidth]{fig-optimal-weight}
 \caption{The product $p(w) = f(w-1)\,f(w)$ for two pairs from the mediant tree for
-$\theta = \log_2 3$, illustrating the optimal weight $w^*$.
-\emph{Left:} pair $(3/2,\, 5/3)$ with $c \approx 0.693$ and $w^* = 1$.
-\emph{Right:} pair $(65/41,\, 84/53)$ with $c \approx 5.490$ and $w^* = 6$.
+$\theta = \log_2 3$, illustrating the optimal integer weight $\wplus$.
+\emph{Left:} pair $(3/2,\, 8/5)$ with $\Delta = +1$, $c \approx 2.260$, and $\wplus = 3$.
+\emph{Right:} pair $(65/41,\, 84/53)$ with $\Delta = -1$, $c \approx 5.490$, and $\wplus = 6$.
 In each case the roots of $p$ are at $c$ (where $f(w)=0$, green dashed) and $c+1$
-(where $f(w-1)=0$, green dotted); the stationary point $w_0 = c + \tfrac{1}{2}$ (red)
-is their midpoint; the unique integer in the shaded interval $(c,\,c+1)$ is $w^*$ (black);
-and its companion $w^*-1$ (grey dashed) lies just outside the interval on the left.
-Together $w^*-1$ and $w^*$ are the two weights whose mediants bracket $\theta$.}
+(where $f(w-1)=0$, green dotted); the continuous stationary point $w^* = c + \tfrac{1}{2}$ (red)
+is their midpoint; the unique integer in the shaded interval $(c,\,c+1)$ is $\wplus$ (black);
+and its companion $\wminus = \wplus - 1$ (grey dashed) lies just outside the interval on the left.
+Together $\wminus$ and $\wplus$ are the two weights whose mediants bracket $\theta$.
+The two panels illustrate both signs of $\Delta$.}
 \label{fig:optimal-weight}
 \end{figure}
 
@@ -631,11 +690,11 @@ The iteration proceeds as follows.
   \item Start with an initial bounded pair $(r_0, r_1)$ for $\theta$.
   \item Compute $\Dval$ and $\Kval$.
   \item If $\Kval = 0$, terminate.
-  \item Compute $w^* = \lfloor \Dval/\Kval - o_i/o_{i+1} \rfloor + 1$.
-  \item Form the new bounded pair $(\mathrm{Mediant}(r_i, r_{i+1}, w^*-1),\, \mathrm{Mediant}(r_i, r_{i+1}, w^*))$ and repeat from step~2.
+  \item Compute $\wplus = \lfloor \Dval/\Kval - o_i/o_{i+1} \rfloor + 1$ and set $\wminus = \wplus - 1$.
+  \item Form the new bounded pair $(\mathrm{Mediant}(r_i, r_{i+1}, \wminus),\, \mathrm{Mediant}(r_i, r_{i+1}, \wplus))$ and repeat from step~2.
 \end{enumerate}
 Because $o_{i+1}$ grows monotonically along the iteration, the denominator of $\Kval$
-grows and the iteration converges (Section~\ref{sec:convergence}).
+grows and the iteration converges to $\theta$ (Corollary~\ref{cor:convergence}).
 
 %------------------------------------------------------------
 \section{Mediant Words and the Mediant Tree}
@@ -665,9 +724,11 @@ Its \emph{mediant word} is
 a string of $e$ copies of $\EE$ followed by one $\OO$.
 \end{definition}
 
-The two leaf estimates that initialise the algorithm are $r_0 = \lfloor\theta\rfloor/1$
-and $r_1 = \lceil\theta\rceil/1$, with mediant words
-$\pi(r_0) = \EE^{\lfloor\theta\rfloor}\OO$ and $\pi(r_1) = \EE^{\lceil\theta\rceil}\OO$.
+The two leaf estimates that initialise the algorithm are $\lfloor\theta\rfloor/1$
+and $\lceil\theta\rceil/1$, ordered as $(r_0, r_1)$ so that $r_1$ is the better estimate
+(i.e.\ $|\eps_{r_1}| < |\eps_{r_0}|$).
+Their mediant words are $\EE^{\lfloor\theta\rfloor}\OO$ and $\EE^{\lceil\theta\rceil}\OO$
+respectively.
 Since $\theta$ is irrational, $\lceil\theta\rceil = \lfloor\theta\rfloor + 1$, so
 $\pi(r_0)$ and $\pi(r_1)$ differ by exactly one $\EE$.
 Each word $\EE^k\OO$ contains exactly one $\OO$, so it is not a power of a shorter
@@ -690,15 +751,19 @@ $(u, v) = (\pi(r_i), \pi(r_{i+1}))$ by concatenation:
 A \emph{branch} estimate $r_{i+2}$ or $r_{i+3}$ has two \emph{ordered parents}
 $(r_i, r_{i+1})$ and a positive integer \emph{weight} $w$.
 Estimates are indexed so that $r_{2n}$ and $r_{2n+1}$ form the bounded pair at depth
-$n$, with $r_{2n+1}$ always the better estimate (smaller $|\eps|$).
+$n$, with $r_{2n+1}$ always the better estimate (smaller $|\eps|$);
+thus $i = 2n$ and $i+1 = 2n+1$.
+The optimal weight $\wplus$ computed from $(r_i, r_{i+1})$ equals $w_{i+1}$ in this
+indexing; the two child estimates $r_{i+2}$ and $r_{i+3}$ carry weights $\wminus$ and
+$\wplus$ (i.e.\ $w_{i+2}$ and $w_{i+3}$ are $\wplus - 1$ and $\wplus$ in some order).
 Write $u = \pi(r_i)$ and $v = \pi(r_{i+1})$ for the parent mediant words.
 
 The two branch words at each depth share the same parents and differ only in the
-multiplicity of $v$: one estimate uses weight $w$ and the other uses weight $w-1$.
-Which is the better estimate depends on the errors: writing $\eps_j$ and $\eps_k$ for
+multiplicity of $v$: one estimate uses weight $\wplus$ and the other uses weight $\wminus$.
+Which is the better estimate depends on the errors: writing $\epsminus$ and $\epsplus$ for
 the errors of the two candidates (Definition~\ref{def:lambda-eps}),
 \[
-  w_{i+3} - w_{i+2} = \begin{cases} +1 & \text{if } |\eps_k| < |\eps_j|, \\ -1 & \text{otherwise.}\end{cases}
+  w_{i+3} - w_{i+2} = \begin{cases} +1 & \text{if } |\epsplus| < |\epsminus|, \\ -1 & \text{otherwise.}\end{cases}
 \]
 In either case $|\pi(r_{i+3})| - |\pi(r_{i+2})| = \pm|v|$.
 
@@ -716,15 +781,17 @@ The branch mediant words are:
     \end{align*}
 \end{itemize}
 Which of the two words is the better estimate $r_{i+3}$ is determined by comparing
-$|\eps_j|$ and $|\eps_k|$; the assignment is not fixed in advance.
+$|\epsminus|$ and $|\epsplus|$; the assignment is not fixed in advance.
 \end{definition}
 
 \textbf{Concrete example} ($w = 2$, depth-$0$ leaves
-$\pi(r_0) = \mathtt{EO}$, $\pi(r_1) = \mathtt{EEO}$, $\Dval > 0$):
+$\pi(r_0) = \mathtt{EO}$, $\pi(r_1) = \mathtt{EEO}$, $\Dval > 0$).
+Write $\Phi^w(v, u) = (v^w \cdot u,\; v^{w-1} \cdot u)$ for the pair of branch words
+at weight $w$ (the $\Dval > 0$ case):
 \[
   \Phi^2\bigl(\mathtt{EEO},\, \mathtt{EO}\bigr)
-  = \bigl(\mathtt{EEO}^2\,\mathtt{EO},\; \mathtt{EEO}\bigr)
-  = \bigl(\mathtt{EEOEEOEO},\; \mathtt{EEO}\bigr),
+  = \bigl(\mathtt{EEO}^2\,\mathtt{EO},\; \mathtt{EEO}\,\mathtt{EO}\bigr)
+  = \bigl(\mathtt{EEOEEOEO},\; \mathtt{EEOEO}\bigr),
 \]
 so $\pi(r_3) = \mathtt{EEOEEOEO}$ and $\pi(r_2) = \mathtt{EEOEO}$
 ($= \Phi^1(\mathtt{EEO}, \mathtt{EO})$, the $w{-}1$ companion).
@@ -769,13 +836,8 @@ giving $o_i/L_i < \alpha < o_{i+1}/L_{i+1}$.
 Thus $\pi(r_i)$ has the smaller slope and $\pi(r_{i+1})$ has the larger slope.
 The new word is $u v^w = \pi(r_i) \cdot \pi(r_{i+1})^w$: the single smaller-slope
 word followed by the larger-slope word repeated $w$ times.
-The applicable identity is the symmetric companion:
-\[
-  \mathrm{Ch}^-(e_0,o_0) \cdot \mathrm{Ch}^-(e_1,o_1)^w
-  = \mathrm{Ch}^-(e_0 + w\,e_1,\; o_0 + w\,o_1)
-  \quad (o_0/L_0 < o_1/L_1),
-\]
-(Berstel~\cite{berstel2009}, Theorem~1.5.1), giving
+By Theorem~\ref{thm:christoffel-concat} (with $e_0 = e_i$, $e_1 = e_{i+1}$,
+$o_0/L_0 < o_1/L_1$, Berstel~\cite{berstel2009} Theorem~1.5.1) this equals
 $\mathrm{Ch}^-(e_i + w\,e_{i+1},\; o_i + w\,o_{i+1})$.
 
 In both cases $\gcd(e_i + w e_{i+1},\; o_i + w o_{i+1}) = 1$ by the Farey adjacency
@@ -790,6 +852,18 @@ standard sequence generation rule for Sturmian words
 (Widmer~\cite{widmer2010}, Proposition~2.4.6), with weight $w$ encoding the
 partial quotient at that depth.
 
+\begin{remark}
+The Christoffel tree --- the binary tree whose nodes are lower Christoffel words
+under the same concatenation rules --- is a classical object (Berstel et
+al.~\cite{berstel2009}, Chapter~2).
+Lemma~\ref{lem:branch-standard-pair} says that the mediant algorithm traverses
+exactly this tree: every estimate produced is a node of the Christoffel tree, and
+the branch rule is the Christoffel concatenation.
+The novelty is not the tree itself but the \emph{driving criterion}: the optimal
+weight $\wplus$ (Theorem~\ref{thm:optimal-w}) selects the unique child that
+straddles $\theta$, making the traversal goal-directed rather than exhaustive.
+\end{remark}
+
 %------------------------------------------------------------
 \subsection{The mediant tree}
 \label{sec:tree}
@@ -797,10 +871,9 @@ partial quotient at that depth.
 
 The mediant tree is the practical device for generating mediant words of arbitrary
 length and precision.
-Given a target $\theta$ and a desired precision, one runs the algorithm to depth $n$,
-obtaining a bounded pair $(r_{2n}, r_{2n+1})$ whose mediant words have length
-$e_{2n+1} + o_{2n+1}$.
-The mediant word $\pi(r_{2n+1})$ is then read off the tree by the recursive rule:
+Given a target $\theta$ and a desired precision, one runs the algorithm until the
+bounded pair $(r_i, r_{i+1})$ achieves the required length $e_{i+1} + o_{i+1}$.
+The mediant word $\pi(r_{i+1})$ is then read off the tree by the recursive rule:
 an interior node $\mathrm{Mediant}(r_0, r_1, w)$ with $\Delta > 0$ yields
 $\pi(r_1)^w \cdot \pi(r_0)$, and with $\Delta < 0$ yields
 $\pi(r_0) \cdot \pi(r_1)^w$.
@@ -823,97 +896,15 @@ The \emph{mediant tree} of an estimate $r$ is defined recursively:
 \end{definition}
 
 The two leaves are the unique consecutive integers bracketing $\theta$,
-forming the initial bounded pair $(r_0, r_1) = (\lfloor\theta\rfloor, \lceil\theta\rceil)$.
-Each bounded pair $(r_{2n}, r_{2n+1})$ in the algorithm's sequence consists of two
-mediant trees sharing the same leaves; as $n$ increases the trees grow deeper,
+forming the initial bounded pair $(r_0, r_1)$, ordered so that $r_1$ is the better estimate
+(i.e.\ $|\varepsilon_{r_1}| < |\varepsilon_{r_0}|$).
+Each bounded pair $(r_i, r_{i+1})$ in the algorithm's sequence consists of two
+mediant trees sharing the same leaves; as the iteration advances the trees grow deeper,
 recording the full construction history of each estimate.
 
-\begin{example}[Mediant words and trees for $\log_2 3$]
-\label{ex:log2-3}
-Starting from the initial bounded pair $(r_0, r_1) = (1/1,\, 2/1)$ with
-$\theta = \log_2 3 \approx 1.58496$,
-the algorithm produces the following sequence of bounded pairs.
-At each step $n$, weight $w_{2n+1}$ is used to compute the two candidates
-$r_j = \mathrm{Mediant}(r_{2n}, r_{2n+1}, w_{2n+1}-1)$ and
-$r_k = \mathrm{Mediant}(r_{2n}, r_{2n+1}, w_{2n+1})$;
-the better estimate (smaller $|\eps|$) becomes $r_{2n+3}$.
-
-\medskip
-\begin{center}
-\begin{tabular}{@{}cllllcll@{}}
-\toprule
-$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
-\midrule
-0 & $1/1$   & $2/1$   & $-0.369$ & $+0.262$ & 2 & $3/2$   & $5/3$   \\
-1 & $3/2$   & $5/3$   & $-0.054$ & $+0.052$ & 1 & $3/2$   & $8/5$   \\
-2 & $3/2$   & $8/5$   & $-0.054$ & $+0.010$ & 3 & $19/12$ & $27/17$ \\
-3 & $27/17$ & $19/12$ & $+0.002$ & $-0.001$ & 3 & $65/41$ & $84/53$ \\
-\bottomrule
-\end{tabular}
-\end{center}
-\medskip
-
-The leaf words are $\pi(r_0) = \mathtt{EO}$ and $\pi(r_1) = \mathtt{EEO}$.
-Reading the word decomposition bottom-up:
-
-\medskip
-\noindent
-\textbf{Level 1} ($n=0$, $w_1=2$, $\Delta>0$,
-$\pi(r_3)=\pi(r_1)^2\cdot\pi(r_0)$, $\pi(r_2)=\pi(r_1)^1\cdot\pi(r_0)$):
-\[
-\underbrace{
-  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
-  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
-  \underbrace{\mathtt{EO}}_{\pi(r_0)}
-}_{\pi(r_3)=\mathtt{EEOEEOEO}}
-\qquad
-\underbrace{
-  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
-  \underbrace{\mathtt{EO}}_{\pi(r_0)}
-}_{\pi(r_2)=\mathtt{EEOEO}}
-\]
-
-\noindent
-\textbf{Level 2} ($n=1$, $w_3=1$, $\Delta>0$,
-$\pi(r_5)=\pi(r_3)^1\cdot\pi(r_2)$, $\pi(r_4)=\pi(r_2)$):
-\[
-\underbrace{
-  \underbrace{\mathtt{EEOEEOEO}}_{\pi(r_3)}
-  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
-}_{\pi(r_5)=\mathtt{EEOEEOEOEEOEO}}
-\qquad
-\underbrace{
-  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
-}_{\pi(r_4)=\mathtt{EEOEO}}
-\]
-
-\noindent
-\textbf{Level 3} ($n=2$, $w_5=3$, $\Delta>0$,
-$\pi(r_7)=\pi(r_5)^2\cdot\pi(r_4)$):
-\[
-\underbrace{
-  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
-  \;
-  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
-  \;
-  \underbrace{\mathtt{EEOEO}}_{\pi(r_4)}
-}_{\pi(r_7)}
-\]
-
-The same estimates as mediant trees (steps $n=1$ and $n=2$):
-\begin{align*}
-  r_{2} = 3/2 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\;
-                   \underbrace{2}_{\text{leaf}},\; w=1), \\
-  r_{3} = 5/3 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\;
-                   \underbrace{2}_{\text{leaf}},\; w=2), \\
-  r_{4} = 3/2 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\;
-                   \mathrm{Mediant}(1,\, 2,\, 2),\; w=0), \\
-  r_{5} = 8/5 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\;
-                   \mathrm{Mediant}(1,\, 2,\, 2),\; w=1).
-\end{align*}
-A weight of $w=0$ means the left subtree is used directly (contributing zero copies
-of the right subtree).
-\end{example}
+A detailed worked example for $\theta = \log_2 3$, tracing the first four steps of the
+algorithm and the corresponding mediant word decompositions, is given in
+Appendix~\ref{app:examples}.
 
 %------------------------------------------------------------
 \subsection{The mediant word encodes the fraction}
@@ -926,8 +917,8 @@ The fraction $e/o$ records the full construction history of $r$ via the Euclidea
 structure of the mediant algorithm.
 Conversely, the fraction $e/o$ can be read off from $\pi(r)$ by counting $\EE$'s and
 $\OO$'s.
-As $n$ increases, the ratio of $\EE$'s to $\OO$'s in $\pi(r_{2n+1})$ converges to
-$\theta$, with strict improvement guaranteed across layers
+As the iteration advances, the ratio of $\EE$'s to $\OO$'s in $\pi(r_{i+1})$ converges to
+$\theta$, with strict improvement guaranteed across iterations
 (Theorem~\ref{thm:convergence}) but not within a single layer.
 
 %------------------------------------------------------------
@@ -941,14 +932,40 @@ At each iteration of the algorithm, $|\eps_{i+1}|$ strictly decreases.
 \end{theorem}
 
 \begin{proof}
-By Theorem~\ref{thm:mediant-convergence}, both $|\eps_j|$ and $|\eps_k|$ are strictly
-less than $|\eps_{i+1}|$.
-The next iterate uses the better of $r_j$ and $r_k$ as its $r_{i+1}$, so
-$|\eps_{i+1}^{\text{new}}| < |\eps_{i+1}^{\text{old}}|$.
+By Theorem~\ref{thm:mediant-convergence}, $|\epsplus| < |\eps_{i+1}|$.
+The next iterate assigns the better of $\rminus$ and $\rplus$ as $r_{i+3}$, so
+$|\eps_{i+3}| \leq |\epsplus| < |\eps_{i+1}|$.
 \end{proof}
 
-\begin{remark}[Connection to continued fractions]
-\label{rem:cf}
+\begin{corollary}[Convergence to $\theta$]
+\label{cor:convergence}
+The sequence of better estimates produced by the algorithm satisfies $\eps_{i+1} \to 0$.
+\end{corollary}
+
+\begin{proof}
+From the proof of Corollary~\ref{cor:children-bounded-pair}, writing $f(w) = A + wB$ for
+the linear error function and $\odenp, \odenm$ for the two child denominators:
+\[
+  |f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm = |\Dval| = 1.
+\]
+Since $f(w) = e_w - \theta\,o_w$ and $\eps_w = f(w)/o_w$, substituting
+$|f(w)| = |\eps_w|\,o_w$ gives
+\[
+  \bigl(|\epsminus| + |\epsplus|\bigr)\,\odenm\,\odenp = 1,
+\]
+so in particular the better child satisfies
+\[
+  |\eps_{\mathrm{better}}| \leq \frac{1}{2\,\odenm\,\odenp}.
+\]
+Since $\odenp = o_i + \wplus\,o_{i+1} \geq o_i + o_{i+1} > o_{i+1}$, the
+denominator of the better child strictly exceeds $o_{i+1}$; by induction the
+denominators diverge.
+Since $|\eps_{\mathrm{better}}| \leq 1/(2\,\odenm\,\odenp)$ and
+$\odenp \to \infty$, we have $\eps_{i+1} \to 0$.
+\end{proof}
+
+\subsection*{Connection to continued fractions}
+
 The connection between the mediant algorithm and continued fractions is a direct
 consequence of the Sturmian identity (Theorem~\ref{prop:sturmian}).
 In combinatorics on words, the standard sequence for a Sturmian word with slope
@@ -957,91 +974,40 @@ where the weights $d_n$ are precisely the partial quotients of the continued-fra
 expansion of $\alpha$ (Lothaire~\cite{lothaire2002}, Theorem~2.3.5; Widmer~\cite{widmer2010},
 Proposition~2.4.6).
 The mediant word sequence agrees with this standard sequence at all interior positions
-(Theorem~\ref{prop:sturmian}), so the optimal weights $w^*$ track the partial quotients
-of $\alpha$, and the denominator recurrence $o_{2n+3} = w^* \cdot o_{2n+1} + o_{2n-1}$
-mirrors the classical recurrence $q_{k+1} = a_k q_k + q_{k-1}$.
-The algorithm thus inherits superlinear denominator growth from large partial quotients
-without requiring a separate proof.
+(Theorem~\ref{prop:sturmian}).
+This does \emph{not} imply that the algorithm's weights $\wplus$ equal the partial quotients
+$a_k$: the Sturmian identity constrains only interior positions of the words, not which
+weights the algorithm selects.
+What does follow is that the two children at weights $\wminus$ and $\wplus$ always have
+denominators $o_i + \wminus \cdot o_{i+1}$ and $o_i + \wplus \cdot o_{i+1}$
+(one even-indexed, one odd-indexed depending on which is the better estimate),
+mirroring the structure of the classical recurrence $q_{k+1} = a_k q_k + q_{k-1}$.
+Whether this implies superlinear denominator growth remains open.
 
-However, the MT fractions are not in general the same as the CF convergents.
+The MT fractions are not in general the same as the CF convergents.
 The standard CF recurrence jumps by the full partial quotient $a_k$ at each step,
 landing on a new convergent $p_k/q_k$.
-The MT algorithm picks the optimal bracketing weight $w^*$, which may be strictly
+The MT algorithm picks the optimal bracketing weight $\wplus$, which may be strictly
 less than $a_k$: in that case the new estimate is a \emph{semi-convergent} --- a
 Stern-Brocot fraction between two consecutive CF convergents --- not a CF convergent
 itself.
-Conversely, when $w^*$ is large it can jump past several intermediate semi-convergents
+Conversely, when $\wplus$ is large it can jump past several intermediate semi-convergents
 in one step, skipping CF convergents that lie between them.
 Neither sequence is a subsequence of the other: the MT visits some semi-convergents
 that CF skips, and CF visits some convergents that the MT skips.
-The two sequences are related via the shared Sturmian word structure and produce
-equivalent denominator growth, but they traverse different fractions.
-\end{remark}
+The two sequences are related via the shared Sturmian word structure, but they traverse
+different fractions.
 
+%------------------------------------------------------------
 %------------------------------------------------------------
 \section{Examples and Computational Results}
 \label{sec:examples}
 %------------------------------------------------------------
 
-We illustrate the algorithm on two targets.
+Extended tables illustrating the algorithm on $\theta = \log_2 3$ and $\theta = \pi$
+are given in Appendix~\ref{app:examples}.
 
-\subsection{Approximating \texorpdfstring{$\log_2 3$}{log\_2(3)}}
 
-Table~\ref{tab:log23} shows the first several bounded pairs produced by the algorithm
-for $\theta = \log_2 3$.
-The initial pair is $r_0 = 1/1$, $r_1 = 2/1$ ($r_1$ is the better estimate
-throughout).
-
-\begin{table}[h]
-\centering
-\caption{Successive bounded pairs approximating $\log_2 3 \approx 1.58496\ldots$}
-\label{tab:log23}
-\begin{tabular}{@{}cllllcll@{}}
-\toprule
-$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
-\midrule
-0 & $1/1$     & $2/1$      & $-0.369$ & $+0.262$ & 2  & $3/2$         & $5/3$         \\
-1 & $3/2$     & $5/3$      & $-0.054$ & $+0.052$ & 1  & $3/2$         & $8/5$         \\
-2 & $3/2$     & $8/5$      & $-0.054$ & $+0.009$ & 3  & $19/12$       & $27/17$       \\
-3 & $27/17$   & $19/12$    & $+0.002$ & $-0.001$ & 3  & $65/41$       & $84/53$       \\
-4 & $65/41$   & $84/53$    & $+2.5\times10^{-4}$ & $-3.6\times10^{-5}$ & 6
-  & $485/306$     & $569/359$     \\
-5 & $485/306$ & $569/359$  & $+3.0\times10^{-6}$ & $-2.7\times10^{-6}$ & 1
-  & $485/306$     & $1054/665$    \\
-6 & $485/306$ & $1054/665$ & $+3.0\times10^{-6}$ & $-6.0\times10^{-8}$ & 24
-  & $24727/15601$ & $25781/16266$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Approximating \texorpdfstring{$\pi$}{pi}}
-
-For comparison, Table~\ref{tab:pi} shows the first several steps for $\theta = \pi$,
-starting from $r_0 = 4/1$, $r_1 = 3/1$.
-The classical approximant $355/113$ appears at step $n = 2$ with
-$\eps \approx +8.49 \times 10^{-8}$,
-after which the weight $w_5 = 293$ produces a large jump in precision in a single step.
-
-\begin{table}[h]
-\centering
-\caption{Successive bounded pairs approximating $\pi \approx 3.14159\ldots$}
-\label{tab:pi}
-{\small
-\begin{tabular}{@{}cllllcll@{}}
-\toprule
-$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $r_j$ & $r_k$ \\
-\midrule
-0 & $4/1$     & $3/1$     & $+0.273$            & $-0.045$            & $7$
-  & $22/7$         & $25/8$        \\
-1 & $25/8$    & $22/7$    & $-5.0\times10^{-3}$ & $+4.0\times10^{-4}$ & $15$
-  & $333/106$      & $355/113$     \\
-2 & $333/106$ & $355/113$ & $-2.7\times10^{-5}$ & $+8.5\times10^{-8}$ & $293$
-  & $103993/33102$ & $104348/33215$ \\
-\bottomrule
-\end{tabular}}
-\end{table}
-
-\clearpage
 %------------------------------------------------------------
 \section{Relationship to Sturmian Sequences}
 \label{sec:sturmian}
@@ -1080,77 +1046,59 @@ If $\Delta < 0$ then $\pi(r_{\mathrm{new}}) = \pi(r_0) \cdot \pi(r_1)^w$,
 whose last symbol is the last symbol of the final copy of $\pi(r_1)$, again $\OO$.
 \end{proof}
 
-\begin{theorem}[$\Delta$ predicts whether the last letter of $\pi(r)$ matches the Sturmian word at that position]
+\begin{theorem}[Overestimate criterion]
 \label{thm:last-sturmian}
-Let $\theta > 1$ be irrational, let $(r_i, r_{i+1})$ be a bounded pair for $\theta$,
-let $w = w^*$ be the optimal weight of Theorem~\ref{thm:optimal-w} (so that
-$\mathrm{Mediant}(r_i, r_{i+1}, w^*-1)$ and $\mathrm{Mediant}(r_i, r_{i+1}, w^*)$
-bracket $\theta$), and let $r = (e, o) = \mathrm{Mediant}(r_i, r_{i+1}, w^*)$
-(Definition~\ref{def:mediant}).
-Write $\Delta = \Delta(r_i, r_{i+1})$ and $L = e + o = |\pi(r)|$.
-The last letter of $\pi(r)$ is always $\OO$ (Theorem~\ref{thm:parity-ends-O}).
+Let $\theta > 1$ be irrational, let $r = (e, o)$ be a good estimate of $\theta$
+(Definition~\ref{def:good-estimate}), and set $L = e + o$.
 Let $s$ be the Sturmian word with slope $\alpha = 1/(1+\theta)$.
-The symbol $s_{L-1}$ satisfies
+
+\textup{(1)} The Sturmian symbol $s_{L-1}$ satisfies
 \[
-  s_{L-1} = \begin{cases} \OO & \text{if } \Delta > 0, \\ \EE & \text{if } \Delta < 0. \end{cases}
+  s_{L-1} = \begin{cases} \OO & \text{if } e > \theta o \text{ ($r$ an overestimate),} \\
+                           \EE & \text{if } e < \theta o \text{ ($r$ an underestimate).} \end{cases}
 \]
-Hence $\pi(r)[-1] = s_{L-1}$ exactly when $\Delta > 0$ ($r$ an overestimate),
-and $\pi(r)[-1] \neq s_{L-1}$ exactly when $\Delta < 0$ ($r$ an underestimate).
+
+\textup{(2)} If moreover $r$ is produced by the mediant tree, then
+$\pi(r)[-1] = \OO$ (Theorem~\ref{thm:parity-ends-O}), and therefore
+$\pi(r)[-1] = s_{L-1}$ if and only if $r$ is an overestimate.
 \end{theorem}
 
 \begin{proof}
-\textbf{Walk-state criterion.}
+\textbf{Part (1).}
 The Sturmian word satisfies $s_j = \OO$ iff the fractional part
-$f_j := \{(j+1)\alpha\}$ lies in $[0, \alpha)$: the walk on $[0,1)$ stepping by
-$\alpha$ emits $\OO$ exactly when it wraps past $0$.
-So $s_{L-1} = \OO$ iff $f_{L-1} = \{(e+o)\alpha\} \in [0,\alpha)$.
+$f_j := \{(j+1)\alpha\}$ lies in $[0, \alpha)$.
+So $s_{L-1} = \OO$ iff $\{(e+o)\alpha\} \in [0,\alpha)$.
 
-\textbf{Reduction to $\Kval$.}
-Set $\Kval = o(e - \theta o)$ for the child $r = e/o$,
-so $e = \theta o + \Kval/o$.
+Set $\Kval = o(e - \theta o)$, so $e = \theta o + \Kval/o$.
 Since $\alpha = 1/(1+\theta)$:
 \[
-  (e+o)\alpha = \frac{e+o}{1+\theta}
-  = \frac{\theta o + \Kval/o + o}{1+\theta}
-  = \frac{o(\theta+1)}{1+\theta} + \frac{\Kval/o}{1+\theta}
-  = o + \frac{\Kval\alpha}{o}.
+  (e+o)\alpha = o + \frac{\Kval\alpha}{o}.
 \]
 Since $o$ is a positive integer, $\{(e+o)\alpha\} = \{\Kval\alpha/o\}$.
-
-\textbf{Sign of $\Delta$ characterises $s_{L-1}$.}
-Write $f(w) = A + wB$ where $A = e_i - \theta o_i$ and $B = e_{i+1} - \theta o_{i+1}$.
-Since $w = w^*$ is the bracketing weight, $f(w^*-1)$ and $f(w^*)$ have opposite signs,
-so $f(w^*)$ has the same sign as $B$ (the sign that $f$ tends to as $w \to \infty$).
-Because $(r_i, r_{i+1})$ is a bounded pair with $r_{i+1}$ the better estimate,
-$\Dval > 0$ iff $r_{i+1}$ is an overestimate iff $B > 0$.
-Hence $\operatorname{sgn}(\Kval) = \operatorname{sgn}(e - \theta o) = \operatorname{sgn}(f(w^*)) = \operatorname{sgn}(B) = \operatorname{sgn}(\Dval)$.
-Let $r' = \mathrm{Mediant}(r_i, r_{i+1}, w^*-1)$.
-Since $(r', r)$ is a bounded pair (Theorem~\ref{thm:mediant-convergence}),
-$r$ is a good estimate, so $|\Kval|/o = |e - \theta o| < 1$; with $\alpha < 1/2$, we have
-$|\Kval\alpha/o| < \alpha < 1/2$, so the fractional part collapses to:
+Since $r$ is a good estimate, $|\Kval|/o < 1$; with $\alpha < 1/2$ we have
+$|\Kval\alpha/o| < \alpha < 1/2$, so:
 \begin{itemize}
-  \item $\Dval > 0$ (so $\Kval > 0$): $\Kval\alpha/o \in (0, \alpha)$, so $\{\Kval\alpha/o\} = \Kval\alpha/o \in (0,\alpha)$,
-        hence $f_{L-1} \in (0,\alpha)$ and $s_{L-1} = \OO$.
-  \item $\Dval < 0$ (so $\Kval < 0$): $\Kval\alpha/o \in (-\alpha, 0)$, so
-        $\{\Kval\alpha/o\} = 1 + \Kval\alpha/o \in (1-\alpha, 1) \subset (\alpha, 1)$,
-        hence $f_{L-1} \notin [0,\alpha)$ and $s_{L-1} = \EE$.
+  \item $\Kval > 0$: $\{\Kval\alpha/o\} = \Kval\alpha/o \in (0,\alpha)$, so $s_{L-1} = \OO$.
+  \item $\Kval < 0$: $\{\Kval\alpha/o\} = 1 + \Kval\alpha/o \in (1-\alpha,1) \subset (\alpha,1)$,
+        so $s_{L-1} = \EE$.
 \end{itemize}
-Since the mediant tree produces both overestimates ($\Delta > 0$) and underestimates
-($\Delta < 0$) infinitely often, both values of $s_{L-1}$ occur infinitely often.
+
+\textbf{Part (2).}
+For a tree estimate, $\pi(r)[-1] = \OO$ by Theorem~\ref{thm:parity-ends-O}.
+Combined with Part~(1), $\pi(r)[-1] = s_{L-1}$ iff both equal $\OO$, i.e.\ iff $r$ is an overestimate.
 \end{proof}
 
-\begin{lemma}[$e > o$ for all non-leaf estimates]
-\label{rem:e-gt-o}
-The leaf estimates $\lfloor\theta\rfloor/1$ and $\lceil\theta\rceil/1$ satisfy $e \geq o$
-since $\theta > 1$; the lower leaf $\lfloor\theta\rfloor/1$ has $e = o = 1$ when
-$1 < \theta < 2$.
-The upper leaf always satisfies $e_{i+1} = \lceil\theta\rceil \geq 2 > 1 = o_{i+1}$
-(strict).
-For any child $r = \mathrm{Mediant}(r_i, r_{i+1}, w)$ with $w \geq 1$, if both parents
-satisfy $e_i \geq o_i$ and $e_{i+1} \geq o_{i+1}$ with $e_{i+1} > o_{i+1}$, then
-$e = e_i + w\,e_{i+1} > o_i + w\,o_{i+1} = o$ by positive linear combination.
-Hence $e > o$ holds inductively for every non-leaf estimate produced by the mediant tree.
-\end{lemma}
+\begin{remark}
+When $r = \mathrm{Mediant}(r_i, r_{i+1}, \wplus)$ is the child at the bracketing weight,
+the overestimate condition $e > \theta o$ is equivalent to $\Dval(r_i, r_{i+1}) > 0$: since
+$\wplus$ is the bracketing weight, $\operatorname{sgn}(e - \theta o) = \operatorname{sgn}(f(\wplus)) = \operatorname{sgn}(B) = \operatorname{sgn}(\Dval)$
+(where $f(t) = A + tB$ as in the proof of Theorem~\ref{thm:optimal-w}, and $\Dval = \Dval(r_i, r_{i+1})$
+is the determinant of the \emph{parent pair}).
+For the companion child $r = \mathrm{Mediant}(r_i, r_{i+1}, \wminus)$
+(when $\wplus = 1$, the companion is $r_i$ itself), the relationship is reversed.
+The sign of $\Dval$ of the parent pair is therefore not a uniform criterion for a general good estimate;
+the sign of $\Kval = o(e - \theta o)$ is.
+\end{remark}
 
 \begin{theorem}[Universal $\EE\EE$ prefix]
 \label{prop:EE-prefix}
@@ -1181,7 +1129,7 @@ the interior slice $\pi(r)[1{:}L{-}1]$ is a palindrome.
 \begin{proof}
 By Lemma~\ref{lem:branch-standard-pair}, $\pi(r) = \mathrm{Ch}^-(e, o)$ with $L = e+o$.
 By Definition~\ref{def:christoffel}, $\mathrm{Ch}^-(e,o) = \EE \cdot U \cdot \OO$ where
-$U$ is a central word, hence a palindrome (Berstel~\cite{berstel2009}, Chapter~1).
+$U$ is the palindromic interior (Berstel~\cite{berstel2009}, Chapter~1).
 Therefore $\pi(r)[1{:}L{-}1] = U$ is a palindrome.
 \end{proof}
 
@@ -1196,7 +1144,7 @@ length $N$,
 \]
 The terminal position $i = N-1$ is excluded: by Theorem~\ref{thm:parity-ends-O}
 the mediant always emits $\OO$ there, while by Theorem~\ref{thm:last-sturmian}
-the Sturmian emits $\OO$ or $\EE$ according to the sign of $\Delta$.
+the Sturmian emits $\OO$ if $r$ is an overestimate and $\EE$ if $r$ is an underestimate.
 \end{theorem}
 
 \begin{proof}
@@ -1231,15 +1179,15 @@ Hence $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq L-2$.
 \paragraph{Terminal position.}
 The exclusion of $i = L-1$ follows from Theorems~\ref{thm:parity-ends-O}
 and~\ref{thm:last-sturmian}: $\pi(r)$ ends in $\OO$, while $s_{L-1} = \OO$ iff
-$\Delta > 0$ (i.e.\ $r$ is an overestimate).
+$r$ is an overestimate ($e/o > \theta$).
 \end{proof}
 
 \begin{corollary}[Mismatch characterisation]
 \label{cor:mismatch}
 The mediant word $\pi(r)$ and the Sturmian prefix $s[0{:}L]$ are identical
-if and only if $\Delta > 0$.
-When $\Delta < 0$, they agree at every position except $i = L-1$, where the mediant
-emits $\OO$ and the Sturmian emits $\EE$.
+if and only if $r$ is an overestimate ($e/o > \theta$).
+When $r$ is an underestimate ($e/o < \theta$), they agree at every position except
+$i = L-1$, where the mediant emits $\OO$ and the Sturmian emits $\EE$.
 \end{corollary}
 
 The single terminal discrepancy is an artefact of truncation, not a genuine
@@ -1248,6 +1196,15 @@ position $N-1$, whereas the Sturmian word --- which continues indefinitely --- m
 still be in the interior of a longer word at that depth.
 As the depth increases and $N \to \infty$, both sequences converge to the same
 infinite word.
+
+\begin{remark}
+The identification of finite approximants of a Sturmian word with lower Christoffel
+words is classical (Lothaire~\cite{lothaire2002}, Berstel et al.~\cite{berstel2009}).
+The novel content of Theorem~\ref{prop:sturmian} is the proof via the mediant tree,
+which gives an explicit construction of these approximants together with a precise
+characterisation of the terminal discrepancy (the last-letter criterion,
+Theorems~\ref{thm:parity-ends-O} and~\ref{thm:last-sturmian}).
+\end{remark}
 
 This has been verified computationally for several irrational values of $\theta$,
 including $\sqrt{2}$, $\log_2 3$, $\log_2 5$, $\phi$, and $\pi$.
@@ -1267,7 +1224,7 @@ The Sturmian algorithm at position $N-1$ is mid-word in a longer primitive word,
 so it emits $\EE$ --- inherently favouring the above-$\theta$ estimate and leaving the
 running density below $\alpha$.
 The mediant tree, by contrast, explicitly selects at each step the estimate with
-smaller $|\varepsilon|$, which is the lower-bound estimate $r_{2n}$ (the
+smaller $|\varepsilon|$, which is the lower-bound estimate $r_{i+1}$ (the
 below-$\theta$ member of the pair) when that is the better of the two.
 Closing the sequence with $\OO$ at that point reflects this selection: it is the
 correct terminal for a word whose ratio $e/o$ slightly underestimates $\theta$, nudging
@@ -1294,9 +1251,10 @@ positions, requiring $O(N)$ real-arithmetic operations.
 The mediant algorithm instead builds a compressed representation of the same prefix.
 Each iteration requires a constant number of real-arithmetic operations to compute
 the next bounded pair and weight; after $k$ iterations the tree encodes a Sturmian
-prefix of length $N = e_{2k+1} + o_{2k+1}$, which grows exponentially in $k$.
-Thus only $O(\log N)$ real-arithmetic operations are needed to encode a prefix of
-length $N$.
+prefix of length $N = e_{2k+1} + o_{2k+1}$.
+Empirically $N$ grows rapidly with $k$ (see Section~\ref{sec:convergence}), suggesting
+$O(\log N)$ real-arithmetic operations suffice to encode a prefix of length $N$,
+though a formal proof of this bound remains open.
 
 Once the tree is built, enumerating the $N$ symbols requires \emph{no real
 arithmetic at all}: each node specifies an integer weight $w$ and two child words,
@@ -1310,12 +1268,12 @@ avoids $\OO\OO$: two consecutive $\OO$'s would require
 $\lfloor(n+2)\alpha\rfloor - \lfloor n\alpha\rfloor = 2$, but $2\alpha < 1$ makes
 this impossible.
 The mediant tree gives an independent structural proof: every mediant word ends in
-$\OO$ and begins with $\EE$ (since $e > o$ for all non-leaf estimates; Lemma~\ref{rem:e-gt-o}), so every concatenation
+$\OO$ and begins with $\EE$ (since $e \geq 1$; Lemma~\ref{lem:branch-standard-pair} and Definition~\ref{def:christoffel}), so every concatenation
 boundary within a branch word $v^w \cdot u$ or $u \cdot v^w$ reads $\cdots\OO\EE\cdots$;
 $\OO\OO$ never arises at any boundary, and by induction never arises anywhere.
 
 \begin{remark}
-The weights $w_{2n+1}$ are related to the partial quotients of the continued fraction
+The weights $w_{i+1}$ are related to the partial quotients of the continued fraction
 expansion of $\theta$, though they are not in general identical to them.
 A large weight at step $n$ corresponds to a large partial quotient, producing a long
 run of one symbol type in the mediant word --- the same phenomenon that gives rise
@@ -1336,8 +1294,8 @@ If one were content to accept $\OO\OO$ in the mediant word, no special treatment
 would be needed: the algorithm and the Sturmian definition extend formally to any
 $\theta > 0$, and for $\theta < 1$ the slope $\alpha = 1/(1+\theta) > 1/2$ makes
 $\OO\OO$ unavoidable.
-The reductions below are motivated by applications (described in
-Appendix~\ref{app:collatz}) that require $\OO\OO$-free mediant words.
+The reductions below are motivated by applications (described in~\cite{paper77})
+that require $\OO\OO$-free mediant words.
 More concretely: for $\theta \in (0,1)$, setting $\theta' = (1-\theta)/\theta$ (when
 $\theta < 1/2$) or $\theta' = \theta/(1-\theta)$ (when $\theta > 1/2$) maps $\theta$
 to $\theta' > 1$, giving a slope $1/(1+\theta') < 1/2$ and hence an $\OO\OO$-free
@@ -1430,30 +1388,51 @@ $\theta = 1$                & trivial: word $\OO$, $o/(o+e) = 1$  & $1/1$       
 
 We have presented a theory of rational approximation for real numbers based on
 bounded pairs and the weighted mediant construction.
-The core algorithm applies to $\theta > 1$; all other real numbers --- including the
-boundary cases $\theta \in \{0, \tfrac{1}{2}, 1\}$, whose mediant words are the
-trivial words $\EE$, $\EE\OO$, and $\OO$ respectively --- are handled by algebraic
-reduction or direct construction (Section~\ref{sec:extension}).
-The central result, Theorem~\ref{thm:optimal-w}, gives a closed-form formula for the
-optimal mediant weight at each step, enabling an efficient iterative algorithm whose
-denominator sequence grows in proportion to the optimal weights --- superlinearly when
-partial quotients are large.
-The connection to continued fractions falls out as a consequence of the Sturmian
-identity: the optimal weights track the partial quotients of $1/(1+\theta)$, giving
-superlinear denominator growth at no extra proof cost (Remark~\ref{rem:cf}).
-The mediant word (Section~\ref{sec:parity}) is uniquely determined by its fraction,
-and the sequence converges to the Sturmian word with slope $1/(\theta+1)$, agreeing
-at all interior positions of every finite prefix, with the terminal symbol fully
-characterised by the sign of $\Delta$ (Theorem~\ref{prop:sturmian}).
-Two structural invariants further characterise mediant words: every non-leaf word
-begins with $\EE\EE$ (Theorem~\ref{prop:EE-prefix}), and the interior slice
-$\pi(r)[1{:}L{-}1]$ is a palindrome for any mediant word of length $L \geq 2$
-(Theorem~\ref{prop:palindrome}).
-Section~\ref{sec:extension} extends the construction to all $\theta \in (0,1)$ via the
-reductions $\theta' = (1-\theta)/\theta$ (for $\theta < \tfrac{1}{2}$) and
-$\theta' = \theta/(1-\theta)$ (for $\theta > \tfrac{1}{2}$);
-in both cases the algorithm runs on the reduced $\theta' > 1$ and the approximant to
-$\theta$ is read off from the resulting $e$ and $o$ counts.
+The core algorithm applies to $\theta > 1$; all other real numbers are handled by
+algebraic reduction (Section~\ref{sec:extension}).
+
+\paragraph{What is new.}
+The weighted mediant step is the classical Stern--Brocot step; the novelty is
+Theorem~\ref{thm:optimal-w}, which identifies the \emph{unique optimal weight}
+$\wplus$ via a sign-change bracket on the linear error function, giving a closed-form
+formula and guaranteeing that each iterate is a Stern--Brocot semi-convergent ---
+the best approximant achievable in one step from the current bounded pair.
+Lemma~\ref{lem:branch-standard-pair} (every mediant word is a lower Christoffel word)
+follows from the standard Christoffel concatenation theorem (Berstel et
+al.~\cite{berstel2009}); the contribution is the identification that the mediant
+algorithm \emph{naturally} produces lower Christoffel words, without any explicit
+reference to the Christoffel tree.
+The Sturmian identity (Theorem~\ref{prop:sturmian}) and the palindrome invariant
+(Theorem~\ref{prop:palindrome}) are consequences of the Christoffel word theory
+(Lothaire~\cite{lothaire2002}, Berstel et al.~\cite{berstel2009}); the contribution
+is a direct proof via the mediant construction, together with the last-letter criterion
+(Theorem~\ref{prop:sturmian}) which is new.
+The mediant tree taken as a whole is a \emph{compressed transducer}: it encodes the
+construction history of a length-$N$ Sturmian prefix in $O(\log N)$ integer-arithmetic
+steps (empirically; a formal bound remains open), after which the symbols are
+enumerated by a purely integer recursive traversal.
+
+\paragraph{Open problems.}
+\begin{enumerate}
+  \item \textbf{Superlinear denominator growth.}
+    Prove that $o_{i+1}$ grows superlinearly (or exponentially) with the iteration
+    count.
+    The empirical evidence is strong --- every tested irrational shows at least $4\times$
+    growth per two steps --- but a formal proof is lacking.
+    The half-factor bound $|\eps_{i+1}| \leq |\eps_{i-1}|/2$ would follow from the
+    Legendre-type inequality $|e_{i+1} - \theta o_{i+1}| \geq 1/(o_i + o_{i+1})$,
+    which in turn may follow from Farey adjacency; this is an open problem.
+  \item \textbf{Characterisation of the MT fractions.}
+    The MT visits a specific subsequence of Stern--Brocot semi-convergents: those whose
+    consecutive mediants straddle $\theta$.
+    Characterise this subsequence in terms of the continued-fraction expansion of
+    $\theta$, and determine when the MT fraction equals a CF convergent.
+  \item \textbf{Cost comparison with CF.}
+    The CF algorithm produces convergents in $O(\log N)$ arithmetic steps; the MT does
+    likewise but visits different fractions.
+    Give a precise comparison of the approximation quality per step between the two
+    algorithms.
+\end{enumerate}
 
 
 \begin{thebibliography}{9}
@@ -1461,11 +1440,6 @@ $\theta$ is read off from the resulting $e$ and $o$ counts.
   M.~Morse and G.~A.~Hedlund,
   \textit{Symbolic dynamics II: Sturmian trajectories},
   American Journal of Mathematics \textbf{62} (1940), 1--42.
-
-\bibitem{deluca1997}
-  A.~de~Luca,
-  \textit{Sturmian words: structure, combinatorics, and their arithmetics},
-  Theoretical Computer Science \textbf{183} (1997), 45--82.
 
 \bibitem{gkp1994}
   R.~L.~Graham, D.~E.~Knuth, and O.~Patashnik,
@@ -1490,6 +1464,12 @@ $\theta$ is read off from the resulting $e$ and $o$ counts.
   CRM Monograph Series \textbf{27},
   American Mathematical Society, Providence, RI, 2009.
 
+\bibitem{paper77}
+  J.~Seymour,
+  \textit{Mediants and Collatz: Constructing Generalised Collatz Trajectories
+  via Rational Approximation},
+  \texttt{https://github.com/wildducktheories/collatz}, Paper~77 (2026).
+
 \end{thebibliography}
 
 %============================================================
@@ -1501,7 +1481,7 @@ $\theta$ is read off from the resulting $e$ and $o$ counts.
 \label{app:optimal-w}
 %------------------------------------------------------------
 
-We prove the closed-form formula $w^* = \lfloor -A/B \rfloor + 1$ directly from
+We prove the closed-form formula $\wplus = \lfloor -A/B \rfloor + 1$ directly from
 the bracketing condition, using only a linear sign argument.
 
 We have a bounded pair $(r_i, r_{i+1})$ bracketing $\theta$, with
@@ -1512,17 +1492,17 @@ Since $r_i$ and $r_{i+1}$ are on opposite sides of $\theta$ we have $\operatorna
 so $A/B < 0$ and $c := -A/B > 0$.
 The two weighted mediants are
 \[
-  r_j = \frac{e_i + (w-1)\,e_{i+1}}{o_i + (w-1)\,o_{i+1}}, \qquad
-  r_k = \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}},
+  \rminus = \frac{e_i + (w-1)\,e_{i+1}}{o_i + (w-1)\,o_{i+1}}, \qquad
+  \rplus = \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}},
 \]
-with signed errors (numerators of $\eps_j$, $\eps_k$ up to positive denominators)
+with signed errors (numerators of $\epsminus$, $\epsplus$ up to positive denominators)
 \[
   A + (w-1)B \qquad \text{and} \qquad A + wB.
 \]
 
 \paragraph{Bracketing condition.}
 
-The pair $(r_j, r_k)$ brackets $\theta$ iff $\eps_j$ and $\eps_k$ have opposite signs,
+The pair $(\rminus, \rplus)$ brackets $\theta$ iff $\epsminus$ and $\epsplus$ have opposite signs,
 i.e.\ $(A + (w-1)B)(A + wB) < 0$.
 Writing $c = -A/B$, this product equals $B^2\,(w - 1 - c)(w - c)$, which is negative
 iff $w - 1 - c$ and $w - c$ have opposite signs, i.e.\
@@ -1533,8 +1513,9 @@ iff $w - 1 - c$ and $w - c$ have opposite signs, i.e.\
 Since $\theta$ is irrational, $A + nB \neq 0$ for all integers $n$, so $c$ is never
 an integer and the condition is strict: exactly one integer $w$ satisfies it, namely
 \[
-  w^* = \lfloor -A/B \rfloor + 1.
+  \wplus = \lfloor -A/B \rfloor + 1.
 \]
+We also write $\wminus = \wplus - 1 = \lfloor -A/B \rfloor$ for the companion weight.
 
 \paragraph{Expression in terms of $\Dval$ and $\Kval$.}
 
@@ -1546,12 +1527,194 @@ $A = (Bo_i - \Dval)/o_{i+1}$, so
 \]
 and therefore
 \[
-  w^* = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_i}{o_{i+1}} \right\rfloor + 1,
+  \wplus = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_i}{o_{i+1}} \right\rfloor + 1,
 \]
 completing the proof of Theorem~\ref{thm:optimal-w}.
 
 \paragraph{Termination.}
 When $\Kval = 0$, $r_{i+1}$ is an exact rational representation of $\theta$;
 no further improvement is possible and the algorithm terminates.
+
+%------------------------------------------------------------
+\section{Examples and Computational Results}
+\label{app:examples}
+%------------------------------------------------------------
+
+\subsection{Worked example: mediant words for \texorpdfstring{$\log_2 3$}{log\_2(3)}}
+
+\begin{example}[Mediant words and trees for $\log_2 3$]
+\label{ex:log2-3}
+Starting from the initial bounded pair $(r_0, r_1) = (1/1,\, 2/1)$ with
+$\theta = \log_2 3 \approx 1.58496$,
+the algorithm produces the following sequence of bounded pairs.
+At each step $n$, weight $w_{2n+1}$ is used to compute the two candidates
+$\rminus = \mathrm{Mediant}(r_{2n}, r_{2n+1}, w_{2n+1}-1)$ and
+$\rplus = \mathrm{Mediant}(r_{2n}, r_{2n+1}, w_{2n+1})$;
+the better estimate (smaller $|\eps|$) becomes $r_{2n+3}$.
+
+\medskip
+\begin{center}
+\begin{tabular}{@{}cllllcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $w_{2n+1}$ & $\rminus$ & $\rplus$ \\
+\midrule
+0 & $1/1$   & $2/1$   & $-0.369$ & $+0.262$ & 2 & $3/2$   & $5/3$   \\
+1 & $3/2$   & $5/3$   & $-0.054$ & $+0.052$ & 1 & $3/2$   & $8/5$   \\
+2 & $3/2$   & $8/5$   & $-0.054$ & $+0.009$ & 3 & $19/12$ & $27/17$ \\
+3 & $27/17$ & $19/12$ & $+0.002$ & $-0.001$ & 3 & $65/41$ & $84/53$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\medskip
+
+The leaf words are $\pi(r_0) = \mathtt{EO}$ and $\pi(r_1) = \mathtt{EEO}$.
+Reading the word decomposition bottom-up:
+
+\medskip
+\noindent
+\textbf{Level 1} ($n=0$, $w_1=2$, $\Delta>0$,
+$\pi(r_3)=\pi(r_1)^2\cdot\pi(r_0)$, $\pi(r_2)=\pi(r_1)^1\cdot\pi(r_0)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EO}}_{\pi(r_0)}
+}_{\pi(r_3)=\mathtt{EEOEEOEO}}
+\qquad
+\underbrace{
+  \underbrace{\mathtt{EEO}}_{\pi(r_1)}
+  \underbrace{\mathtt{EO}}_{\pi(r_0)}
+}_{\pi(r_2)=\mathtt{EEOEO}}
+\]
+
+\noindent
+\textbf{Level 2} ($n=1$, $w_3=1$, $\Delta>0$,
+$\pi(r_5)=\pi(r_3)^1\cdot\pi(r_2)$, $\pi(r_4)=\pi(r_2)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEOEEOEO}}_{\pi(r_3)}
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
+}_{\pi(r_5)=\mathtt{EEOEEOEOEEOEO}}
+\qquad
+\underbrace{
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_2)}
+}_{\pi(r_4)=\mathtt{EEOEO}}
+\]
+
+\noindent
+\textbf{Level 3} ($n=2$, $w_5=3$, $\Delta>0$,
+$\pi(r_7)=\pi(r_5)^2\cdot\pi(r_4)$):
+\[
+\underbrace{
+  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
+  \;
+  \underbrace{\mathtt{EEOEEOEOEEOEO}}_{\pi(r_5)}
+  \;
+  \underbrace{\mathtt{EEOEO}}_{\pi(r_4)}
+}_{\pi(r_7)}
+\]
+
+The same estimates as mediant trees (steps $n=1$ and $n=2$):
+\begin{align*}
+  r_{2} = 3/2 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\;
+                   \underbrace{2}_{\text{leaf}},\; w=1), \\
+  r_{3} = 5/3 &= \mathrm{Mediant}(\underbrace{1}_{\text{leaf}},\;
+                   \underbrace{2}_{\text{leaf}},\; w=2), \\
+  r_{4} = 3/2 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\;
+                   \mathrm{Mediant}(1,\, 2,\, 2),\; w=0), \\
+  r_{5} = 8/5 &= \mathrm{Mediant}(\mathrm{Mediant}(1,\, 2,\, 1),\;
+                   \mathrm{Mediant}(1,\, 2,\, 2),\; w=1).
+\end{align*}
+A weight of $w=0$ means the left subtree is used directly (contributing zero copies
+of the right subtree).
+\end{example}
+
+\subsection{Approximating \texorpdfstring{$\log_2 3$}{log\_2(3)}}
+
+Table~\ref{tab:log23} shows 22 steps of the algorithm for $\theta = \log_2 3$,
+starting from $r_0 = 1/1$, $r_1 = 2/1$.
+Note the large weight $w = 24$ at step $n=6$ and $w=55$ at step $n=10$, corresponding
+to large partial quotients of the continued fraction of $\log_2 3$, which produce
+large jumps in precision.
+
+\begin{table}[ht]
+\centering
+\caption{Successive bounded pairs approximating $\log_2 3 \approx 1.58496\ldots$}
+\label{tab:log23}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}clllrcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $\wplus$ & $\rminus$ & $\rplus$ \\
+\midrule
+0  & $1/1$         & $2/1$          & $-0.369$ & $+0.262$ & 2  & $3/2$         & $5/3$         \\
+1  & $3/2$         & $5/3$          & $-0.054$ & $+0.052$ & 1  & $3/2$         & $8/5$         \\
+2  & $3/2$         & $8/5$          & $-0.054$ & $+0.009$ & 3  & $19/12$       & $27/17$       \\
+3  & $27/17$       & $19/12$        & $+0.002$ & $-0.001$ & 3  & $65/41$       & $84/53$       \\
+4  & $65/41$       & $84/53$        & $+2.54\times10^{-4}$ & $-3.59\times10^{-5}$ & 6  & $485/306$     & $569/359$     \\
+5  & $485/306$     & $569/359$      & $+3.04\times10^{-6}$ & $-2.70\times10^{-6}$ & 1  & $485/306$     & $1054/665$    \\
+6  & $485/306$     & $1054/665$     & $+3.04\times10^{-6}$ & $-5.98\times10^{-8}$ & 24 & $24727/15601$ & $25781/16266$ \\
+7  & $25781/16266$ & $24727/15601$  & $-1.42\times10^{-9}$ & $+1.06\times10^{-9}$ & 2  & $50508/31867$ & $75235/47468$ \\
+8  & $75235/47468$ & $50508/31867$  & $+2.10\times10^{-10}$ & $-2.08\times10^{-10}$ & 2 & $125743/79335$ & $176251/111202$ \\
+9  & $125743/79335$ & $176251/111202$ & $+4.20\times10^{-11}$ & $-2.95\times10^{-11}$ & 2 & $301994/190537$ & $478245/301739$ \\
+10 & $478245/301739$ & $301994/190537$ & $-1.07\times10^{-11}$ & $+3.08\times10^{-13}$ & 55 & $16785921/10590737$ & $17087915/10781274$ \\
+11 & $16785921/10590737$ & $17087915/10781274$ & $-4.50\times10^{-15}$ & $+1.03\times10^{-15}$ & 5 & $85137581/53715833$ & $102225496/64497107$ \\
+12 & $102225496/64497107$ & $85137581/53715833$ & $+1.23\times10^{-16}$ & $-5.88\times10^{-17}$ & 3 & $272500658/171928773$ & $357638239/225644606$ \\
+13 & $272500658/171928773$ & $357638239/225644606$ & $+9.47\times10^{-18}$ & $-6.79\times10^{-18}$ & 2 & $630138897/397573379$ & $987777136/623217985$ \\
+14 & $987777136/623217985$ & $630138897/397573379$ & $-2.30\times10^{-18}$ & $+2.42\times10^{-19}$ & 15 & $9809721694/6189245291$ & $10439860591/6586818670$ \\
+15 & $9809721694/6189245291$ & $10439860591/6586818670$ & $-1.41\times10^{-20}$ & $+1.40\times10^{-21}$ & 10 & $103768467013/65470613321$ & $114208327604/72057431991$ \\
+16 & $114208327604/72057431991$ & $103768467013/65470613321$ & $+6.96\times10^{-23}$ & $-6.41\times10^{-23}$ & 2 & $217976794617/137528045312$ & $321745261630/202998658633$ \\
+17 & $321745261630/202998658633$ & $217976794617/137528045312$ & $-1.67\times10^{-23}$ & $+5.95\times10^{-24}$ & 5 & $1193652440098/753110839881$ & $1411629234715/890638885193$ \\
+18 & $1411629234715/890638885193$ & $1193652440098/753110839881$ & $+7.97\times10^{-25}$ & $-1.44\times10^{-25}$ & 7 & $8573543875303/5409303924479$ & $9767196315401/6162414764360$ \\
+19 & $8573543875303/5409303924479$ & $9767196315401/6162414764360$ & $+1.11\times10^{-26}$ & $-7.83\times10^{-27}$ & 2 & $18340740190704/11571718688839$ & $28107936506105/17734133453199$ \\
+20 & $28107936506105/17734133453199$ & $18340740190704/11571718688839$ & $-2.06\times10^{-27}$ & $+1.01\times10^{-27}$ & 4 & $83130157078217/52449289519716$ & $101470897268921/64021008208555$ \\
+21 & $101470897268921/64021008208555$ & $83130157078217/52449289519716$ & $+1.63\times10^{-28}$ & $-2.51\times10^{-29}$ & 8 & $683381996816440/431166034846567$ & $766512153894657/483615324366283$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Approximating \texorpdfstring{$\pi$}{pi}}
+
+
+Table~\ref{tab:pi} shows 22 steps for $\theta = \pi$, starting from $r_0 = 4/1$,
+$r_1 = 3/1$.
+The classical approximant $355/113$ appears at step $n=1$ (as $\rplus$) with
+$\eps \approx +8.49 \times 10^{-8}$, and the weight $w=293$ at step $n=2$
+produces an immediate jump of roughly three orders of magnitude
+(from $|\varepsilon| \approx 8.49 \times 10^{-8}$ to $|\varepsilon| \approx 1.06 \times 10^{-10}$).
+
+\begin{table}[ht]
+\centering
+\caption{Successive bounded pairs approximating $\pi \approx 3.14159\ldots$}
+\label{tab:pi}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}clllrcll@{}}
+\toprule
+$n$ & $r_{2n}$ & $r_{2n+1}$ & $\eps_{r_{2n}}$ & $\eps_{r_{2n+1}}$ & $\wplus$ & $\rminus$ & $\rplus$ \\
+\midrule
+0  & $4/1$     & $3/1$     & $+0.273$            & $-0.045$            & 7   & $22/7$         & $25/8$         \\
+1  & $25/8$    & $22/7$    & $-5.0\times10^{-3}$ & $+4.02\times10^{-4}$ & 15  & $333/106$      & $355/113$      \\
+2  & $333/106$ & $355/113$ & $-2.65\times10^{-5}$ & $+8.49\times10^{-8}$ & 293 & $103993/33102$ & $104348/33215$ \\
+3  & $103993/33102$ & $104348/33215$ & $-1.84\times10^{-10}$ & $+1.06\times10^{-10}$ & 2  & $208341/66317$  & $312689/99532$  \\
+4  & $208341/66317$  & $312689/99532$  & $-3.89\times10^{-11}$ & $+9.28\times10^{-12}$ & 3  & $833719/265381$  & $1146408/364913$  \\
+5  & $833719/265381$  & $1146408/364913$  & $-2.77\times10^{-12}$ & $+5.13\times10^{-13}$ & 4  & $4272943/1360120$  & $5419351/1725033$  \\
+6  & $4272943/1360120$  & $5419351/1725033$  & $-1.29\times10^{-13}$ & $+7.05\times10^{-15}$ & 15 & $80143857/25510582$ & $85563208/27235615$ \\
+7  & $85563208/27235615$ & $80143857/25510582$ & $+2.74\times10^{-16}$ & $-1.84\times10^{-16}$ & 2  & $165707065/52746197$ & $245850922/78256779$ \\
+8  & $165707065/52746197$ & $245850922/78256779$ & $+5.22\times10^{-17}$ & $-2.49\times10^{-17}$ & 2  & $411557987/131002976$ & $657408909/209259755$ \\
+9  & $411557987/131002976$ & $657408909/209259755$ & $+6.16\times10^{-18}$ & $-5.45\times10^{-18}$ & 1  & $411557987/131002976$ & $1068966896/340262731$ \\
+10 & $411557987/131002976$ & $1068966896/340262731$ & $+6.16\times10^{-18}$ & $-9.77\times10^{-19}$ & 3  & $2549491779/811528438$ & $3618458675/1151791169$ \\
+11 & $2549491779/811528438$ & $3618458675/1151791169$ & $+1.76\times10^{-19}$ & $-1.65\times10^{-19}$ & 1  & $2549491779/811528438$ & $6167950454/1963319607$ \\
+12 & $2549491779/811528438$ & $6167950454/1963319607$ & $+1.76\times10^{-19}$ & $-2.43\times10^{-20}$ & 3  & $14885392687/4738167652$ & $21053343141/6701487259$ \\
+13 & $14885392687/4738167652$ & $21053343141/6701487259$ & $+9.94\times10^{-21}$ & $-8.33\times10^{-23}$ & 85 & $1783366216531/567663097408$ & $1804419559672/574364584667$ \\
+14 & $1804419559672/574364584667$ & $1783366216531/567663097408$ & $-5.85\times10^{-25}$ & $+3.91\times10^{-25}$ & 2  & $3587785776203/1142027682075$ & $5371151992734/1709690779483$ \\
+15 & $3587785776203/1142027682075$ & $5371151992734/1709690779483$ & $-1.00\times10^{-25}$ & $+6.28\times10^{-26}$ & 2  & $8958937768937/2851718461558$ & $14330089761671/4561409241041$ \\
+16 & $14330089761671/4561409241041$ & $8958937768937/2851718461558$ & $+2.20\times10^{-26}$ & $-2.46\times10^{-27}$ & 15 & $139755218526789/44485467702853$ & $148714156295726/47337186164411$ \\
+17 & $148714156295726/47337186164411$ & $139755218526789/44485467702853$ & $-9.99\times10^{-29}$ & $+5.13\times10^{-29}$ & 3  & $428224593349304/136308121570117$ & $567979811876093/180793589272970$ \\
+18 & $567979811876093/180793589272970$ & $428224593349304/136308121570117$ & $+1.17\times10^{-29}$ & $-1.21\times10^{-30}$ & 13 & $5706674932067741/1816491048114374$ & $6134899525417045/1952799169684491$ \\
+19 & $5706674932067741/1816491048114374$ & $6134899525417045/1952799169684491$ & $+7.43\times10^{-32}$ & $-1.55\times10^{-32}$ & 5  & $30246273033735921/9627687726852338$ & $36381172559152966/11580486896536829$ \\
+20 & $30246273033735921/9627687726852338$ & $36381172559152966/11580486896536829$ & $+1.45\times10^{-33}$ & $-1.40\times10^{-33}$ & 1  & $30246273033735921/9627687726852338$ & $66627445592888887/21208174623389167$ \\
+21 & $30246273033735921/9627687726852338$ & $66627445592888887/21208174623389167$ & $+1.45\times10^{-33}$ & $-1.07\times10^{-34}$ & 7  & $430010946591069243/136876735467187340$ & $496638392183958130/158084910090576507$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
 
 \end{document}
