@@ -96,12 +96,14 @@ governed by $\theta = \log_h g$: a long-descending trajectory must have the rati
 of even steps to odd steps approximate $\theta$ from above.
 
 \paragraph{The question this paper answers.}
-A non-trivial cycle in a Collatz system must have its parity sequence balanced so that
-the net effect is multiplication by exactly $1$: formally, $g^o = h^e$ for a cycle
-with $o$ odd and $e$ even steps.
-Since $\log_h g$ is irrational, no exact balance exists, but arbitrarily close rational
-approximants $e/o \approx \theta$ produce parity sequences where $g^o/h^e$ is
-arbitrarily close to $1$.
+A non-trivial cycle in a Collatz system must have its parity sequence balanced so
+that the trajectory closes: following the cycle once gives $h^e x_0 = g^o x_0 + qK$,
+i.e.\ $(h^e - g^o)x_0 = qK$.
+The median element of such a cycle satisfies $\hat{x} = qK/(h^e - g^o)$, which
+is large precisely when $h^{e/o} \approx g$, i.e.\ when $e/o \approx \theta = \log_h g$.
+Since $\theta$ is irrational, $h^e \neq g^o$ always, but arbitrarily close rational
+approximants $e/o \approx \theta$ produce parity sequences where $\hat{x}$ is
+arbitrarily large.
 The mediant tree provides a canonical \emph{generator} for such sequences:
 for any desired approximation quality, it produces an explicit $e/o$, the balanced
 parity word of length $e+o$ that realises it, and (via the pipeline of
@@ -153,17 +155,17 @@ All notation is consistent with that reference.
 A \emph{ratio} is a pair $(e, o) \in \NN^2$ with $\gcd(e, o) = 1$, written $e/o$.
 Given a real $\theta > 1$, a ratio $r = e/o$ is a \emph{good estimate} of $\theta$
 if $|e - \theta o| < 1$.
-Two good estimates $r_i = e_i/o_i$ and $r_{i+1} = e_{i+1}/o_{i+1}$ form a
-\emph{bounded pair} $(r_i, r_{i+1})$ if they bracket $\theta$ and satisfy
-$\Delta(r_i, r_{i+1}) := e_{i+1} o_i - e_i o_{i+1} = \pm 1$.
+Two good estimates $r_{2d} = e_{2d}/o_{2d}$ and $r_{2d+1} = e_{2d+1}/o_{2d+1}$ form a
+\emph{bounded pair} $(r_{2d}, r_{2d+1})$ if they bracket $\theta$ and satisfy
+$\Delta(r_{2d}, r_{2d+1}) := e_{2d+1} o_{2d} - e_{2d} o_{2d+1} = \pm 1$.
 
-Given a bounded pair $(r_i, r_{i+1})$ and a weight $w \geq 0$, the
+Given a bounded pair $(r_{2d}, r_{2d+1})$ and a weight $w \geq 0$, the
 \emph{weighted mediant} is
 \[
-  \mathrm{Mediant}(r_i, r_{i+1}, w) = \frac{e_i + w\,e_{i+1}}{o_i + w\,o_{i+1}}.
+  \mathrm{Mediant}(r_{2d}, r_{2d+1}, w) = \frac{e_{2d} + w\,e_{2d+1}}{o_{2d} + w\,o_{2d+1}}.
 \]
 The \emph{optimal integer weight} $\wplus$ is the unique integer such that the pair
-$\bigl(\mathrm{Mediant}(r_i, r_{i+1}, \wminus),\, \mathrm{Mediant}(r_i, r_{i+1}, \wplus)\bigr)$
+$\bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus),\, \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)\bigr)$
 brackets $\theta$, where $\wminus = \wplus - 1$; it is given in closed form by
 Theorem~8.1 of~\cite{paper76}, which also guarantees $\wplus \geq 1$.
 
@@ -241,9 +243,9 @@ interpretation.
 \medskip
 \noindent\textbf{Step 2: Run the mediant tree.}
 Apply the optimal weight formula (Theorem~8.1 of~\cite{paper76}) to produce a
-sequence of mediant words $\pi(r_{2n+1})$ of increasing length.
-At level $n$, the word $\pi(r_{2n+1})$ has $o_{2n+1}$ odd steps and $e_{2n+1}$
-even steps, and $e_{2n+1}/o_{2n+1}$ is a good estimate of $\theta$ satisfying
+sequence of mediant words $\pi(r_{2d+1})$ of increasing length.
+At depth $d$, the word $\pi(r_{2d+1})$ has $o_{2d+1}$ odd steps and $e_{2d+1}$
+even steps, and $e_{2d+1}/o_{2d+1}$ is a good estimate of $\theta$ satisfying
 $h^{e-1} < g^o < h^e$ (upper bound) or $h^e < g^o < h^{e+1}$ (lower bound).%
 \footnote{These inequalities follow from the good-estimate condition
 $|e - \theta o| < 1$ with $\theta = \log_h g$: an upper estimate has
@@ -255,7 +257,7 @@ development.}
 
 \medskip
 \noindent\textbf{Step 3: Derive the path identity.}
-For a chosen mediant word $\sigma = \pi(r_{2n+1})$, the function
+For a chosen mediant word $\sigma = \pi(r_{2d+1})$, the function
 \texttt{path\_identity($\sigma$)} constructs the \emph{basic path identity}
 \[
   h^e\,x_n = g^o\,x_0 + q\,K(g, h),
@@ -304,7 +306,7 @@ The output tuple $(o,\, e,\, e/o,\, x_0)$ encodes:
 \end{itemize}
 Setting $t = 0$ gives $x_n = (g^o x_0 + qK) / h^e$, which is also determined by
 $x_0$.
-As $n \to \infty$ the ratio $e_{2n+1}/o_{2n+1}$ converges to $\theta$, with
+As $d \to \infty$ the ratio $e_{2d+1}/o_{2d+1}$ converges to $\theta$, with
 convergence rate governed by the continued-fraction expansion of $\theta$.
 
 \medskip
@@ -414,7 +416,7 @@ For the standard case $g = 3$, $h = 2$ the first 60 symbols are:
   \mathtt{EEOEEOEOEEOEOEEOEEOEOEEOEOEEOEEOEOEEOEOEEOEOEEOEEOEOEEOEOEEO},
 \]
 with $\OO$-density converging to $1/(1+\log_2 3) = \log_6 2 \approx 0.387$ ---
-the \emph{ideally balanced} parity pattern, descending as quickly as theory
+the \emph{ideally balanced} parity pattern, descending as slowly as theory
 permits.
 For $g = 5$, $h = 2$ ($\mathit{short} = 2$, $\mathit{long} = 3$, since
 $\log_2 5 \approx 2.322$) the first 60 symbols are:
@@ -463,8 +465,8 @@ alphabets whose $e/o$ ratio approximates $\theta$.
 The connection between parity sequences and rational approximation of $\log_h g$ is
 classical.
 Terras~\cite{terras1976} introduced the parity sequence as a tool for analysing Collatz
-orbits and observed that a descending trajectory requires the density of even steps to
-exceed $\log_2 3$.
+orbits and observed that a descending trajectory requires the ratio of even to odd steps
+to exceed $\log_2 3$.
 Lagarias~\cite{lagarias1985} gave a systematic account of the parity--residue
 correspondence, relating the number of odd and even steps in a segment to the
 residue class of the starting integer modulo a power of $h$.
@@ -487,7 +489,7 @@ The mediant word is not just any parity word with the right ratio of $\EE$'s to
 $\OO$'s: it is the \emph{canonical} one, identical to the Sturmian word for slope
 $1/(1+\theta)$ at all interior positions (Theorem~12.6 of~\cite{paper76}), and
 palindromic in its interior (Theorem~12.5 of~\cite{paper76}).
-These structural properties make it the unique \emph{balanced} representative of its
+These structural properties make it the unique \emph{lower Christoffel} representative of its
 approximation class.
 
 \paragraph{Comparison with Eliahou.}
@@ -518,22 +520,29 @@ Recall that the path identity for a word $\sigma$ of length $e + o$ is
 \[
   h^e\,x_n = g^o\,x_0 + q\,K(g, h),
 \]
-where $K(g, h) = \sum_{k} c_k\, g^{a_k} h^{b_k}$ records the cumulative additive
-contributions.
-The exponent pair $(a_k, b_k)$ at position $k$ counts the number of odd steps before
-and even steps after position $k$ in $\sigma$, so the full set of exponent pairs is
-determined by the combinatorial structure of the word.
+where $K(g, h) = \sum_{j:\,\OO_j} g^{a_j} h^{b_j}$ records the cumulative additive
+contributions, with one term per $\OO$ in $\sigma$.
+The exponent pair $(a_j, b_j)$ at $\OO$-position $j$ counts: $a_j$ = number of $\OO$'s
+\emph{after} position $j$; $b_j$ = number of $\EE$'s \emph{before} position $j$.
 
-When $\sigma$ is a mediant word, its interior is a palindrome (Theorem~12.5 of~\cite{paper76}).
-The mirror symmetry of the interior forces the exponent pairs to come in symmetric pairs around
-the midpoint: if $(a, b)$ appears in $K$, so does $(o - a,\, e - b)$.
-Extracting the central scaling factor $h^{e/2}$ (or $g^{o/2}$ --- these are equivalent
-up to the factor $g^o / h^e \approx 1$ at a good estimate) yields
+Every mediant word has the form $\sigma = \EE \cdot P \cdot \OO$ where $P$ is a
+palindrome (Theorem~12.5 of~\cite{paper76}).
+The leading $\EE$ contributes no $\OO$, but shifts all $b_j$ up by $1$; the trailing
+$\OO$ contributes the term $g^0 h^e = h^e$ (all $e$ even steps lie before it).
+Separating this unpaired term, write
 \[
-  K(g, h) = h^{e/2} \cdot \tilde K(g/h^{\theta},\, h),
+  K(g, h) = h^e + C(g, h),
 \]
-where $\tilde K$ is, up to this rescaling, a symmetric Laurent polynomial: every term
-with exponent $+n$ in the central variable is paired with a term with exponent $-n$.
+where $C = gh \cdot K_P(g, h)$ absorbs the contributions from the interior $\OO$'s.
+The palindrome symmetry of $P$ forces the exponent pairs of $C$ to come in matched
+pairs: if $(a, b)$ appears in $C$, so does $(o - a,\, e + 1 - b)$.
+Equivalently, $C$ satisfies the self-reciprocal identity
+\[
+  C(g, h) = g^o h^{e+1}\, C(g^{-1}, h^{-1}),
+\]
+so centering by $g^{o/2} h^{(e+1)/2}$ yields a Laurent polynomial in $g^{1/2},
+h^{1/2}$ invariant under simultaneous inversion.
+Lean: \texttt{laurent\_symmetry}, \texttt{TreeWord.laurent\_symmetry}.
 
 This structural property --- that the carry polynomial of any mediant word is a
 symmetric Laurent polynomial after central rescaling --- implies that the cumulative
@@ -556,10 +565,14 @@ this optimal backbone.
 Specifically, a \emph{defect} is any position where the trajectory uses a block of length
 $\ell \notin \{\lfloor\theta\rfloor, \lceil\theta\rceil\}$ (i.e.\ a block length not in the
 Sturmian alphabet for $\theta$).
-Each defect at word position $k$ perturbs specific coefficients of $K(g, h)$: replacing
-a short block $\EE^{\lfloor\theta\rfloor}\OO$ with a long block $\EE^{\lceil\theta\rceil}\OO$
-shifts the exponent pair at position $k$ by $(0, +1)$, and the corresponding change in $K$
-is computable from the surrounding word structure.
+Each defect at word position $k$ perturbs the carry polynomial $K(g, h)$ globally:
+replacing a Sturmian block $\EE^\ell\OO$ with an out-of-alphabet block $\EE^{\ell'}\OO$
+(where $\ell' \notin \{\lfloor\theta\rfloor, \lceil\theta\rceil\}$) changes $e$ by
+$\ell' - \ell$, which shifts $b_j$ by $\ell' - \ell$ for every $\OO$ at position
+$j \geq k$, and changes the modulus $h^{e+1}$.
+The total perturbation to $K$ is therefore a sum over all subsequent $\OO$ positions,
+not a local change at $k$ alone.
+Lean: \texttt{carry\_insert\_E}.
 
 Because the starting residue is determined by
 $x_0 \equiv -q K(g^o)^{-1} \pmod{h^{e+1}}$, every defect causes a predictable arithmetic
@@ -583,48 +596,54 @@ future work.
 \label{sec:palindrome-cycles}
 
 The palindrome invariant (Theorem~12.5 of~\cite{paper76}) characterises the
-\emph{family} of optimal descent paths generated by the mediant tree, not arbitrary
-Collatz trajectories.
-This has a structural implication for limit cycles.
+\emph{family} of optimal descent paths generated by the mediant tree.
+While a pure Sturmian word is an infinite, aperiodic object, finite factors of
+mediant words can appear as parity sequences of cycles in related systems (such
+as the $3x-1$ cycle, whose parity period is a cyclic rotation of a mediant word
+factor).
+Nonetheless, the palindromic structure of mediant words provides a powerful
+algebraic reference frame for analysing candidate cycles.
 
-A non-trivial cycle in a Collatz system must have a parity sequence that is a finite
-periodic word (a cyclic word or necklace).
-For such a word to be palindromic under some cyclic shift, it would need to have
-\emph{multiple symmetry axes} (since a cyclic palindrome under any shift is a cyclic
-palindrome under many shifts), making it extremely constrained.
-In particular, a cyclic word that is palindromic under every shift must be
-highly periodic --- essentially a repetition of a very short unit --- and such a
-word cannot approximate an irrational slope $\theta = \log_h g$ at any reasonable
-precision.
-
-More concretely, the mediant-tree argument for why cycles are structurally
-obstructed proceeds in two steps:
+Specifically, the palindrome invariant acts as a conservation law on the carry
+polynomial $K(g,h)$, enforcing a symmetric Laurent structure (Section~\ref{sec:laurent}).
+Any actual cycle in a generalised Collatz system must deviate from this ideal
+mediant backbone by incorporating ``defects''---local variations in block lengths
+outside the pure Sturmian alphabet $\{\lfloor\theta\rfloor, \lceil\theta\rceil\}$.
+The mediant framework suggests a two-part perspective on why non-trivial cycles
+are so rigidly constrained:
 
 \begin{enumerate}
-\item \textbf{Pure Sturmian backbone is aperiodic.}
-  The Sturmian word for slope $\alpha = 1/(1+\theta)$ with $\theta$ irrational is
-  by definition aperiodic --- it cannot be written as a finite repetition of any
-  shorter word.
-  The mediant tree generates longer and longer factors of this infinite Sturmian word.
-  No finite factor of the Sturmian word can close into a cycle, because the full word
-  is not eventually periodic.
+\item \textbf{Optimality versus exact closure.}
+  The mediant tree constructs the maximally balanced parity sequences that
+  asymptotically approach optimal descent for slope $\alpha = 1/(1+\theta)$.
+  A true cycle requires an exact integer closure condition: from the path
+  identity $h^e x_n = g^o x_0 + q K(g,h)$, setting $x_n = x_0$ yields the exact
+  integer equation
+  \[
+    (h^e - g^o) x_0 = q K(g,h).
+  \]
+  Because $\theta = \log_h g$ is irrational, $h^e \neq g^o$ for any finite word
+  length, meaning any exact cycle must inhabit a precise arithmetic balance
+  between the multiplicative drift $(h^e - g^o)$ and the carry polynomial $K$.
 
-\item \textbf{Defects violate modular closure.}
-  Any parity sequence that is not Sturmian must contain defects (non-Sturmian blocks).
-  The defect perturbation theory of Section~\ref{sec:perturbation} associates a drift
-  in $x_0$ to each defect.
-  For a trajectory to close into a cycle, the total drift must be exactly zero modulo
-  $h^{e+1}$ (the starting residue must equal the ending residue).
-  Whether and under what conditions the defect drifts can cancel to produce such closure
-  is a precise modular arithmetic question.
+\item \textbf{Defect drift and algebraic obstruction.}
+  Because actual cycle words deviate from the pristine palindromic mediant
+  backbone, their carry polynomials experience algebraic ``drift'' away from the
+  symmetric Laurent structure.
+  Each defect perturbs the coefficients of $K(g,h)$ in a measurable way.
+  For a candidate cycle to satisfy the exact integer equation $(h^e - g^o) x_0 = q K$,
+  the cumulative drift induced by these defects must conspire exactly with the
+  multiplicative mismatch.
+  Whether the algebraic constraints imposed by the palindromic conservation law
+  forbid such defect configurations from ever satisfying the exact cycle equation
+  remains an open question.
 \end{enumerate}
 
-If both prongs of this argument can be made rigorous --- showing that the pure Sturmian
-backbone cannot close, and that any defect structure violating palindromicity creates
-drift incompatible with modular closure --- then the framework provides a structural
-impossibility argument for non-trivial cycles.
-This is speculative at present; making it rigorous would require a careful analysis of
-which defect configurations are consistent with the modular closure constraint.
+Rather than viewing palindromicity as a rigid combinatorial barrier that forbids
+finite-factor cycles outright, the mediant framework provides a quantitative
+baseline: it measures exactly how far any candidate cycle deviates from the
+symmetric, asymptotically optimal backbone, casting cycle existence as a question
+of whether defect-induced algebraic drift can satisfy exact integer closure.
 
 %------------------------------------------------------------
 \begin{thebibliography}{9}
