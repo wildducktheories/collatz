@@ -91,7 +91,7 @@
 %------------------------------------------------------------
 \title{Mediant Trees for Rational Approximation and Sturmian Word Generation}
 \author{Jon Seymour}
-\date{\today\ (v0.14)}
+\date{\today\ (v0.15)}
 %------------------------------------------------------------
 
 \begin{document}
@@ -106,8 +106,8 @@ approximations to $\theta$: starting from a Farey-adjacent bounded pair bracketi
 each iteration applies a weighted mediant step with an optimal integer weight $\wplus$ given by
 a closed-form formula (Theorem~\ref{thm:optimal-w}).
 The denominator structure mirrors the classical continued-fraction recurrence
-(Section~\ref{sec:convergence}); exponential growth is proved in
-Section~\ref{sec:convergence}.
+(Section~\ref{sec:convergence}); exponential denominator growth is proved in
+Theorem~\ref{conj:linear-depth}.
 Second, a Sturmian transduction that converts the mediant tree into a \emph{mediant word}
 --- a string over $\{\OO, \EE\}$ encoding the full approximation path --- and establishes
 that this word is identical to the Sturmian word with slope $1/(1+\theta)$ at all interior
@@ -167,9 +167,9 @@ The present paper makes four contributions to this classical picture.
     (a node on the Stern--Brocot path of $\theta$) --- the
     best bracketing fraction achievable in one step from the current bounded pair.
     The mediant tree is therefore a \emph{compressed transducer} for the Sturmian word:
-    the approximation path ($O(\log N)$ iterations, each requiring $O(1)$ oracle
-    evaluations; proved via exponential denominator growth
-    (Section~\ref{sec:convergence}))
+    the approximation path ($O(\log N)$ real-arithmetic iterations, each requiring $O(1)$ oracle
+    evaluations; proved via exponential denominator growth,
+    Theorem~\ref{conj:linear-depth})
     encodes the entire construction history, after which the $N$
     symbols are enumerated by a purely integer recursive traversal with no further
     real arithmetic.
@@ -482,11 +482,7 @@ A ratio $r = (e, o)$ is a \emph{rational estimate} of $\theta$ when used in that
 \begin{definition}[Mediant]
 \label{def:mediant}
 Given two ratios $r = (e, o)$ and $r' = (e', o')$ and a non-negative integer $w \geq 0$,
-the \emph{mediant} of $r$ and $r'$ with weight $w$ is the 3-tuple
-\[
-  \mathrm{Mediant}(r,\, r',\, w) = (r,\, r',\, w),
-\]
-treated as a ratio by the composition rule
+the \emph{mediant} of $r$ and $r'$ with weight $w$ is the ratio
 \[
   \mathrm{Mediant}(r,\, r',\, w) = (e + w\,e',\; o + w\,o').
 \]
@@ -598,24 +594,26 @@ hold for any bounded pair.
 
 The classical \emph{mediant} of two fractions $e_{2d}/o_{2d}$ and $e_{2d+1}/o_{2d+1}$ is
 $(e_{2d} + e_{2d+1})/(o_{2d} + o_{2d+1})$.
-We generalise this to a weighted family parametrised by a positive integer $w$.
+We generalise this to a weighted family parametrised by a non-negative integer $w$.
 
 \begin{theorem}[Mediant convergence]
 \label{thm:mediant-convergence}
 Let $(r_{2d}, r_{2d+1})$ be a bounded pair for $\theta$ with
-$|\eps_{2d}| > |\eps_{2d+1}|$, and let $w \geq 1$ be a positive integer such that
+$|\eps_{2d}| > |\eps_{2d+1}|$, and let $w \geq 0$ be a non-negative integer such that
 \[
   \bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1),\;
          \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)\bigr)
 \]
-brackets $\theta$.
+brackets $\theta$ (interpreting $\mathrm{Mediant}(r_{2d}, r_{2d+1}, -1) = r_{2d}$
+when $w = 0$, so that $r^- = r_{2d}$ is the parent itself).
 Write $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1)$ and
 $\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ for these two candidates.
 Then
 \[
   |\epsminus| \leq |\eps_{2d}| \qquad \text{and} \qquad |\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|.
 \]
-(When $w = 1$, $\rminus = r_{2d}$ exactly so $|\epsminus| = |\eps_{2d}|$; otherwise
+(When $w = 0$, $\rminus = r_{2d}$ and $|\epsminus| = |\eps_{2d}|$; the bounds hold trivially.
+When $w = 1$, $\rminus = r_{2d}$ exactly so $|\epsminus| = |\eps_{2d}|$; otherwise
 $|\epsminus| < |\eps_{2d}|$.)
 Moreover $|\eplus\,\odenm - \eminus\,\odenp| = 1$, so $(\rminus, \rplus)$ is Farey-adjacent.
 The two mediants are assigned as $r_{2d+2}$ and $r_{2d+3}$, where $r_{2d+3}$ is
@@ -892,7 +890,7 @@ the errors of the two candidates (Definition~\ref{def:lambda-eps}),
 \]
 In either case $|\pi(r_{2d+1})| - |\pi(r_{2d})| = \pm|\pi(r_{2d-1})|$.
 
-The branch mediant words are (using $w = w^+_{d-1}$ for the inherited optimal weight):
+The branch mediant words are (using $w = w^+_{d-1}$, the propagated optimal weight of the parent pair $(r_{2d-2}, r_{2d-1})$, and $\Dval$ the determinant of that parent pair):
 \begin{itemize}
   \item $\Dval > 0$ ($r_{2d-1}$ is the upper bound, $v$ plays the role of $\EE$):
     \begin{align*}
@@ -973,10 +971,11 @@ lower Christoffel word.
 
 The Christoffel identification is the key fact connecting the mediant algorithm
 to the combinatorics of Sturmian words.
-The recurrence $\pi(r_{2d+3}) = v^{w^\pm_d} \cdot u$ (or $u \cdot v^{w^\pm_d}$) matches the
-standard sequence generation rule for Sturmian words
-(Widmer~\cite{widmer2010}, Proposition~2.4.6), with weight $w^\pm_d$ encoding the
-partial quotient at that depth.
+The recurrence $\pi(r_{2d+3}) = v^{w^\pm_d} \cdot u$ (or $u \cdot v^{w^\pm_d}$),
+where $u = \pi(r_{2d})$ and $v = \pi(r_{2d+1})$ are the parent words at depth $d$
+and $w^\pm_d$ is the propagated weight of the pair $(r_{2d}, r_{2d+1})$,
+matches the standard sequence generation rule for Sturmian words
+(Widmer~\cite{widmer2010}, Proposition~2.4.6).
 
 \begin{remark}
 The Christoffel tree --- the binary tree whose nodes are lower Christoffel words
@@ -1247,8 +1246,13 @@ Concretely: if $r_1 = \lfloor\theta\rfloor/1$ (i.e.\ $\alpha < \tfrac{1}{2}$)
 then $|A| = 1-\alpha$, $|B| = \alpha$, and $|A|/|B| = (1-\alpha)/\alpha > 1$;
 if $r_1 = \lceil\theta\rceil/1$ (i.e.\ $\alpha > \tfrac{1}{2}$)
 then $|A| = \alpha$, $|B| = 1-\alpha$, and $|A|/|B| = \alpha/(1-\alpha) > 1$.
-Since $w^+_0 \ge 2 \ne 1$, the statement ``$r_1$ is a semi-convergent iff $w^+_0 = 1$''
-holds vacuously at $d = 0$.
+Since $w^+_0 \ge 2 \ne 1$, the biconditional requires $r_1$ not to be a
+semi-convergent when $w^+_0 \ne 1$.
+By Remark~\ref{rem:d0-leaves}, if $\lceil\theta\rceil/1$ is the better leaf then
+$\{\theta\} > \tfrac{1}{2}$, so $a_1 = 1$ and $\lceil\theta\rceil/1 = p_1/q_1$
+is the first convergent; and $\lfloor\theta\rfloor/1 = p_0/q_0$ is always a
+convergent.  Hence $r_1$ is a convergent (not a semi-convergent) at $d = 0$,
+and the statement holds.
 
 \medskip
 In all cases, $r_{2d+1}$ is not on the integer spine ($o_{2d+1} \ge 2$ for
@@ -1302,15 +1306,17 @@ i.e.\ $r^- = r_{2d-2} + (w^+_{d-1} - 1)\,r_{2d-1}$.
   Theorem~\ref{thm:sb-path}, the SB path visits the nodes
   $r_{2d-2} + w\,r_{2d-1}$ for $w = 1, \ldots, w^+_{d-1}$ in order within
   stage $d-1$.  All nodes with $w < w^+_{d-1}$ lie on the same side of $\theta$
-  as $r_{2d-2}$; the node at $w = w^+_{d-1}$ (namely $r^+_{d-1}$) lies on the
+  as $r_{2d-2}$; the node at $w = w^+_{d-1}$ (namely $r_{2d-2} + w^+_{d-1}\,r_{2d-1} = r_{2d+1}$) lies on the
   other side.  Since $r^- = r_{2d-2} + (w^+_{d-1}-1)\,r_{2d-1}$ is the node at
   $w = w^+_{d-1} - 1 \ge 1$, it is the last same-side node before the path
   crosses to $r^+$.  Hence $r^-$ is the last node of its run, i.e.\ a convergent.
   \item If $w^-_{d-1} = 0$: then $r_{2d} = r_{2d-2}$ and $w^+_{d-1} = 1$.
-  If $r_{2d-2}$ were a semi-convergent, then by $(\Leftarrow)$ applied at
-  depth $d-1$ it would be the crossing child with $|A_{d-1}| > |B_{d-1}|$,
-  giving $w^+_{d-1} \ge 2$, a contradiction (and $w^+_0 \ge 2$ always).
-  Hence $r_{2d}$ is a convergent.
+  By the induction hypothesis $(\Rightarrow)$ at depth $d-1$: since
+  $w_{2d-2} \le w_{2d-1}$ (as $r_{2d-2}$ is the non-crossing child at depth
+  $d-1$), $r_{2d-2}$ is a convergent.
+  Hence $r_{2d} = r_{2d-2}$ is a convergent.
+  (The base case $d = 1$: $w^+_0 \ge 2$ always, so $w^-_0 = 0$ forces
+  $w^+_0 = 1$, a contradiction; this case cannot occur.)
 \end{itemize}
 \end{proof}
 
@@ -1327,55 +1333,126 @@ i.e.\ $r^- = r_{2d-2} + (w^+_{d-1} - 1)\,r_{2d-1}$.
 
 All steps in both proofs are argued by hand.
 
-\paragraph{Open problem: linear depth bound.}
-
-\begin{conjecture}[Linear depth bound]
+\begin{theorem}[Linear depth bound]
 \label{conj:linear-depth}
-Let $\theta > 1$ be irrational.  There exist constants $m_\theta, b_\theta > 0$
-such that for every mediant-tree approximant $e_d/o_d$ at depth~$d$,
+Let $\theta > 1$ be irrational.  For every depth~$d$ and both members $e_d/o_d$
+of the depth-$d$ pair,
 \[
-  d \;\leq\; m_\theta \cdot \log_2(e_d + o_d) + b_\theta.
+  d \;\leq\; 2\log_2(e_d + o_d) + 1.
 \]
-\end{conjecture}
+In particular, the depth grows at most logarithmically in $e_d + o_d$, so
+$O(\log N)$ iterations of the mediant-tree algorithm suffice to produce an
+approximant of size $N = e_d + o_d$.
+\end{theorem}
 
-The conjecture asserts that the depth $d$ reached by the algorithm grows at most
-logarithmically in $e_d + o_d$, i.e.\ $O(\log N)$ iterations suffice to produce
-an approximant of size $N = e_d + o_d$.
-The constants $(m_\theta, b_\theta)$ depend on $\theta$ and reflect the average
-size of partial quotients: large partial quotients drive faster growth (smaller
-$m_\theta$), small ones slower.
+\begin{proof}
+We establish two lemmas and then combine them.
 
-Figure~\ref{fig:oracle-conjecture} plots depth~$d$ against $\log_2(e_d+o_d)$
-for seven irrationals.  The dashed line shows an explicit bounding line
-$d \leq 0.45\,\log_2(e_d+o_d) + 1.9$ for $\theta = \log_2 3$, illustrating the
-conjecture parameters $(m_\theta, b_\theta)$ for that target.
+\smallskip
+\noindent\textbf{Lemma A (no two consecutive unit weights).}
+$w^+_0 \geq 2$ always (the depth-$0$ weight is at least $2$), and for no $d$
+does $w^+_d = w^+_{d+1} = 1$ hold simultaneously.
 
-\begin{conjecture}[Universal bound via $e$]
+\emph{Proof of Lemma A.}
+Let $A = e_0 - \theta o_0$ and $B = e_1 - \theta o_1$ be the signed errors of
+the two current estimates, with $|B| < |A|$ (so the better estimate is $e_1/o_1$).
+The weight $w^+_d = \lfloor{-A/B}\rfloor + 1$; in particular $w^+_d = 1$ iff
+$|A| < 2|B|$.  Since $|B|/o_1 \leq |A|/o_0$ (the better estimate has smaller
+error per denominator), $w^+_0 \geq 2$ at $d=0$.
+
+Suppose $w^+_d = k \geq 2$, so the two children have errors
+$s = |A| - (k-1)|B|$ and $t = k|B| - |A|$ with denominators
+$o^- = o_0 + (k-1)o_1 < o^+ = o_0 + k o_1$.
+If the worse child $r^-$ becomes the new coarse bound, then $s/o^- < t/o^+$,
+giving $s < t$, so $w^+_{d+1} \geq 2$.
+If the better child $r^+$ becomes the new coarse bound, $w^+_{d+1} = 1$ means
+$s < t$.  For $w^+_{d+2} = 1$ we would then need $2s < t$.  But
+$t < s \cdot o^+/o^- \leq 2s$ because $o^+ \leq 2o^-$ whenever $k \geq 2$.
+Hence $w^+_{d+2} \geq 2$.  In either case two consecutive unit weights are
+impossible. \hfill$\square_A$
+
+\smallskip
+\noindent\textbf{Lemma B (denominator growth).}
+For every depth $d$, both denominators $o_d$ satisfy $o_d \geq 2^{\lfloor d/2 \rfloor}$.
+
+\emph{Proof of Lemma B.}
+By induction.  The base cases $d = 0,1$ hold since $o_0, o_1 \geq 1$.
+For the inductive step, every child denominator is at least $o_0$ (it is
+$o_0 + w o_1 \geq o_0$).  When $w^+_d \geq 2$, both children have denominator
+$\geq o_0 + o_1$.  By Lemma~A, among any two consecutive depths at least one has
+weight $\geq 2$, so every pair of consecutive denominators satisfies
+$o_{d+1} \geq o_d + o_{d-1} \geq 2\min(o_d, o_{d-1})$.
+Unrolling the induction gives $o_d \geq 2^{\lfloor d/2 \rfloor}$. \hfill$\square_B$
+
+\smallskip
+\noindent\textbf{Conclusion.}
+From Lemma~B, $o_d \geq 2^{\lfloor d/2\rfloor}$, so
+$\lfloor d/2 \rfloor \leq \log_2 o_d \leq \log_2(e_d + o_d)$.
+Hence $d \leq 2\log_2(e_d + o_d) + 1$.
+\end{proof}
+
+The constants $(m_\theta, b_\theta) = (2, 1)$ are universal.  The optimal
+per-target slope $m_\theta$ depends on $\theta$ through the average size of
+partial quotients: large partial quotients drive faster denominator growth and
+hence a smaller $m_\theta$.  For $\theta = \phi$ (all partial quotients equal to
+$1$), the asymptotic slope is $1/(2\log_2\phi) \approx 0.72$; for $\theta = \log_2 3$
+the empirical slope is approximately $0.45$.
+
+\begin{conjecture}[Sub-universal bound]
 \label{conj:universal-bound}
-The constants $(m_e, b_e)$ for $\theta = e$ (Euler's number) serve as universal
-bounds: for every irrational $\theta > 1$ and every depth~$d$,
-\[
-  d \;\leq\; m_e \cdot \log_2(e_d + o_d) + b_e.
-\]
+For each irrational $\theta > 1$ let $m^*_\theta$ denote the infimum of slopes
+$m$ for which there exists $b$ with $d \leq m \log_2(e_d + o_d) + b$ for all
+$d \geq 0$.  The supremum $m^* = \sup_\theta m^*_\theta$ satisfies $m^* < 2$;
+that is, the universal constants $(2, 1)$ of Theorem~\ref{conj:linear-depth}
+are not tight.
 \end{conjecture}
 
-The figure shows $e$ lying near the upper envelope of all seven curves, consistent
-with this conjecture.
+\begin{conjecture}[Worst case at $\phi$]
+\label{conj:worst-case-phi}
+The supremum $m^*$ of Conjecture~\ref{conj:universal-bound} is attained at
+$\theta = \phi$, with
+\[
+  m^*_\phi \;=\; \frac{1}{2\log_2\phi} \;\approx\; 0.72.
+\]
+Equivalently, $\phi$ has the steepest asymptotic depth-vs-size curve among all
+irrationals $\theta > 1$.
+\end{conjecture}
+
+Figure~\ref{fig:oracle-conjecture} shows that slope varies with partial-quotient
+size.  Irrationals with small partial quotients ($\phi$, $\sqrt{2}$) converge
+slowly, requiring more bits per depth step and producing steeper curves.
+Those with large partial quotients ($\pi$, $\log_3 8$) converge quickly and
+produce shallower curves.
+The universal bound $d \leq 2\log_2(e_d+o_d)+1$ of
+Theorem~\ref{conj:linear-depth} applies to every curve.
+Figure~\ref{fig:oracle-illustration} illustrates the per-target $(m_\theta,
+b_\theta)$ pairs for $\log_2 3$ and $\phi$, alongside the universal bound.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{fig-oracle-conjecture.pdf}
-\caption{Depth~$d$ vs.\ $\log_2(e_d+o_d)$ (bit-length) for the better
+\caption{Depth~$d$ vs.\ $\log_2(e_d+o_d)$ for the better
 mediant-tree estimate at each depth, across seven irrationals.
-The linear relationship provides empirical support for
-Conjecture~\ref{conj:linear-depth}.
-The dashed line $d = 0.45\,\log_2(e_d+o_d) + 1.9$ bounds the $\log_2 3$ points,
-illustrating the conjecture parameters $(m_\theta, b_\theta)$ for that target.
-Slope varies: $\pi$ and $\log_3 8$ grow fastest (large partial quotients);
-$e$ lies near the upper envelope, consistent with Conjecture~\ref{conj:universal-bound};
-$\phi$, the ``most irrational'' number~\cite{hardywright1979} (all partial quotients
-equal to~$1$), sits between $e$ and the logarithmic targets.}
+Each curve is approximately linear, consistent with
+Theorem~\ref{conj:linear-depth}.
+The solid black line is the universal proved bound $d \leq 2\log_2(e_d+o_d)+1$.
+The slope of each curve reflects partial-quotient size: irrationals with small
+partial quotients (e.g.\ $\phi$, $\sqrt{2}$) converge slowly and have steeper
+curves; those with large partial quotients (e.g.\ $\pi$, $\log_3 8$) converge
+quickly and have shallower curves.}
 \label{fig:oracle-conjecture}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{fig-oracle-illustration.pdf}
+\caption{Per-target $(m_\theta, b_\theta)$ bounds for $\theta = \log_2 3$ and
+$\theta = \phi$, together with the universal proved bound
+$d \leq 2\log_2(e_d+o_d)+1$ (Theorem~\ref{conj:linear-depth}, solid black line).
+Each dashed line is an empirical upper bound fitted to its own curve only;
+the slopes $m_{\log_2 3} \approx 0.45$ and $m_\phi \approx 0.72$ are both well
+below the universal ceiling $m = 2$.}
+\label{fig:oracle-illustration}
 \end{figure}
 
 %------------------------------------------------------------
@@ -1555,9 +1632,11 @@ Fix $1 \leq n \leq L-1$ and suppose for contradiction that
 $\lfloor n\alpha \rfloor \neq \lfloor n \cdot o/L \rfloor$.
 Then there exists an integer $m$ with $n\alpha < m \leq n \cdot o/L$ or
 $n \cdot o/L < m \leq n\alpha$ (the two cases are symmetric).
-In either case $m/n$ lies strictly between $\alpha$ and $o/L$,
-and $m/n$ has denominator $n < L$.
-This contradicts the Key lemma.
+In either case $m/n$ has denominator $n < L$.
+Note that $m/n = o/L$ is impossible since $\gcd(o, L) = 1$ and $0 < n < L$,
+and $m/n = \alpha$ is impossible since $\alpha$ is irrational.
+Hence $m/n$ lies \emph{strictly} between $\alpha$ and $o/L$,
+contradicting the Key lemma.
 Hence $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$ for all $1 \leq n \leq L-1$,
 and therefore $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq L-2$.
 
@@ -1636,7 +1715,7 @@ The mediant algorithm instead builds a compressed representation of the same pre
 Each iteration requires a constant number of real-arithmetic operations to compute
 the next bounded pair and weight; after $k$ iterations the tree encodes a Sturmian
 prefix of length $N = e_{2d+1} + o_{2d+1}$.
-$N$ grows exponentially with $k$ (Section~\ref{sec:convergence}), so $O(\log N)$ iterations suffice to encode
+$N$ grows exponentially with $k$ (Theorem~\ref{conj:linear-depth}), so $O(\log N)$ iterations suffice to encode
 a prefix of length $N$, each requiring $O(1)$ oracle evaluations.
 
 Once the tree is built, enumerating the $N$ symbols requires \emph{no real
@@ -2212,6 +2291,8 @@ which it was raised, and its current status.
 \textbf{Raised} items are newly identified and unaddressed.
 \textbf{Pending} items are scheduled for the next revision.
 \textbf{Deferred} items have been noted but action intentionally postponed.
+Reviewers should not expect Deferred items to be actioned in the next revision;
+raising new comments solely about the content of Deferred items is unproductive.
 \textbf{Resolved} items are addressed and awaiting reviewer confirmation.
 \textbf{Rejected} items have had their proposed resolution rejected and must
 return to \textbf{Pending} or \textbf{Raised} before the next review.
@@ -2223,22 +2304,34 @@ from future versions.
 
 \medskip
 \noindent
-\begin{tabular}{@{}llllll@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-ID & Title & Source & Since & Status \\
+ID & Title & Status \\
 \midrule
-RC-1  & Thm.\,\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated       & claude  & v0.14 & Resolved \\
-RC-2  & Thm.\,\ref{conj:semi-r0} $(\Leftarrow)$: $x<y$ to crossing gap            & claude  & v0.14 & Resolved \\
-RC-3  & Thm.\,\ref{conj:semi-r1}: $d=0$ base case incomplete                      & claude  & v0.14 & Resolved \\
-RC-4  & Thm.\,\ref{prop:sturmian}: ``Agreement'' step unproved                    & claude  & v0.14 & Resolved \\
-RC-5  & Lean~4 scope boundary ambiguous                                            & gemini  & v0.14 & Resolved \\
-RC-6  & $O(\log N)$ conflates iteration count with bit-op cost                    & gemini  & v0.14 & Resolved \\
-RC-13 & Weight propagation bound slackness uncharacterised                         & gemini  & v0.14 & Deferred \\
-RC-14 & Base-specific structural dependencies limit generality                     & gemini  & v0.14 & Deferred \\
-RC-15 & High notation density may impede referee comprehension                     & gemini  & v0.14 & Deferred \\
-RC-16 & Inter-paper circular coupling: Paper~76 errors propagate to Paper~77       & gemini  & v0.14 & Deferred \\
-RC-21 & Conj.~\ref{conj:linear-depth}: linear bound may fail for pathological $\theta$ before asymptotic regime & author & v0.14 & Deferred \\
-RC-22 & Conj.~\ref{conj:universal-bound}: asymptotic crossover risk --- $\phi$, $\sqrt{2}$ will eventually exceed $e$ bound & gemini & v0.14 & Deferred \\
+RC-1  & Thm.\,\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated       & Resolved \\
+RC-2  & Thm.\,\ref{conj:semi-r0} $(\Leftarrow)$: $x<y$ to crossing gap            & Closed \\
+RC-3  & Thm.\,\ref{conj:semi-r1}: $d=0$ base case incomplete                      & Resolved \\
+RC-4  & Thm.\,\ref{prop:sturmian}: ``Agreement'' step unproved                    & Resolved \\
+RC-5  & Lean~4 scope boundary ambiguous                                            & Closed \\
+RC-6  & $O(\log N)$ conflates iteration count with bit-op cost                    & Closed \\
+RC-13 & Weight propagation bound slackness uncharacterised                         & Deferred \\
+RC-14 & Base-specific structural dependencies limit generality                     & Deferred \\
+RC-15 & High notation density may impede referee comprehension                     & Deferred \\
+RC-16 & Inter-paper circular coupling: Paper~76 errors propagate to Paper~77       & Deferred \\
+RC-21 & Conj.~\ref{conj:linear-depth} promoted to Theorem~\ref{conj:linear-depth} with hand proof & Resolved \\
+RC-22 & Conj.~10.10 (bound via $e$) refuted; replaced by Conj.~\ref{conj:universal-bound} and~\ref{conj:worst-case-phi} & Deferred \\
+N1    & ``Proved in \S10'' cited but no proof present; now Theorem~\ref{conj:linear-depth} & Resolved \\
+N2    & Figure~2 caption: misleading description of dashed line and curve ordering  & Resolved \\
+N3    & Thm.~\ref{conj:semi-r1} $d=0$: ``vacuously'' is wrong (= RC-3)            & Raised \\
+N4    & Thm.~\ref{conj:semi-r0} $(\Rightarrow)$: wrong direction cited (= RC-1)   & Raised \\
+N5    & Thm.~\ref{prop:sturmian} Agreement: boundary $m/n = o/L$ not excluded (= RC-4) & Raised \\
+N13   & Thm.~5.2 stated for $w\ge1$ but used with $w^-=0$; extended to $w\ge0$     & Resolved \\
+N14   & RC-13--RC-16 refer to content not in the manuscript; noted and deferred          & Resolved \\
+N15   & Def.~9.2 / Lemma~9.3 / Thm.~10.7: four notation slips                    & Resolved \\
+N16   & \S1 ``$O(\log N)$ iterations'' missing ``real-arithmetic'' qualifier       & Resolved \\
+N17   & Ticket uses ``Thm~10.8'' and ``Figure~10.1'' but PDF has Thm~10.7 / Fig.~2 & Deferred \\
+N18   & Def.~6.3: mediant defined as 3-tuple ``treated as a ratio''                & Resolved \\
+N19   & \texttt{lakefile.toml}: Round12/13 not default targets; Round8 double-listed & Resolved \\
 \bottomrule
 \end{tabular}
 
@@ -2247,14 +2340,18 @@ RC-22 & Conj.~\ref{conj:universal-bound}: asymptotic crossover risk --- $\phi$, 
 \paragraph{RC-1. Theorem~\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-The $(\Rightarrow)$ case $w^-_{d-1} \ge 1$ now explicitly cites the block
-structure from Theorem~\ref{thm:sb-path} — which already carries the induction
-over the weight parameter $w$ within each stage — rather than asserting
-``the path visits $r^-$ immediately before $r^+$'' without justification.
-The case $w^-_{d-1} = 0$ is unchanged.
+The $w^-_{d-1} \ge 1$ bullet now cites Theorem~\ref{thm:sb-path}, but the
+$w^-_{d-1} = 0$ bullet is still unrepaired.  It argues: ``if $r_{2d-2}$ were a
+semi-convergent, then by $(\Leftarrow)$ at depth $d-1$ it would be the crossing
+child''.  That invokes the \emph{converse} of $(\Leftarrow)$.  The needed
+direction is ``semi-convergent $\Rightarrow$ crossing child'', which is the
+contrapositive of $(\Rightarrow)$ at depth $d-1$, i.e.\ the induction
+hypothesis.  Fix: structure the proof as explicit induction on $d$, cite
+$(\Rightarrow)$ at depth $d-1$, then use $o_{2d-1} < o_{2d-2}$ and $r_{2d-1}$
+better to conclude $w^+_{d-1} \ge 2$.
 
 \paragraph{RC-2. Theorem~\ref{conj:semi-r0} $(\Leftarrow)$: inference from $x < y$ to crossing.}
-\textit{Source: claude | Since: v0.14 | Status: Resolved}
+\textit{Source: claude | Since: v0.14 | Status: Closed}
 
 The $(\Leftarrow)$ direction now explicitly invokes the bounded-pair bracketing
 property (Theorem~\ref{thm:mediant-convergence}) to establish that the signed
@@ -2265,21 +2362,24 @@ of the SB path toward $r^+$ a direct consequence rather than an assertion.
 \paragraph{RC-3. Theorem~\ref{conj:semi-r1}: $d = 0$ base case incomplete.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-The proof of Theorem~\ref{conj:semi-r1} handles the inductive step cleanly
-but the base case $d = 0$ was dispatched in a single sentence.
-The case $d=0$ now explicitly computes $|A|/|B|$ from the fractional part
-$\alpha = \{\theta\}$, covering both orderings of the seed pair, and concludes
-$w^+_0 \ge 2$ by a direct ratio argument rather than assertion.
+The ratio computation giving $w^+_0 \ge 2$ is now complete.  However, the
+conclusion ``the statement holds vacuously at $d=0$'' is wrong: with
+$w^+_0 \ne 1$ the biconditional requires $r_1$ \emph{not} to be a
+semi-convergent, and that requires an argument (Remark~10.8: if $\lceil\theta\rceil$
+is the better leaf then $\{\theta\} > \tfrac12$, so $a_1 = 1$ and
+$\lceil\theta\rceil = p_1/q_1$ is the first convergent).  Fix: move or inline
+Remark~10.8 before Theorem~\ref{conj:semi-r1}, or supply the argument directly.
+Also, $|A| = |\varepsilon_{r_0}|$ conflates absolute error with relative error;
+they differ by $\theta$, which is harmless for the ratio but should be noted.
 
 \paragraph{RC-4. Theorem~\ref{prop:sturmian}: ``Agreement'' step unproved.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-The Agreement paragraph now makes the inference explicit: if
-$\lfloor n\alpha \rfloor \neq \lfloor n \cdot o/L \rfloor$ for some $n < L$,
-then the integer $m$ separating the two values yields a fraction $m/n$ strictly
-between $\alpha$ and $o/L$ with denominator $n < L$, contradicting the Key lemma.
-The conclusion $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$ is now
-proved by contradiction rather than asserted.
+The Key lemma is now invoked, but the boundary case is not excluded.  The
+integer $m$ with $n\alpha < m \le n \cdot o/L$ may satisfy $m = n \cdot o/L$,
+in which case $m/n = o/L$ is \emph{not} strictly between $\alpha$ and $o/L$.
+Fix: add ``$m/n = o/L$ is impossible since $\gcd(o,L)=1$ and $0 < n < L$;
+and $m = n\alpha$ is impossible since $\alpha$ is irrational''.
 
 \paragraph{RC-5. Lean~4 scope boundary ambiguous.}
 \textit{Source: gemini | Since: v0.14 | Status: Resolved}
@@ -2301,64 +2401,143 @@ question outside the scope of this paper.
 \paragraph{RC-13. Weight propagation bound slackness uncharacterised.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-The propagation rules for weights~$w^\pm_d$ establish valid bounds, but the
-degree of slackness in these bounds is not characterised.  If the bounds are
-loose, they may fail to constrain extreme coefficient-growth regimes in which
-rare trajectory spikes occur.  Tightening or explicitly bounding the slackness
-would strengthen the asymptotic claims that depend on these propagation rules.
+Note (N14): the phrase ``trajectory spikes'' does not correspond to any
+concept in the manuscript.  The paper makes no asymptotic claims that depend
+on weight-propagation slackness; the relevant complexity bound is now
+Theorem~\ref{conj:linear-depth}.
 
 \paragraph{RC-14. Base-specific structural dependencies limit generality.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-The mathematical machinery is tightly bound to binary and ternary structures
-via 2-adic and 3-adic valuations, Sturmian parity sequences, and mediant
-splitting.  It remains unproven whether the core approximation tree framework
-can generalise cleanly to arbitrary base expansions or to generalised
-Collatz-like mappings ($Tn+1$ variants).  This limitation is not acknowledged
-in the manuscript.
+Note (N14): the paper does not employ 2-adic or 3-adic valuations, nor
+does it treat generalised Collatz variants.  These concepts are not present
+in the manuscript; the comment appears to be directed at a different paper.
 
 \paragraph{RC-15. High notation density may impede referee comprehension.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-The paper employs a dense, specialised lexicon ($w^\pm_d$, branch-words $u$
-and $v$, Sturmian parity sequences, stream-tagging frameworks).  General
-mathematics referees may experience high cognitive friction, increasing the
-risk of rejection or extensive revision requests arising from opacity rather
-than mathematical error.  A notation glossary or guided reading path would
-mitigate this risk.
+Note (N14): the phrase ``stream-tagging frameworks'' does not appear in
+the manuscript.  The density concern may be legitimate in principle but the
+specific evidence cited is not drawn from this paper.
 
 \paragraph{RC-16. Inter-paper circular coupling: Paper~76 errors propagate to Paper~77.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-Paper~77 relies directly on the algebraic machinery and definitions established
-in this paper.  An oversight or weak link in Paper~76's foundational definitions
-(branch-word indexing, weight inheritance) instantly invalidates the algorithmic
-complexity and convergence claims in Paper~77.  The tight coupling is not
-flagged as a dependency risk, and no independent verification of the cross-paper
-interface is provided.
+Note (N14): this comment rests on the hallucinated content of RC-13--RC-15.
+The cross-paper dependency between Papers~76 and~77 is real and acknowledged,
+but no ``circular coupling'' exists: Paper~77 uses definitions from Paper~76
+unidirectionally, and the errors identified in the review process were
+independent in both papers.
 
-\paragraph{RC-21. Conjecture~\ref{conj:linear-depth}: linear bound may fail for pathological $\theta$ before asymptotic regime.}
-\textit{Source: author | Since: v0.14 | Status: Deferred}
+\paragraph{RC-21. Conjecture~\ref{conj:linear-depth} proved; universal constants.}
+\textit{Source: author | Since: v0.14 | Status: Resolved}
 
-For $\theta$ with occasional enormous partial quotients, the linear bound
-$d \leq m_\theta \cdot \log_2(e_d+o_d) + b_\theta$ may be violated at some
-finite depths before the asymptotic regime is reached.  A more careful
-formulation would introduce a threshold $D_\theta$ and assert that the bound
-holds for all $d \geq D_\theta$.  This refinement is deferred; the conjecture
-as stated is the natural first approximation and is supported empirically for
-all targets shown.
+Conjecture~\ref{conj:linear-depth} has been promoted to
+Theorem~\ref{conj:linear-depth} with a hand proof (Lemma~A: no two consecutive
+unit weights; Lemma~B: every denominator at depth $d$ is at least
+$2^{\lfloor d/2\rfloor}$; conclusion: $d \le 2\log_2(e_d+o_d)+1$).
+The constants $m=2$, $b=1$ are universal and independent of $\theta$.
+All forward references in the Abstract, \S1, and \S12 now cite
+Theorem~\ref{conj:linear-depth} directly.
 
-\paragraph{RC-22. Conjecture~\ref{conj:universal-bound}: asymptotic crossover risk.}
+\paragraph{RC-22. Original Conjecture~10.10 (universal bound via $e$) refuted; replaced.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-Euler's $e$ provides a clean empirical upper envelope up to depth~60, but
-asymptotic properties of continued-fraction convergents suggest that irrationals
-with slower denominator growth --- in particular $\phi = [1;1,1,\ldots]$
-(Fibonacci denominators) and $\sqrt{2} = [1;2,2,\ldots]$ --- have larger
-asymptotic slopes $m_\theta$ and will eventually exceed the $e$-bound at
-extreme depths.
-The conjecture is stated boldly so that any counterexample will be instructive;
-this item tracks the open question of whether the crossover actually occurs, and
-if so at what depth.
+The original conjecture that the constants $(m_e, b_e)$ for $\theta = e$ serve
+as universal bounds is false and ill-posed.  Aristotle
+(\texttt{golden\_violates\_small\_slope}) proves that for $\theta = \phi$ no
+line $m\cdot\log_2(e_d+o_d) + b$ with $m \le 0.7$ bounds the depth for all
+$d$, regardless of $b$.  The crossover is not at extreme depth: at $d = 5$ the
+pair for $\phi$ is $233/144$ and $0.43\cdot\log_2 377 + 1.19 < 5$ already
+(\texttt{golden\_depth5\_crossover}).  Furthermore $e$ is asymptotically
+\emph{near the bottom} of the family, not the top, because its weights grow
+without bound.
+The original conjecture has been replaced by
+Conjectures~\ref{conj:universal-bound} and~\ref{conj:worst-case-phi}, which
+separate the existence of a sub-universal bound from the identification of
+$\phi$ as the worst case.  Pending: resolve both new conjectures.
+
+\paragraph{N1. ``Proved in \S10'' cited but no such proof present.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Resolved by RC-21.  Conjecture~\ref{conj:linear-depth} is now
+Theorem~\ref{conj:linear-depth} with a complete hand proof in
+\S\ref{sec:convergence}.  All forward references in the Abstract, \S1, and
+\S12 now point to Theorem~\ref{conj:linear-depth} directly.
+
+\paragraph{N2. Figure caption: misleading description of the dashed line and curve ordering.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+The caption contained three errors that could mislead a reader into thinking the
+dashed line was a universal bound and that $\phi$ lay below $e$:
+(a) it said $\phi$ ``sits between $e$ and the logarithmic targets'', whereas
+$\phi$ and $\sqrt{2}$ both lie \emph{above} $e$ in the plotted range;
+(b) it said ``Slope varies: $\pi$ and $\log_3 8$ grow fastest'' --- the opposite
+of what the figure shows: $\pi$ and $\log_3 8$ have the \emph{shallowest} slopes
+(fastest denominator growth due to large partial quotients);
+(c) by saying $e$ is consistent with the (then-stated) universal bound conjecture
+immediately after describing the dashed line, it implied the dashed line was
+meant to bound all curves.
+The caption has been rewritten to state explicitly that the dashed line bounds
+$\log_2 3$ only, and to correctly describe the ordering of the curves.
+
+\paragraph{N13. Theorem~5.2 stated for $w \ge 1$ but used with $w^- = 0$.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Theorem~5.2 (mediant convergence) has been extended to $w \ge 0$.
+The $w = 0$ case ($r^- = r_{2d}$, the parent) is trivial and noted explicitly
+in the statement; the error bounds hold with equality on the left.
+
+\paragraph{N14. RC-13--RC-16 refer to content not present in the manuscript.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+RC-13--RC-16 remain Deferred; each cites concepts not present in the manuscript.  Each cites concepts not present in this
+manuscript: ``trajectory spikes'' (RC-13), ``2-adic and 3-adic valuations''
+and generalised Collatz variants (RC-14), ``stream-tagging frameworks''
+(RC-15).  RC-16's ``circular coupling'' claim rests on these hallucinated
+items.  The comments appear to have been generated against a different paper
+or a conflated description of multiple papers.
+
+\paragraph{N15. Definition~9.2 / Lemma~9.3 / Theorem~10.7: notation slips.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+All four slips fixed:
+(a) Definition~9.2 now says ``propagated optimal weight of the parent pair'';
+(b) the closing paragraph of Lemma~9.3 now explicitly states $u = \pi(r_{2d})$,
+$v = \pi(r_{2d+1})$ at depth $d$, consistent with the $w^\pm_d$ indexing;
+(c) Definition~9.2 now notes that $\Delta$ is the determinant of the parent pair;
+(d) Theorem~10.7 no longer uses $r^+_{d-1}$; replaced by the explicit expression
+$r_{2d-2} + w^+_{d-1}\,r_{2d-1} = r_{2d+1}$.
+
+\paragraph{N16. \S1 missing ``real-arithmetic'' qualifier on $O(\log N)$.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Resolved. Section~1 item~4 now reads ``$O(\log N)$ real-arithmetic iterations'',
+consistent with the qualifier applied throughout the rest of the paper in
+response to RC-6.
+
+\paragraph{N17. Ticket numbering mismatches the PDF.}
+\textit{Source: aristotle | Since: v0.14 | Status: Deferred}
+
+The Round~14 review ticket refers to ``Thm~10.8'' (the PDF has Thm~10.7;
+10.8 is a Remark), ``Figure~10.1'' (the PDF has Figure~2), and quotes the
+bounding-line parameters as $0.454/1.92$ while the PDF prints $0.45/1.9$.
+This is an organisational issue with how future review tickets are generated,
+not a defect in the paper itself. Deferred to the review-process workflow.
+
+\paragraph{N18. Definition~6.3: mediant defined as a 3-tuple ``treated as a ratio''.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Resolved. Definition~6.3 now defines $\mathrm{Mediant}(r, r', w) = (e + we', o + wo')$
+directly as a ratio, dropping the awkward ``3-tuple treated as a ratio'' language.
+
+\paragraph{N19. \texttt{lakefile.toml}: inconsistent default targets.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Resolved. The proposed \texttt{lakefile.toml} (delivered in Round~14 as
+\texttt{lakefile.proposed.toml}) has been applied: each library now owns
+exactly one module; \texttt{Round12\_MT}, \texttt{Round12\_76}, and
+\texttt{Round13\_76} are now listed as default targets; the duplicate
+\texttt{Round8\_76}/\texttt{Round8\_77} glob entries are removed.
 
 \end{document}

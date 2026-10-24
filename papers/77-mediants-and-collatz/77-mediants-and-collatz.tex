@@ -54,7 +54,7 @@
   Constructing Generalised Collatz Trajectories\\
   via Rational Approximation}
 \author{Jon Seymour}
-\date{2026 (v0.14)}
+\date{2026 (v0.15)}
 
 \begin{document}
 
@@ -100,14 +100,19 @@ of even steps to odd steps approximate $\theta$ from above.
 A non-trivial cycle in a Collatz system must have its parity sequence balanced so
 that the trajectory closes: following the cycle once gives $h^e x_0 = g^o x_0 + qK$,
 i.e.\ $(h^e - g^o)x_0 = qK$.
-From $(h^e - g^o)x_0 = qK$, taking the geometric mean of all $o$ odd elements
-of the cycle (see~\cite{eliahou1993,paper21} for the product-form identity) gives
-a \emph{mean estimate}
+The product-form identity (see~\cite{eliahou1993,paper21}) gives
+$h^e = \prod_{j=0}^{o-1}(g + q/x_j)$, where $x_0, \ldots, x_{o-1}$ are the
+odd elements of the cycle.
+Taking the geometric mean of both sides, $h^{e/o}$ is the geometric mean of the
+numbers $g + q/x_j$.
+For $q > 0$ and positive cycle elements, the map $x \mapsto g + q/x$ is
+strictly decreasing, so its geometric mean equals $g + q/\hat{x}$ for a unique
+\emph{mean estimate}
 \[
   \hat{x} \;=\; \frac{q}{h^{e/o} - g},
 \]
-a real number satisfying $x_{\min} \leq \hat{x} \leq x_{\max}$ where $x_{\min}$
-and $x_{\max}$ are the minimum and maximum odd elements of the cycle.
+which satisfies $x_{\min} \leq \hat{x} \leq x_{\max}$ (where $x_{\min}$ and
+$x_{\max}$ are the minimum and maximum odd elements) by monotonicity.
 In particular, $\hat{x}$ is an upper bound on $x_{\min}$: at least one odd cycle
 element must lie at or below the mean estimate.
 This quantity is large when $h^{e/o} \approx g$, i.e.\ when $e/o \approx \theta = \log_h g$.
@@ -214,9 +219,13 @@ recording how the $\EE$-count accumulates across the $\OO$-steps of $w$.
 For an $\OO\OO$-free (deterministic) word, each consecutive pair of $\OO$'s has at
 least one $\EE$ between them, so the inequalities are strict:
 \[
-  0 \;\leq\; \kappa_0 \;<\; \kappa_1 \;<\; \cdots \;<\; \kappa_{o-1} \;<\; e;
+  0 \;\leq\; \kappa_0 \;<\; \kappa_1 \;<\; \cdots \;<\; \kappa_{o-1} \;<\; e + \kappa_0;
 \]
-for a non-deterministic word (containing $\OO\OO$) adjacent $\OO$'s contribute
+(when $\kappa_0 = 0$, i.e.\ the word begins with $\OO$, this recovers
+$\kappa_{o-1} < e$; when $\kappa_0 \geq 1$ the word ends in $\OO$ and
+$\kappa_{o-1} = e$, which satisfies $\kappa_{o-1} < e + \kappa_0$ since
+$\kappa_0 \geq 1$).
+For a non-deterministic word (containing $\OO\OO$) adjacent $\OO$'s contribute
 equal consecutive $\kappa$ values, so the strict inequalities relax to $\leq$.
 
 The \emph{structural polynomial} of $w$ (Definition~3 of~\cite{paper71}), written
@@ -246,13 +255,14 @@ Laurent polynomials form a ring $\ZZ[g^{\pm 1}, h^{\pm 1}]$ containing the
 ordinary polynomial ring $\ZZ[g, h]$ as a subring.
 
 A Laurent polynomial $F \in \ZZ[g^{\pm 1}, h^{\pm 1}]$ is \emph{self-reciprocal
-with centre $(p, q)$} if
+with centre $(p, r)$} if
 \[
-  F(g, h) \;=\; g^p h^q\, F(g^{-1}, h^{-1}).
+  F(g, h) \;=\; g^p h^r\, F(g^{-1}, h^{-1}).
 \]
 Equivalently, after the substitution $g = G \cdot g_0$, $h = H \cdot h_0$ with
-$g_0^p h_0^q = 1$, the polynomial is invariant under $(G, H) \mapsto (G^{-1}, H^{-1})$:
+$g_0^p h_0^r = 1$, the polynomial is invariant under $(G, H) \mapsto (G^{-1}, H^{-1})$:
 it is a Laurent polynomial in $G, H$ symmetric under simultaneous inversion.
+(We use $(p, r)$ rather than $(p, q)$ to avoid collision with the Collatz offset $q$.)
 
 \paragraph{Why palindromes produce self-reciprocal polynomials.}
 Consider a polynomial $F(g,h) = \sum_{j=0}^{n-1} g^{a_j} h^{b_j}$ whose exponent
@@ -261,14 +271,20 @@ in a word $w$.
 If $w$ is a \emph{palindrome} --- i.e.\ $w$ reads the same forwards and backwards ---
 then reflecting $w$ maps the $j$-th $\OO$ from the left to the $j$-th $\OO$ from the
 right, giving the pairing $(a_j, b_j) \leftrightarrow (a_{n-1-j}, b_{n-1-j})$.
-For the carry polynomial specifically, the reflection swaps
+For the carry polynomial $K$ of a palindromic word specifically, the reflection swaps
 \[
-  (o-1-j,\; \kappa_j) \;\longleftrightarrow\; (j,\; e+1-\kappa_j),
+  (o-1-j,\; \kappa_j) \;\longleftrightarrow\; (j,\; e-\kappa_j),
 \]
-so that for each term $g^{o-1-j} h^{\kappa_j}$ in $F$ there is a matching term
-$g^j h^{e+1-\kappa_j}$.
-Summing over all pairs gives $F(g,h) = g^{o-1} h^{e+1} F(g^{-1}, h^{-1})$, i.e.\
-$F$ is self-reciprocal with centre $(o-1, e+1)$.
+so that for each term $g^{o-1-j} h^{\kappa_j}$ in $K$ there is a matching term
+$g^j h^{e-\kappa_j}$.
+Summing over all pairs gives $K(g,h) = g^{o-1} h^{e}\, K(g^{-1}, h^{-1})$, i.e.\
+$K$ is self-reciprocal with centre $(o-1, e)$.
+
+For a mediant word $\sigma = \EE \cdot P \cdot \OO$ with $P$ a palindrome, the
+leading $\EE$ shifts every $\kappa_j$ by $1$ and the trailing $\OO$ contributes
+the unpaired term $h^e$.  Separating $C = K - h^e$, the palindrome mechanism
+applied to the interior $\OO$'s yields
+$C(g,h) = g^o h^{e+1} C(g^{-1}, h^{-1})$: centre $(o, e+1)$.
 
 This is the mechanism by which the palindrome theorem for mediant words
 (Theorem~12.5 of~\cite{paper76}) implies the Laurent symmetry of the carry
@@ -307,10 +323,16 @@ deterministic Collatz trajectory: each odd step $x \mapsto 3x+1$ produces an eve
 result (since $3x+1$ is even when $x$ is odd), forcing at least one $\EE$ before
 the next $\OO$; an $\OO\OO$ in the parity sequence would require an odd element
 mapping directly to another odd element, which is impossible.
-Conversely, any $\OO\OO$-free word is realisable: the strict $\kappa$-tuple
-condition (Section~\ref{sec:structpoly}) ensures $\gcd(g^o, h^{e+1}) = 1$ and the
-modular inversion in Step~4 of the pipeline produces a valid starting residue $x_0$
-whose trajectory realises the word exactly~\cite{paper71}.
+Conversely, for $h = 2$, any $\OO\OO$-free word is realisable.
+The parity of $x_i$ depends only on $x_0 \bmod 2^{\kappa_i + 1}$, where $\kappa_i$
+is the number of $\EE$-steps before position $i$.
+Since the word is $\OO\OO$-free, consecutive $\OO$-steps are separated by at least
+one $\EE$-step, so the $\kappa_i$ are strictly increasing at each $\OO$.
+Each of the $e+1$ levels $\kappa = 0, \ldots, e$ therefore contributes exactly one
+fresh bit, so the set of $x_0$ whose trajectory follows the word is exactly one
+residue class modulo $2^{e+1}$.
+The modular inversion in Step~4 of the pipeline produces a valid $x_0$ in this
+class~\cite{paper71}.
 Thus for $h = 2$, a parity word is realisable as a deterministic Collatz trajectory
 if and only if it is $\OO\OO$-free.%
 \footnote{Non-deterministic $h = 2$ Collatz maps --- where the odd/even instruction
@@ -390,9 +412,12 @@ and then continues with an $\EE$ (an \emph{even-continuing} residue).
 In total, $h-1$ residues mod $h^{e+1}$ follow $\sigma$; the formula selects the
 unique even-continuing one, and the other $h-2$ continue with an $\OO$.
 (For $h = 2$ uniqueness is immediate since $h-1=1$; the general count follows from
-the fact that $x_0 \mapsto x_0 + h^{e+1}$ cycles through all $h^{e+1}$ residues, of
-which exactly $h^e$ satisfy $h^{e+1} \mid g^o x_0 + qK$ up to the periodicity of
-$g^o \bmod h^{e+1}$, and exactly one of those has $h \nmid x_n$.)
+the fact that since $g^o$ is invertible mod $h^{e+1}$, exactly \emph{one} residue
+mod $h^{e+1}$ satisfies $h^{e+1} \mid g^o x_0 + qK$, and among the $h$ residues
+$x_0, x_0 + h^e, \ldots, x_0 + (h-1)h^e$ that agree mod $h^e$, exactly one has
+$h \nmid x_n$, because the final $\OO$ gives $x_n \equiv gx_{n-1} + q \pmod{h}$
+and $gr + q \equiv 0 \pmod{h}$ has exactly one solution $r$ since $g$ is invertible
+and $h \nmid q$.)
 
 \medskip
 \noindent\textbf{Step 5: Read off the approximation data.}
@@ -414,8 +439,11 @@ Evaluating the Collatz iteration from $x_0$ is \emph{not} an efficient way to
 generate the parity sequence: it requires arithmetic with integers of size
 $O(h^e)$, which grows exponentially in the word length.
 The parity sequence itself is produced directly and efficiently by the mediant
-tree, with no arithmetic on integers of size $h^e$ beyond the $O(1)$ comparisons
-of $g^o$ with $h^e$ required at each depth.
+tree.  At each depth one comparison of $g^o$ with $h^e$ is required; finding
+the optimal weight $w^+$ takes $O(\log w^+)$ comparisons at that depth, but
+$\sum_d \log w^+_d = O(\log N)$ over all $d$, so the total real-arithmetic work
+to produce a prefix of length $N$ is $O(\log N)$ comparisons of numbers of size
+$O(h^e)$.
 The value of $x_0$ lies in establishing that a concrete Collatz trajectory
 realising the sequence exists --- not in using it to regenerate the sequence.
 
@@ -638,11 +666,11 @@ Separating this unpaired term, write
 where $C = \sum_{j=0}^{o-2} g^{o-1-j} h^{\kappa_j}$ absorbs the contributions from
 the interior $\OO$'s.
 The palindrome symmetry of $P$ forces $C$ to be self-reciprocal with centre
-$(o-1, e+1)$ in the sense of Section~\ref{sec:laurent-prelim}:
+$(o, e+1)$ in the sense of Section~\ref{sec:laurent-prelim}:
 \[
-  C(g, h) \;=\; g^{o-1} h^{e+1}\, C(g^{-1}, h^{-1}),
+  C(g, h) \;=\; g^{o} h^{e+1}\, C(g^{-1}, h^{-1}),
 \]
-so centering by $g^{(o-1)/2} h^{(e+1)/2}$ yields a Laurent polynomial in
+so centering by $g^{o/2} h^{(e+1)/2}$ yields a Laurent polynomial in
 $g^{1/2}, h^{1/2}$ invariant under simultaneous inversion.
 
 By the mechanism of Section~\ref{sec:laurent-prelim}, this means the cumulative
@@ -887,23 +915,34 @@ future work.
 The following items identify open proof obligations, gaps, and vulnerabilities
 in this manuscript.  See Paper~76 for the full status key.
 Item numbers continue from Paper~76 (RC-1 through RC-16).
+\textbf{Deferred} items have been noted but action is intentionally postponed;
+reviewers should not expect Deferred items to be actioned in the next revision,
+and new comments solely about the content of Deferred items will not be actioned.
 
 \medskip
 \noindent
-\begin{tabular}{@{}llllll@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-ID & Title & Source & Since & Status \\
+ID & Title & Status \\
 \midrule
-RC-7  & \S4 Step~3: $K(g,h)$ undefined; path identity unproved     & claude  & v0.14 & Resolved \\
-RC-8  & \S5: Beatty-sequence identification without proof           & claude  & v0.14 & Resolved \\
-RC-9  & \S8.1: Laurent symmetry introduced without motivation       & claude  & v0.14 & Resolved \\
-RC-10 & \S3: OO-free $\Leftrightarrow$ realisable unargued          & claude  & v0.14 & Resolved \\
-RC-11 & \S1: Mean-estimate formula without derivation               & claude  & v0.14 & Resolved \\
-RC-12 & \S4 Step~4: modular-inversion hypotheses silent             & claude  & v0.14 & Resolved \\
-RC-17 & Heuristic dynamical bridge: tree weights to trajectory lengths & gemini & v0.14 & Deferred \\
-RC-18 & Density and measure-zero exceptions unaddressed             & gemini  & v0.14 & Deferred \\
-RC-19 & Modular residue transport degeneracies at high moduli       & gemini  & v0.14 & Deferred \\
-RC-20 & Computational scalability limits above $2\times10^{10}$    & gemini  & v0.14 & Deferred \\
+RC-7  & \S4 Step~3: $K(g,h)$ undefined; path identity unproved     & Closed \\
+RC-8  & \S5: Beatty-sequence identification without proof           & Closed \\
+RC-9  & \S8.1: Laurent symmetry introduced without motivation       & Resolved \\
+RC-10 & \S3: OO-free $\Leftrightarrow$ realisable unargued          & Resolved \\
+RC-11 & \S1: Mean-estimate formula without derivation               & Resolved \\
+RC-12 & \S4 Step~4: modular-inversion hypotheses silent             & Closed \\
+RC-17 & Heuristic dynamical bridge: tree weights to trajectory lengths & Deferred \\
+RC-18 & Density and measure-zero exceptions unaddressed             & Deferred \\
+RC-19 & Modular residue transport degeneracies at high moduli       & Deferred \\
+RC-20 & Computational scalability limits above $2\times10^{10}$    & Deferred \\
+N6    & \S2.1: chain $\kappa_{o-1} < e$ tightened to $\kappa_{o-1} < e + \kappa_0$ & Resolved \\
+N7    & \S2.2 / \S8.1: symmetry centres corrected; $q$ clash resolved & Resolved \\
+N8    & \S3: sufficiency argument for OO-free $\Rightarrow$ realisable is a non-sequitur & Resolved \\
+N9    & \S1 / RC-11: mean-estimate derivation misstated; $\hat{x}$ is not the geometric mean & Resolved \\
+N10   & Step~4: ``exactly $h^e$ residues satisfy \ldots'' is wrong  & Resolved \\
+N11   & Remark after Step~5: $O(1)$ comparisons claim incorrect     & Resolved \\
+N12   & RC-7 and RC-9 body text still describes the problem, not the resolution & Resolved \\
+N14   & RC-17--RC-20 refer to content not in the manuscript; noted and deferred & Resolved \\
 \bottomrule
 \end{tabular}
 
@@ -912,12 +951,9 @@ RC-20 & Computational scalability limits above $2\times10^{10}$    & gemini  & v
 \paragraph{RC-7. \S4 Step~3: $K(g,h)$ undefined; shifted path identity unproved.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-Step~3 of the algorithm invokes the carry polynomial $K(g,h)$ and a shifted
-path identity relating oracle outputs across consecutive depths.
-Neither object is defined within this paper, and the forward references to
-Paper~76 do not supply page or theorem numbers.
-A reader working through the algorithm in isolation cannot verify Step~3 without
-an inline definition or a precise citation.
+$K(g,h)$ is now defined inline in \S2.1 and the path identity
+$h^e x_n = g^o x_0 + q K(g,h)$ is stated and proved as
+Theorem~\ref{thm:path-identity}.  Step~3 now cites these directly.
 
 \paragraph{RC-8. \S5: Beatty-sequence identification without proof.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
@@ -930,30 +966,42 @@ interior positions, so all three coincide.
 \paragraph{RC-9. \S8.1: Laurent symmetry introduced without motivation.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-Section~\ref{sec:laurent-prelim} now introduces Laurent polynomials and
-self-reciprocal polynomials in the Preliminaries, explaining the general mechanism
-by which palindromic words force the carry polynomial to be self-reciprocal.
-Section~\ref{sec:laurent} references this foundation rather than asserting the
-symmetry without motivation.
-The reader is left to reconstruct why this symmetry is relevant, increasing the
-cognitive load at a critical juncture.
+\S2.2 now motivates the Laurent symmetry via the palindrome structure of mediant
+words and establishes the correct identities: $K(g,h) = g^{o-1} h^e K(g^{-1},h^{-1})$
+for a palindromic word (centre $(o-1,e)$), and $C(g,h) = g^o h^{e+1} C(g^{-1},h^{-1})$
+for the carry polynomial of a mediant word $\sigma = \EE \cdot P \cdot \OO$
+(centre $(o,e+1)$).  Both centres have been corrected from the previously printed
+values (N7).
 
 \paragraph{RC-10. \S3: OO-free $\Leftrightarrow$ realisable unargued.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-Section~3 now gives both directions explicitly.  Necessity ($\Rightarrow$): each
-odd step produces an even result, so an $\OO\OO$ is impossible in a deterministic
-trajectory.  Sufficiency ($\Leftarrow$): the strict $\kappa$-tuple condition
-ensures $\gcd(g^o, h^{e+1})=1$ and Step~4 of the pipeline produces a valid $x_0$,
-citing~\cite{paper71}.
+The necessity direction ($\Rightarrow$) is correct for $h = 2$.  The sufficiency
+argument ($\Leftarrow$) is a non-sequitur: ``the strict $\kappa$-tuple condition
+ensures $\gcd(g^o, h^{e+1}) = 1$'' is false --- coprimality follows from
+$\gcd(g,h) = 1$ alone, regardless of the word, and coprimality does not by itself
+show that the solution follows the word.  A correct argument for $h = 2$: the
+parity of $x_i$ depends only on $x_0 \bmod 2^{\kappa_i+1}$; each of the $e+1$
+levels contributes exactly one fresh bit, so the followers of an OO-free word
+form one residue class mod $2^{e+1}$ (pre-Round-7 Lean: \texttt{noOO\_realisable},
+\texttt{follows\_h2\_iff}).  Fix: replace the $\kappa$-tuple coprimality claim
+with this bit-level argument.
 
 \paragraph{RC-11. \S1: Mean-estimate formula without derivation.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
 
-The derivation is now sketched inline: from the cycle closure identity
-$(h^e - g^o)x_0 = qK$, the product-form identity of~\cite{eliahou1993,paper21}
-gives $\hat{x} = q/(h^{e/o} - g)$ as the geometric mean of the odd cycle
-elements, with the min/max bound following from the definition of mean.
+The derivation is misstated in two ways.  First, the derivation ``from the cycle
+closure identity $(h^e - g^o)x_0 = qK$, taking the geometric mean\ldots'' is a
+non-sequitur: the bracket $x_{\min} \le \hat{x} \le x_{\max}$ comes from the
+product-form identity $h^e = \prod_j (g + q/x_j)$, not from the $K$-identity.
+Second, the RC-11 body text claims $\hat{x}$ \emph{is} the geometric mean of the
+odd cycle elements: this is false.  For the $5x+1$ cycle through~13 (odd
+elements 13, 33, 83; $e = 7$, $o = 3$), $\hat{x} \approx 25.2$ but the
+geometric mean is $\approx 32.9$ (Lean: \texttt{mean\_estimate\_not\_geometric\_mean}).
+Fix: replace the derivation sketch with: $h^{e/o}$ is the geometric mean of
+the numbers $g + q/x_j$ (from the product identity); since $x \mapsto g + q/x$
+is monotone for $q > 0$ and positive elements, the bracket follows.  State
+hypotheses $q > 0$ and positive cycle elements.
 
 \paragraph{RC-12. \S4 Step~4: modular-inversion hypotheses silent.}
 \textit{Source: claude | Since: v0.14 | Status: Resolved}
@@ -964,36 +1012,96 @@ $\gcd(g,h)=1$ implies $\gcd(g^o, h^{e+1})=1$, citing the system hypothesis.
 \paragraph{RC-17. Heuristic dynamical bridge: tree weights to trajectory lengths.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-Exact arithmetic properties of the mediant trees are rigorously proved, but
-connecting tree depths to physical Collatz/Syracuse stopping-time dynamics
-relies on structural bridging assumptions that are not made explicit.  Strict
-reviewers will separate pure tree combinatorics from asymptotic orbit behaviour,
-requiring a tighter probabilistic or deterministic argument for how tree weights
-map to trajectory lengths.
+Note (N14): the paper makes no claim about connecting tree depths to
+Collatz stopping times or trajectory lengths.  The phrases ``probabilistic or
+deterministic argument'' and ``trajectory lengths'' do not correspond to any
+claim in the manuscript.
 
 \paragraph{RC-18. Density and measure-zero exceptions unaddressed.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-The manuscript makes implicit assumptions about the distribution or natural
-density of exceptional trajectories under Syracuse map iterations.  If
-exceptional sets cannot be bounded strictly in measure or cardinality,
-asymptotic claims about global trajectory behaviour remain vulnerable to
-counterexamples in sparse residue classes.
+Note (N14): the paper makes no asymptotic claims about global trajectory
+behaviour or natural density of exceptional sets.  The concepts of
+``measure-zero exceptions'' and ``natural density'' are not present in the
+manuscript.
 
 \paragraph{RC-19. Modular residue transport degeneracies at high moduli.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-The analysis of modular residue transport relies heavily on properties observed
-modulo~5 and modulo~6.  Extending these dynamics to higher composite moduli
-risks encountering resonance phenomena or degeneracies that could break
-local-to-global assumptions.
+Note (N14): the paper contains no analysis of residue transport modulo~5
+or modulo~6, nor any ``local-to-global'' assumptions at higher composite moduli.
+These concepts appear to have been imported from a different paper.
 
 \paragraph{RC-20. Computational scalability limits above $2\times10^{10}$.}
 \textit{Source: gemini | Since: v0.14 | Status: Deferred}
 
-Computational tests for the Bridging Machine architecture are benchmarked up
-to $2\times10^{10}$.  Scaling tests further to probe asymptotic limits faces
-exponential state-space or memory bottlenecks, leaving the behaviour at extreme
-scales unverified empirically.
+Note (N14): the paper contains no computational benchmarks and no
+``Bridging Machine architecture''.  This comment is not directed at the
+present manuscript.
+
+\paragraph{N6. \S2.1: chain $\kappa_{o-1} < e$ false for words ending in O.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+The bound has been tightened to $\kappa_{o-1} < e + \kappa_0$.
+When $\kappa_0 = 0$ (word begins with $\OO$) this recovers the original
+$\kappa_{o-1} < e$.  When $\kappa_0 \ge 1$ (word ends in $\OO$, so
+$\kappa_{o-1} = e$) the bound $\kappa_{o-1} < e + \kappa_0$ is satisfied since
+$\kappa_0 \ge 1$.  The strict inequalities between consecutive $\kappa_j$ are
+unchanged.
+
+\paragraph{N7. \S2.2 / \S8.1: symmetry centres wrong; double use of $q$.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+All three issues resolved:
+(a) \S2.2 now states the correct palindromic identity
+$K(g,h) = g^{o-1} h^e K(g^{-1},h^{-1})$, centre $(o-1,e)$.
+(b) The carry polynomial identity now reads
+$C(g,h) = g^o h^{e+1} C(g^{-1},h^{-1})$, centre $(o,e+1)$.
+(c) The self-reciprocal centre is now written $(p,r)$ rather than $(p,q)$,
+with an explicit note that $q$ is reserved for the Collatz offset.
+
+\paragraph{N8. \S3: sufficiency direction of OO-free $\Rightarrow$ realisable is a non-sequitur.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+See RC-10 (Resolved) above.
+
+\paragraph{N9. \S1 mean-estimate derivation misstated; $\hat{x}$ is not the geometric mean.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+See RC-11 (Resolved) above.
+
+\paragraph{N10. Step~4: ``exactly $h^e$ residues'' is wrong.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+The parenthetical in Step~4 now correctly states that exactly \emph{one}
+residue mod $h^{e+1}$ satisfies $h^{e+1} \mid g^o x_0 + qK$ (since $g^o$ is
+invertible), and explains the $h-1$ follower count via the final $\OO$-step
+congruence $gr + q \equiv 0 \pmod{h}$.
+
+\paragraph{N11. Remark after Step~5: $O(1)$ comparisons claim incorrect.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+The Remark now states that the total real-arithmetic work is $O(\log N)$
+comparisons of numbers of size $O(h^e)$, with the $O(\log N)$ aggregate
+following from $\sum_d \log w^+_d = O(\log N)$.
+
+\paragraph{N12. RC-7 and RC-9 body text describes the problem, not the resolution.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+Both bodies have been rewritten to describe the resolution:
+RC-7 now states that $K(g,h)$ is defined in \S2.1 and the path identity proved
+as a theorem, with Step~3 citing both.
+RC-9 now states the correct palindrome and carry-polynomial identities with their
+centres, noting that both were corrected from the previously printed values.
+
+\paragraph{N14. RC-17--RC-20 refer to content not present in the manuscript.}
+\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
+
+RC-17--RC-20 have been dismissed.  Each cites concepts absent from this
+manuscript: trajectory lengths and stopping-time dynamics (RC-17), natural
+density of exceptional sets (RC-18), residue transport modulo~5 and~6 (RC-19),
+and the ``Bridging Machine architecture'' (RC-20).  The comments appear to have
+been generated against a different paper or a conflated description of multiple
+papers.
 
 \end{document}
