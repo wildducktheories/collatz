@@ -6,6 +6,7 @@
 \usepackage{etoolbox}
 \usepackage{hyperref}
 \usepackage{geometry}
+\usepackage{booktabs}
 \usepackage{draftwatermark}
 \SetWatermarkText{DRAFT}
 \SetWatermarkScale{1.5}
@@ -53,7 +54,7 @@
   Constructing Generalised Collatz Trajectories\\
   via Rational Approximation}
 \author{Jon Seymour}
-\date{2026}
+\date{2026 (v0.14)}
 
 \begin{document}
 
@@ -73,8 +74,8 @@ $1/(1+\log_h g)$.
 The parity--residue correspondence used in the pipeline is classical (Terras~\cite{terras1976},
 Lagarias~\cite{lagarias1985}); what is new is the \emph{generative} role of the mediant
 tree as a transducer: it constructs the canonical balanced parity word and the rational
-approximant it realises in a single O(log N) integer-arithmetic pass, with no real
-arithmetic at runtime.
+approximant it realises in $O(\log N)$ iterations, each requiring $O(1)$ oracle
+evaluations (exact comparisons of $g^o$ with $h^e$).
 We compare with Eliahou's continued-fraction bounding method~\cite{eliahou1993}, which
 provides lower bounds on Collatz cycle lengths via good approximants of $\log_2 3$ but
 gives no means of constructing a parity sequence realising any given approximant.
@@ -99,11 +100,20 @@ of even steps to odd steps approximate $\theta$ from above.
 A non-trivial cycle in a Collatz system must have its parity sequence balanced so
 that the trajectory closes: following the cycle once gives $h^e x_0 = g^o x_0 + qK$,
 i.e.\ $(h^e - g^o)x_0 = qK$.
-The median element of such a cycle satisfies $\hat{x} = qK/(h^e - g^o)$, which
-is large precisely when $h^{e/o} \approx g$, i.e.\ when $e/o \approx \theta = \log_h g$.
-Since $\theta$ is irrational, $h^e \neq g^o$ always, but arbitrarily close rational
-approximants $e/o \approx \theta$ produce parity sequences where $\hat{x}$ is
-arbitrarily large.
+From $(h^e - g^o)x_0 = qK$, taking the geometric mean of all $o$ odd elements
+of the cycle (see~\cite{eliahou1993,paper21} for the product-form identity) gives
+a \emph{mean estimate}
+\[
+  \hat{x} \;=\; \frac{q}{h^{e/o} - g},
+\]
+a real number satisfying $x_{\min} \leq \hat{x} \leq x_{\max}$ where $x_{\min}$
+and $x_{\max}$ are the minimum and maximum odd elements of the cycle.
+In particular, $\hat{x}$ is an upper bound on $x_{\min}$: at least one odd cycle
+element must lie at or below the mean estimate.
+This quantity is large when $h^{e/o} \approx g$, i.e.\ when $e/o \approx \theta = \log_h g$.
+Since $\theta$ is irrational, $h^{e/o} \neq g$ for any rational $e/o$, but
+arbitrarily close rational approximants $e/o \approx \theta$ produce parity sequences
+where $\hat{x}$ is arbitrarily large.
 The mediant tree provides a canonical \emph{generator} for such sequences:
 for any desired approximation quality, it produces an explicit $e/o$, the balanced
 parity word of length $e+o$ that realises it, and (via the pipeline of
@@ -140,8 +150,8 @@ Section~\ref{sec:not-sturmian} discusses why general Collatz trajectories are no
 Sturmian.
 Section~\ref{sec:eliahou} compares with Eliahou's approach.
 Section~\ref{sec:future} describes observations on the carry polynomial's Laurent
-symmetry and future work directions: defect perturbation theory and palindromicity
-as an obstruction to limit cycles.
+symmetry and future work directions: mutations of the limiting parity sequence
+and limiting parity sequences as a baseline for cycle analysis.
 
 %------------------------------------------------------------
 \section{Preliminaries}
@@ -165,7 +175,10 @@ Given a bounded pair $(r_{2d}, r_{2d+1})$ and a weight $w \geq 0$, the
   \mathrm{Mediant}(r_{2d}, r_{2d+1}, w) = \frac{e_{2d} + w\,e_{2d+1}}{o_{2d} + w\,o_{2d+1}}.
 \]
 The \emph{optimal integer weight} $\wplus$ is the unique integer such that the pair
-$\bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus),\, \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)\bigr)$
+\[
+  \bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus),\;
+         \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)\bigr)
+\]
 brackets $\theta$, where $\wminus = \wplus - 1$; it is given in closed form by
 Theorem~8.1 of~\cite{paper76}, which also guarantees $\wplus \geq 1$.
 
@@ -182,6 +195,84 @@ It is a lower Christoffel word (Lemma~9.3 of~\cite{paper76}), ends in $\OO$
 begins with $\EE\EE$ for every non-leaf estimate (Theorem~12.4 of~\cite{paper76}),
 and is identical to the Sturmian word for slope $1/(1+\theta)$ at all positions
 except possibly the last (Theorem~12.6 of~\cite{paper76}).
+
+\subsection{Structural polynomials~\texorpdfstring{\cite{paper71}}{[paper71]}}
+\label{sec:structpoly}
+
+We import the following definitions and result from~\cite{paper71}.
+
+Let $w$ be a parity sequence with $o \geq 1$ odd steps and $e$ even steps.
+Reading $w$ from left to right, maintain a running count of $\EE$-steps seen so far;
+$\kappa_j$ is the value of that count at the moment the $(j+1)$-th $\OO$-step is
+encountered (i.e.\ the number of $\EE$'s strictly before it).
+Concretely: $\kappa_0$ is the number of leading $\EE$'s before the first $\OO$
+(so $\kappa_0 = 0$ iff $w$ begins with $\OO$); each subsequent $\kappa_j$ is
+$\kappa_{j-1}$ plus the number of $\EE$'s between the $j$-th and $(j+1)$-th $\OO$.
+The sequence $(\kappa_0, \ldots, \kappa_{o-1})$ is the \emph{$\kappa$-tuple} of $w$
+(Definition~2 of~\cite{paper71}); it is a non-decreasing sequence of integers
+recording how the $\EE$-count accumulates across the $\OO$-steps of $w$.
+For an $\OO\OO$-free (deterministic) word, each consecutive pair of $\OO$'s has at
+least one $\EE$ between them, so the inequalities are strict:
+\[
+  0 \;\leq\; \kappa_0 \;<\; \kappa_1 \;<\; \cdots \;<\; \kappa_{o-1} \;<\; e;
+\]
+for a non-deterministic word (containing $\OO\OO$) adjacent $\OO$'s contribute
+equal consecutive $\kappa$ values, so the strict inequalities relax to $\leq$.
+
+The \emph{structural polynomial} of $w$ (Definition~3 of~\cite{paper71}), written
+$K(g, h)$ and also called the \emph{carry polynomial}, is
+\[
+  K(g, h) \;=\; \sum_{j=0}^{o-1} g^{o-1-j}\, h^{\kappa_j} \;\in\; \ZZ[g,h].
+\]
+When $o = 0$ we set $K = 0$.
+
+\begin{theorem}[Path identity, Theorem~1 of~\cite{paper71}]
+\label{thm:path-identity}
+Let $(g, h, q)$ be a generalised Collatz basis and $w$ a parity sequence with
+$o$ odd steps and $e$ even steps.
+If $x_n = \Phi_w(x_0)$ is the value obtained by applying $w$ to $x_0$, then
+\[
+  h^e\,x_n \;=\; g^o\,x_0 \;+\; q\,K(g, h).
+\]
+\end{theorem}
+
+\subsection{Laurent polynomials and palindromic structure}
+\label{sec:laurent-prelim}
+
+A \emph{Laurent polynomial} in variables $g, h$ is a finite sum
+$\sum_{a,b} c_{ab}\, g^a h^b$ where the exponents $a, b$ range over integers
+(possibly negative), with integer coefficients $c_{ab}$.
+Laurent polynomials form a ring $\ZZ[g^{\pm 1}, h^{\pm 1}]$ containing the
+ordinary polynomial ring $\ZZ[g, h]$ as a subring.
+
+A Laurent polynomial $F \in \ZZ[g^{\pm 1}, h^{\pm 1}]$ is \emph{self-reciprocal
+with centre $(p, q)$} if
+\[
+  F(g, h) \;=\; g^p h^q\, F(g^{-1}, h^{-1}).
+\]
+Equivalently, after the substitution $g = G \cdot g_0$, $h = H \cdot h_0$ with
+$g_0^p h_0^q = 1$, the polynomial is invariant under $(G, H) \mapsto (G^{-1}, H^{-1})$:
+it is a Laurent polynomial in $G, H$ symmetric under simultaneous inversion.
+
+\paragraph{Why palindromes produce self-reciprocal polynomials.}
+Consider a polynomial $F(g,h) = \sum_{j=0}^{n-1} g^{a_j} h^{b_j}$ whose exponent
+pairs $(a_j, b_j)$ are determined by the positions of a fixed letter (say $\OO$)
+in a word $w$.
+If $w$ is a \emph{palindrome} --- i.e.\ $w$ reads the same forwards and backwards ---
+then reflecting $w$ maps the $j$-th $\OO$ from the left to the $j$-th $\OO$ from the
+right, giving the pairing $(a_j, b_j) \leftrightarrow (a_{n-1-j}, b_{n-1-j})$.
+For the carry polynomial specifically, the reflection swaps
+\[
+  (o-1-j,\; \kappa_j) \;\longleftrightarrow\; (j,\; e+1-\kappa_j),
+\]
+so that for each term $g^{o-1-j} h^{\kappa_j}$ in $F$ there is a matching term
+$g^j h^{e+1-\kappa_j}$.
+Summing over all pairs gives $F(g,h) = g^{o-1} h^{e+1} F(g^{-1}, h^{-1})$, i.e.\
+$F$ is self-reciprocal with centre $(o-1, e+1)$.
+
+This is the mechanism by which the palindrome theorem for mediant words
+(Theorem~12.5 of~\cite{paper76}) implies the Laurent symmetry of the carry
+polynomial $C = K - h^e$ observed in Section~\ref{sec:laurent}.
 
 %------------------------------------------------------------
 \section{Generalised Collatz Sequences and Parity Sequences}
@@ -211,11 +302,17 @@ A parity sequence realising a good estimate $e/o$ must therefore have exactly $o
 copies of $\OO$ and $e$ copies of $\EE$.
 The mediant word generator produces $\OO\OO$-free words by construction, as does the
 Sturmian word for slope $\alpha < 1/2$ (equivalently $\theta > 1$).
-For $h = 2$, $\OO\OO$-freeness is also a natural consequence of the deterministic
-Collatz map: each odd step produces an even result, forcing at least one $\EE$ before
-the next $\OO$.
-Because every mediant word is $\OO\OO$-free, it is realisable as a deterministic
-$h = 2$ Collatz trajectory~\cite{paper71}.%
+For $h = 2$, $\OO\OO$-freeness is a necessary condition for realisability as a
+deterministic Collatz trajectory: each odd step $x \mapsto 3x+1$ produces an even
+result (since $3x+1$ is even when $x$ is odd), forcing at least one $\EE$ before
+the next $\OO$; an $\OO\OO$ in the parity sequence would require an odd element
+mapping directly to another odd element, which is impossible.
+Conversely, any $\OO\OO$-free word is realisable: the strict $\kappa$-tuple
+condition (Section~\ref{sec:structpoly}) ensures $\gcd(g^o, h^{e+1}) = 1$ and the
+modular inversion in Step~4 of the pipeline produces a valid starting residue $x_0$
+whose trajectory realises the word exactly~\cite{paper71}.
+Thus for $h = 2$, a parity word is realisable as a deterministic Collatz trajectory
+if and only if it is $\OO\OO$-free.%
 \footnote{Non-deterministic $h = 2$ Collatz maps --- where the odd/even instruction
 is supplied externally rather than derived from the state --- do permit adjacent
 $\OO\OO$ symbols; see~\cite{nondeterministic}.}
@@ -231,9 +328,10 @@ integer for any $(g, h)$ with $\theta = \log_h g$.
 
 \medskip
 \noindent\textbf{Step 1: Choose a real $\theta$ and an initial bounded pair.}
-Select any real $\theta > 1$ and a Farey-adjacent bounded pair $(r_0, r_1)$ with
-one estimate on each side of $\theta$, with $r_1$ the better estimate
-(i.e.\ $|\varepsilon_{r_1}| < |\varepsilon_{r_0}|$).
+Select any real $\theta > 1$ and take the initial integer bounded pair
+the unique Farey-adjacent pair of integer rationals $\lfloor\theta\rfloor/1$ and
+$\lceil\theta\rceil/1$ bracketing $\theta$, ordered as $(r_0, r_1)$ so that $r_1$
+is the better estimate (i.e.\ $|\varepsilon_{r_1}| < |\varepsilon_{r_0}|$).
 For the standard Collatz system take $\theta = \log_2 3$; for the generalised
 system $(g, h)$ take $\theta = \log_h g$.
 The construction applies equally to any irrational $\theta$ (e.g.\ $\pi$,
@@ -247,35 +345,34 @@ sequence of mediant words $\pi(r_{2d+1})$ of increasing length.
 At depth $d$, the word $\pi(r_{2d+1})$ has $o_{2d+1}$ odd steps and $e_{2d+1}$
 even steps, and $e_{2d+1}/o_{2d+1}$ is a good estimate of $\theta$ satisfying
 $h^{e-1} < g^o < h^e$ (upper bound) or $h^e < g^o < h^{e+1}$ (lower bound).%
-\footnote{These inequalities follow from the good-estimate condition
+\footnote{These inequalities follow directly from the good-estimate condition
 $|e - \theta o| < 1$ with $\theta = \log_h g$: an upper estimate has
 $e - 1 < \theta o < e$, giving $h^{e-1} < h^{\theta o} = g^o < h^e$;
-a lower estimate has $e < \theta o < e + 1$, giving $h^e < g^o < h^{e+1}$.
-The general statement was verified by machine-checked proof in Lean~4 by an
-AI assistant; see \texttt{bounded\_pair\_power\_bounds} in the companion Lean
-development.}
+a lower estimate has $e < \theta o < e + 1$, giving $h^e < g^o < h^{e+1}$.}
 
 \medskip
 \noindent\textbf{Step 3: Derive the path identity.}
-For a chosen mediant word $\sigma = \pi(r_{2d+1})$, the function
-\texttt{path\_identity($\sigma$)} constructs the \emph{basic path identity}
+For a chosen mediant word $\sigma = \pi(r_{2d+1})$, form its $\kappa$-tuple and
+carry polynomial $K(g,h)$ as defined in Section~\ref{sec:structpoly}.
+Since $\sigma$ is $\OO\OO$-free the $\kappa$-tuple is strictly increasing.
+Theorem~\ref{thm:path-identity} then gives the \emph{basic path identity}
 \[
-  h^e\,x_n = g^o\,x_0 + q\,K(g, h),
+  h^e\,x_n \;=\; g^o\,x_0 + q\,K(g, h),
 \]
-where $x_0$ is the starting value, $x_n$ is the value after $n = e + o$ steps
-following $\sigma$, and $K(g,h)$ is the \emph{carry polynomial} --- a polynomial
-in $g$ and $h$ whose coefficients record the cumulative effect of the additive
-terms along the trajectory, with $q$ scaling the carry to the chosen additive
-constant.
-This identity holds for every $t \in \mathbb{N}_0$: for each non-negative integer
-$t$, the pair $(x_0 + h^{e+1} t,\; x_n + g^o h\, t)$ is another valid
-(start, end) pair following $\sigma$, as seen from the equivalent
-\emph{shifted path identity}
+where $x_0$ is the starting value and $x_n$ the value after $e+o$ steps following
+$\sigma$.
+
+The \emph{shifted path identity} follows immediately by substituting
+$x_0 \leftarrow x_0 + h^{e+1}t$ and $x_n \leftarrow x_n + g^o h\,t$
+for any $t \in \mathbb{N}_0$:
 \[
-  h^e\bigl(x_n + g^o h\, t\bigr) = g^o\bigl(x_0 + h^{e+1} t\bigr) + q\,K(g, h),
+  h^e\bigl(x_n + g^o h\,t\bigr)
+  \;=\; g^o\bigl(x_0 + h^{e+1}t\bigr) + q\,K(g,h),
 \]
-which makes explicit that the family of valid $(x_0, x_n)$ pairs forms an
-arithmetic progression with step $(h^{e+1}, g^o h)$.
+which holds since the two new $t$-terms cancel ($h^e \cdot g^o h\,t = g^o \cdot h^{e+1} t$).
+Hence the set of valid starting values is the arithmetic progression
+$x_0 + h^{e+1}\mathbb{Z}$, with corresponding end values $x_n + g^o h\,\mathbb{Z}$
+(see also~\S\ref{sec:laurent} for further structure of $K$).
 
 \medskip
 \noindent\textbf{Step 4: Instantiate to concrete $(g, h)$ and solve for $x_0$.}
@@ -284,16 +381,18 @@ concrete multiplier and base, computes $K$, and solves
 \[
   x_0 \;\equiv\; -q\,K \cdot (g^o)^{-1} \pmod{h^{e+1}}
 \]
-for a starting residue $x_0 \in [0, h^{e+1})$. $x_0$ is an element whose parity sequence follows
-$\sigma$ for exactly $o + e$ steps and then continues with an $\EE$ (an \emph{even-continuing}
-residue). In total, $h-1$ residues mod $h^{e+1}$ follow $\sigma$; the formula selects the unique
-even-continuing one, and the other $h-2$ continue with an $\OO$.%
-\footnote{That $h^{e+1} \mid g^o x_0 + qK$ is exactly the condition for $x_0$ to follow $\sigma$
-and continue with $\EE$ (when $h \nmid q$) was verified by machine-checked proof in Lean~4 by an
-AI assistant; see \texttt{step4\_even\_continuing\_iff} in the companion Lean development.
-The counts ($h-1$ total followers, 1 even-continuing, $h-2$ odd-continuing) are proved in
-\texttt{step4\_count\_followers}, \texttt{step4\_count\_even\_continuing}, and
-\texttt{step4\_count\_odd\_continuing}. For $h = 2$ uniqueness follows since $h-1 = 1$.}
+for a starting residue $x_0 \in [0, h^{e+1})$.
+The modular inverse $(g^o)^{-1} \pmod{h^{e+1}}$ exists because $\gcd(g^o, h^{e+1}) = 1$,
+which follows from the system hypothesis $\gcd(g, h) = 1$: since $g$ and $h$ share
+no prime factor, neither do any powers of $g$ and $h$.
+$x_0$ is an element whose parity sequence follows $\sigma$ for exactly $o + e$ steps
+and then continues with an $\EE$ (an \emph{even-continuing} residue).
+In total, $h-1$ residues mod $h^{e+1}$ follow $\sigma$; the formula selects the
+unique even-continuing one, and the other $h-2$ continue with an $\OO$.
+(For $h = 2$ uniqueness is immediate since $h-1=1$; the general count follows from
+the fact that $x_0 \mapsto x_0 + h^{e+1}$ cycles through all $h^{e+1}$ residues, of
+which exactly $h^e$ satisfy $h^{e+1} \mid g^o x_0 + qK$ up to the periodicity of
+$g^o \bmod h^{e+1}$, and exactly one of those has $h \nmid x_n$.)
 
 \medskip
 \noindent\textbf{Step 5: Read off the approximation data.}
@@ -315,7 +414,8 @@ Evaluating the Collatz iteration from $x_0$ is \emph{not} an efficient way to
 generate the parity sequence: it requires arithmetic with integers of size
 $O(h^e)$, which grows exponentially in the word length.
 The parity sequence itself is produced directly and efficiently by the mediant
-tree, with no large integer arithmetic.
+tree, with no arithmetic on integers of size $h^e$ beyond the $O(1)$ comparisons
+of $g^o$ with $h^e$ required at each depth.
 The value of $x_0$ lies in establishing that a concrete Collatz trajectory
 realising the sequence exists --- not in using it to regenerate the sequence.
 
@@ -409,6 +509,10 @@ The Sturmian word has $s_n = \OO$ at position $n$ iff $n = \lfloor k(1+\theta) \
 for some $k \geq 1$, which matches exactly.
 Since a binary word over $\{\OO, \EE\}$ is uniquely determined by the index positions
 of its $\OO$'s, the greedy output and the Sturmian word are identical.
+By Theorem~12.6 of~\cite{paper76}, the mediant word $\pi(r_{2d+1})$ also equals the
+Sturmian word at all interior positions.
+Hence the greedy output, the Sturmian word, and the mediant word are all the same
+word (up to the final letter of the mediant word).
 \end{proof}
 
 For the standard case $g = 3$, $h = 2$ the first 60 symbols are:
@@ -482,15 +586,18 @@ constructing a parity sequence achieving a given approximation quality.
 The contribution of the present work is a \emph{generative} one.
 The mediant tree of~\cite{paper76} is a transducer: given a target $\theta = \log_h g$,
 it simultaneously constructs a rational approximant $e/o$ to $\theta$ and the canonical
-balanced parity word realising it, in a single pass using only integer arithmetic.
-No real arithmetic is required at runtime; the approximation quality is controlled
-entirely by the depth to which the tree is expanded.
+balanced parity word realising it, in $O(\log N)$ iterations, each requiring $O(1)$
+oracle evaluations (exact comparisons of $g^o$ with $h^e$).
+The approximation quality is controlled entirely by the depth to which the tree is expanded.
 The mediant word is not just any parity word with the right ratio of $\EE$'s to
 $\OO$'s: it is the \emph{canonical} one, identical to the Sturmian word for slope
 $1/(1+\theta)$ at all interior positions (Theorem~12.6 of~\cite{paper76}), and
 palindromic in its interior (Theorem~12.5 of~\cite{paper76}).
-These structural properties make it the unique \emph{lower Christoffel} representative of its
-approximation class.
+It is the lower Christoffel word $\mathrm{Ch}^-(e, o)$ --- the unique
+\emph{lower Christoffel} word with $e$ copies of $\EE$ and $o$ copies of $\OO$
+(Lemma~9.3 of~\cite{paper76}), equivalently the unique conjugate of the form
+$\EE \cdot P \cdot \OO$ with $P$ a palindrome among all circularly balanced words
+with these letter counts.
 
 \paragraph{Comparison with Eliahou.}
 Our algorithm constructs approximants directly from bounded pairs via the optimal weight
@@ -516,137 +623,156 @@ parameters chosen freely to match the approximation target.
 The palindrome theorem for mediant words (Theorem~12.5 of~\cite{paper76}) has a direct
 algebraic consequence for the carry polynomial $K(g, h)$.
 
-Recall that the path identity for a word $\sigma$ of length $e + o$ is
-\[
-  h^e\,x_n = g^o\,x_0 + q\,K(g, h),
-\]
-where $K(g, h) = \sum_{j:\,\OO_j} g^{a_j} h^{b_j}$ records the cumulative additive
-contributions, with one term per $\OO$ in $\sigma$.
-The exponent pair $(a_j, b_j)$ at $\OO$-position $j$ counts: $a_j$ = number of $\OO$'s
-\emph{after} position $j$; $b_j$ = number of $\EE$'s \emph{before} position $j$.
+Recall the carry polynomial $K(g,h)$ and path identity from
+Section~\ref{sec:structpoly} (Theorem~\ref{thm:path-identity}).
 
 Every mediant word has the form $\sigma = \EE \cdot P \cdot \OO$ where $P$ is a
 palindrome (Theorem~12.5 of~\cite{paper76}).
-The leading $\EE$ contributes no $\OO$, but shifts all $b_j$ up by $1$; the trailing
-$\OO$ contributes the term $g^0 h^e = h^e$ (all $e$ even steps lie before it).
+The leading $\EE$ shifts every $\kappa_j$ up by $1$; the trailing $\OO$ (the last
+odd step, $j = o-1$) has $\kappa_{o-1} = e$ (all even steps precede it), contributing
+the term $g^0 h^e = h^e$.
 Separating this unpaired term, write
 \[
   K(g, h) = h^e + C(g, h),
 \]
-where $C = gh \cdot K_P(g, h)$ absorbs the contributions from the interior $\OO$'s.
-The palindrome symmetry of $P$ forces the exponent pairs of $C$ to come in matched
-pairs: if $(a, b)$ appears in $C$, so does $(o - a,\, e + 1 - b)$.
-Equivalently, $C$ satisfies the self-reciprocal identity
+where $C = \sum_{j=0}^{o-2} g^{o-1-j} h^{\kappa_j}$ absorbs the contributions from
+the interior $\OO$'s.
+The palindrome symmetry of $P$ forces $C$ to be self-reciprocal with centre
+$(o-1, e+1)$ in the sense of Section~\ref{sec:laurent-prelim}:
 \[
-  C(g, h) = g^o h^{e+1}\, C(g^{-1}, h^{-1}),
+  C(g, h) \;=\; g^{o-1} h^{e+1}\, C(g^{-1}, h^{-1}),
 \]
-so centering by $g^{o/2} h^{(e+1)/2}$ yields a Laurent polynomial in $g^{1/2},
-h^{1/2}$ invariant under simultaneous inversion.
-Lean: \texttt{laurent\_symmetry}, \texttt{TreeWord.laurent\_symmetry}.
+so centering by $g^{(o-1)/2} h^{(e+1)/2}$ yields a Laurent polynomial in
+$g^{1/2}, h^{1/2}$ invariant under simultaneous inversion.
 
-This structural property --- that the carry polynomial of any mediant word is a
-symmetric Laurent polynomial after central rescaling --- implies that the cumulative
-additive contributions \emph{accumulate from the start to the midpoint} in a pattern
-that is the exact mirror image of the \emph{descent from the midpoint to the end}.
-The palindrome in the word domain acts as a conservation law in the algebraic domain,
-constraining $K(g,h)$ far more tightly than an arbitrary parity word of the same length.
+By the mechanism of Section~\ref{sec:laurent-prelim}, this means the cumulative
+additive contributions \emph{accumulate from the start to the midpoint} in a
+pattern that is the exact mirror image of the \emph{descent from the midpoint to
+the end}: the $\kappa$-multiset of $C$ is invariant under
+$\kappa_j \mapsto e+1-\kappa_j$.
+This symmetry holds for every word of the form $\EE \cdot P \cdot \OO$ with $P$
+a palindrome, of which mediant words are the canonical example.
 
-A complete treatment (precise statement, proof, and implications for the structure of
-$K$ for different depths of the mediant tree) is left as future work.
+The implications of this symmetry for the structure of $K$ at different depths of the
+mediant tree --- and for the cycle closure question --- are left as future work.
 
-\subsection{Defect perturbation theory}
+\subsection{Mutations of the limiting parity sequence}
 \label{sec:perturbation}
 
-The mediant tree generates the \emph{optimal} parity sequence for a given approximation
-quality: a word that is Sturmian, palindromic, and OO-free.
-Any actual Collatz trajectory that is not Sturmian can be viewed as a perturbation of
-this optimal backbone.
+The mediant tree generates a specific \emph{mediant word} $\pi(r_{2d+1})$ for a given
+approximation scale: a finite word that is Sturmian up to its last letter, with
+palindromic interior, and OO-free, approximating the infinite limiting Sturmian sequence.
+This provides a natural reference object whose properties are well understood.
+Any parity word with the same $e/o$ ratio can be viewed as a \emph{mutation} of this
+mediant word, and different mutations conserve different properties while altering
+others.
 
-Specifically, a \emph{defect} is any position where the trajectory uses a block of length
-$\ell \notin \{\lfloor\theta\rfloor, \lceil\theta\rceil\}$ (i.e.\ a block length not in the
-Sturmian alphabet for $\theta$).
-Each defect at word position $k$ perturbs the carry polynomial $K(g, h)$ globally:
-replacing a Sturmian block $\EE^\ell\OO$ with an out-of-alphabet block $\EE^{\ell'}\OO$
-(where $\ell' \notin \{\lfloor\theta\rfloor, \lceil\theta\rceil\}$) changes $e$ by
-$\ell' - \ell$, which shifts $b_j$ by $\ell' - \ell$ for every $\OO$ at position
-$j \geq k$, and changes the modulus $h^{e+1}$.
-The total perturbation to $K$ is therefore a sum over all subsequent $\OO$ positions,
-not a local change at $k$ alone.
-Lean: \texttt{carry\_insert\_E}.
-
-Because the starting residue is determined by
-$x_0 \equiv -q K(g^o)^{-1} \pmod{h^{e+1}}$, every defect causes a predictable arithmetic
-shift in the required $x_0$.
-This gives the mediant tree the role of a \emph{reference frame}: the distance of any
-Collatz trajectory from the optimal backbone can be measured by the cumulative drift in
-$x_0$ induced by its defects.
-
-This perturbation-theory perspective suggests a systematic approach to the structure of
-non-Sturmian Collatz trajectories.
-In particular, the known non-trivial cycles of the $5x+1$ system (Section~\ref{sec:not-sturmian})
-each have a specific defect structure relative to the Sturmian alphabet
-$\{\EE\EE\OO, \EE\EE\EE\OO\}$; computing the drift each defect induces, and the corresponding
-shift in $x_0$, would quantify how far each cycle sits from the optimal backbone.
-A full development of this defect perturbation theory --- including a formula for the
-drift as a function of defect type and position, and a classification of which drift
-patterns are compatible with the modular closure constraint for a cycle --- is left as
-future work.
-
-\subsection{Palindromicity as an obstruction to limit cycles}
-\label{sec:palindrome-cycles}
-
-The palindrome invariant (Theorem~12.5 of~\cite{paper76}) characterises the
-\emph{family} of optimal descent paths generated by the mediant tree.
-While a pure Sturmian word is an infinite, aperiodic object, finite factors of
-mediant words can appear as parity sequences of cycles in related systems (such
-as the $3x-1$ cycle, whose parity period is a cyclic rotation of a mediant word
-factor).
-Nonetheless, the palindromic structure of mediant words provides a powerful
-algebraic reference frame for analysing candidate cycles.
-
-Specifically, the palindrome invariant acts as a conservation law on the carry
-polynomial $K(g,h)$, enforcing a symmetric Laurent structure (Section~\ref{sec:laurent}).
-Any actual cycle in a generalised Collatz system must deviate from this ideal
-mediant backbone by incorporating ``defects''---local variations in block lengths
-outside the pure Sturmian alphabet $\{\lfloor\theta\rfloor, \lceil\theta\rceil\}$.
-The mediant framework suggests a two-part perspective on why non-trivial cycles
-are so rigidly constrained:
+Two examples illustrate how mutations can differ in what they conserve:
 
 \begin{enumerate}
-\item \textbf{Optimality versus exact closure.}
-  The mediant tree constructs the maximally balanced parity sequences that
-  asymptotically approach optimal descent for slope $\alpha = 1/(1+\theta)$.
-  A true cycle requires an exact integer closure condition: from the path
-  identity $h^e x_n = g^o x_0 + q K(g,h)$, setting $x_n = x_0$ yields the exact
-  integer equation
-  \[
-    (h^e - g^o) x_0 = q K(g,h).
-  \]
-  Because $\theta = \log_h g$ is irrational, $h^e \neq g^o$ for any finite word
-  length, meaning any exact cycle must inhabit a precise arithmetic balance
-  between the multiplicative drift $(h^e - g^o)$ and the carry polynomial $K$.
+\item \textbf{Block-length mutations.}
+  Replacing a Sturmian block $\EE^\ell\OO$ with $\EE^{\ell'}\OO$ where
+  $\ell' \notin \{\lfloor\theta\rfloor, \lceil\theta\rceil\}$ introduces a
+  block length outside the Sturmian alphabet.
+  This changes $e - \theta o$ by the nonzero integer $\ell' - \ell$, shifting
+  $e/o$ away from $\theta$ for deep mediant words where $|e - \theta o| < \frac{1}{2}$,
+  and alters every term of $K(g,h)$ from the modified block's $\OO$ onward.
+  It also changes the residue condition on $x_0$.
 
-\item \textbf{Defect drift and algebraic obstruction.}
-  Because actual cycle words deviate from the pristine palindromic mediant
-  backbone, their carry polynomials experience algebraic ``drift'' away from the
-  symmetric Laurent structure.
-  Each defect perturbs the coefficients of $K(g,h)$ in a measurable way.
-  For a candidate cycle to satisfy the exact integer equation $(h^e - g^o) x_0 = q K$,
-  the cumulative drift induced by these defects must conspire exactly with the
-  multiplicative mismatch.
-  Whether the algebraic constraints imposed by the palindromic conservation law
-  forbid such defect configurations from ever satisfying the exact cycle equation
-  remains an open question.
+\item \textbf{Reordering mutations.}
+  Permuting the blocks of a Sturmian word --- for example, rearranging
+  $\EE\EE\OO\cdot\EE\EE\OO\cdot\EE\OO\cdot\EE\EE\OO\cdot\EE\OO$ (i.e.\
+  $\pi(8/5)$) as $\EE\EE\OO\cdot\EE\EE\OO\cdot\EE\EE\OO\cdot\EE\OO\cdot\EE\OO$
+  --- keeps the same letters and hence the same $e/o$ ratio, and preserves
+  the multiset of block lengths.
+  What changes is the \emph{order} of the blocks, which alters the run structure
+  and the carry polynomial $K(g,h)$.
+  For $\theta > 1$, every Sturmian block $\EE^\ell\OO$ has $\ell \geq 1$, so
+  no reordering can create an $\OO\OO$ adjacency.
+  The reordered word above is unbalanced (it contains both $\OO\EE\OO\EE\OO$
+  and $\EE\EE\OO\EE\EE$) and is not a factor of any Sturmian word.
 \end{enumerate}
 
-Rather than viewing palindromicity as a rigid combinatorial barrier that forbids
-finite-factor cycles outright, the mediant framework provides a quantitative
-baseline: it measures exactly how far any candidate cycle deviates from the
-symmetric, asymptotically optimal backbone, casting cycle existence as a question
-of whether defect-induced algebraic drift can satisfy exact integer closure.
+These two examples differ in what they conserve.
+Block-length mutations change $e - \theta o$ by a nonzero integer, typically
+shifting $e/o$ away from $\theta$ for deep mediant words where $|e - \theta o| < \frac{1}{2}$.
+Reordering mutations keep $e/o$ fixed but change the internal structure of $K(g,h)$
+and generally break the palindrome invariant (though some permutations that maintain
+the E$\cdot$P$\cdot$O decomposition may preserve it).
+In each case the mediant word serves as a baseline:
+starting from the ideal word and applying controlled mutations, one can ask how
+properties such as the mean estimate $\hat{x}$, the min/max cycle element bounds,
+or the modular closure condition respond to each class of change.
+This is left as a direction for future investigation.
+
+\subsection{Limiting parity sequences and cycle constraints}
+\label{sec:palindrome-cycles}
+
+At each denominator $o_{2d+1}$ produced by the MT algorithm the mediant tree
+identifies the \emph{mediant word} $\pi(r_{2d+1})$, a finite approximant of
+the infinite limiting Sturmian sequence over the block alphabet
+$\{\EE^{\lfloor\theta\rfloor}\OO,\, \EE^{\lceil\theta\rceil}\OO\}$
+whose $e/o$ ratio converges to $\theta = \log_h g$.
+This mediant word is the algebraic reference object for the scale in
+question.
+Its carry polynomial $K(g,h)$ has the interior part $C(g,h) = K(g,h) - h^e$
+with a symmetric Laurent structure (Section~\ref{sec:laurent}), a consequence
+of the palindromic interior of every mediant word (Theorem~12.5
+of~\cite{paper76}).
+Whether this structure imposes constraints on cycle existence --- and if so,
+what those constraints are --- is not claimed here in either direction.
+The purpose of this section is simply to motivate the study of limiting
+sequences as the natural algebraic baseline for cycle analysis at any scale.
+
+Two observations connect the limiting sequence to any actual cycle candidate.
+
+\begin{enumerate}
+\item \textbf{Exact closure requires arithmetic balance.}
+  A cycle satisfies $x_n = x_0$, which via the path identity
+  $h^e x_n = g^o x_0 + q K(g,h)$ yields the exact integer equation
+  \[
+    (h^e - g^o)\, x_0 = q\, K(g,h).
+  \]
+  Because $\theta = \log_h g$ is irrational, $h^e \neq g^o$ for any finite
+  parity word with $o \geq 1$, so any cycle requires a precise arithmetic balance
+  between the multiplicative mismatch $h^e - g^o$ and the carry polynomial $K$.
+  The limiting sequence for the relevant scale sets the algebraic context
+  for this balance.
+
+\item \textbf{Eliahou's constraints bound the letter-frequency scale.}
+  For the standard $3x+1$ system, Eliahou's analysis~\cite{eliahou1993}
+  of the product form of the cycle equation
+  $h^e = g^o \prod_{j}(1 + q/(g x_j))$ shows that the $e/o$ ratio of any
+  non-trivial cycle satisfies
+  \[
+    \log_2 3 \,<\, \frac{e}{o} \,\leq\, \log_2\!\Bigl(3 + \frac{1}{m}\Bigr),
+  \]
+  where $m$ is the minimum cycle element.
+  This means any cycle word must sit in a narrow interval \emph{just above}
+  $\theta = \log_2 3$, and hence its letter frequencies are close to those
+  of the limiting Sturmian sequence for the same scale.
+  (This specific bound is for the $3x+1$ system; analogous product-formula
+  constraints exist for general $(g, h, q)$.)
+  Whether ``close in frequency'' forces structural proximity to a mediant
+  word --- and whether that proximity is algebraically significant --- are
+  open questions that the limiting-sequence framework is designed to address.
+\end{enumerate}
+
+The mediant tree thus provides a natural baseline for cycle analysis: for any
+parity word with a given $e/o$ ratio, the corresponding limiting sequence
+describes what the ``ideal'' word at that scale looks like algebraically.
+How a cycle candidate relates to this ideal --- and whether the Laurent
+symmetry of the limiting carry polynomial plays any role in ruling cycles in
+or out --- is left as a direction for future investigation.
 
 %------------------------------------------------------------
 \begin{thebibliography}{9}
+
+\bibitem{paper21}
+  J.~Seymour,
+  \textit{Extracting Parameters from Generalized Rational Collatz Cycles},
+  \texttt{https://wildducktheories.github.io/collatz/papers/21-extract-parameters/extract-parameters.pdf},
+  Paper~21 (2025).
 
 \bibitem{paper76}
   J.~Seymour,
@@ -684,5 +810,190 @@ of whether defect-induced algebraic drift can satisfy exact integer closure.
   unpublished manuscript (2026).
 
 \end{thebibliography}
+
+%------------------------------------------------------------
+\section*{Disclosures}
+\addcontentsline{toc}{section}{Disclosures}
+\label{sec:disclosures}
+%------------------------------------------------------------
+
+\subsection*{Use of Artificial Intelligence}
+
+Large language models played a substantial role in the development of this paper,
+and the author considers it important to describe that role honestly.
+
+\textbf{Review and gap identification.}
+Claude (Anthropic) and Gemini (Google) were used as critical reviewers across
+multiple structured review rounds.
+Each model was presented with the manuscript and asked to identify mathematical
+gaps, proof obligations, notational inconsistencies, and expository weaknesses.
+The resulting issue lists directly drove successive revisions and are documented
+in the paper's revision history.
+
+\textbf{Theorem formulation.}
+The boundary between the author identifying a result and an AI model identifying
+it is not always sharp.
+In several instances the need for a theorem or lemma was recognised during
+AI-assisted review rather than by the author independently.
+The author regards this as a genuine intellectual contribution by the models
+involved, not merely automated checking.
+
+\textbf{Proof development.}
+On several occasions, Aristotle (the code name used for the AI reviewer in
+this project's review workflow) did not merely flag a conjecture as unproven
+but supplied the proof that elevated it to a theorem.
+Claude also drafted proofs and theorem statements at various points in the
+development; in some cases these drafts were adopted with revision, in others
+they were rejected or replaced.
+The author regards such contributions as substantive, and they are part of
+the honest account of this paper's development.
+
+\textbf{Exposition.}
+Claude was used to assist with drafting, restructuring, and checking revised
+passages of mathematical exposition.
+No AI-generated text was incorporated without review and revision by the author.
+
+\textbf{Responsibility.}
+The overall research programme, the framing of results, all decisions about
+what to accept, defer, or reject, and final responsibility for the correctness
+of the paper rest with the author.
+The author does not regard AI assistance as diminishing the paper's validity,
+but believes readers are entitled to a complete account of how it was produced.
+
+\subsection*{Lean~4 Verification Status}
+
+During peer review, a reviewer produced an independent Lean~4 formalisation
+of selected results from the companion paper (Paper~76), including the exponential
+denominator growth theorem and the weighted-mediant identity.
+The author is grateful for this contribution, which helped identify and
+correct several proof gaps during the review process.
+
+The author has chosen not to publish the Lean~4 development at this stage.
+Accordingly, \textbf{this paper makes no claim of Lean~4 certification or
+machine-checked verification}.
+Every theorem, lemma, and proof in this paper stands solely on its
+hand-argued proof as written in the text.
+Readers should not infer formal verification status from any part of this
+manuscript.
+A complete Lean~4 formalisation of the results in this paper is left for
+future work.
+
+%------------------------------------------------------------
+\section*{Reviewer's Comments}
+\addcontentsline{toc}{section}{Reviewer's Comments}
+\label{sec:reviewers-comments}
+%------------------------------------------------------------
+
+The following items identify open proof obligations, gaps, and vulnerabilities
+in this manuscript.  See Paper~76 for the full status key.
+Item numbers continue from Paper~76 (RC-1 through RC-16).
+
+\medskip
+\noindent
+\begin{tabular}{@{}llllll@{}}
+\toprule
+ID & Title & Source & Since & Status \\
+\midrule
+RC-7  & \S4 Step~3: $K(g,h)$ undefined; path identity unproved     & claude  & v0.14 & Resolved \\
+RC-8  & \S5: Beatty-sequence identification without proof           & claude  & v0.14 & Resolved \\
+RC-9  & \S8.1: Laurent symmetry introduced without motivation       & claude  & v0.14 & Resolved \\
+RC-10 & \S3: OO-free $\Leftrightarrow$ realisable unargued          & claude  & v0.14 & Resolved \\
+RC-11 & \S1: Mean-estimate formula without derivation               & claude  & v0.14 & Resolved \\
+RC-12 & \S4 Step~4: modular-inversion hypotheses silent             & claude  & v0.14 & Resolved \\
+RC-17 & Heuristic dynamical bridge: tree weights to trajectory lengths & gemini & v0.14 & Deferred \\
+RC-18 & Density and measure-zero exceptions unaddressed             & gemini  & v0.14 & Deferred \\
+RC-19 & Modular residue transport degeneracies at high moduli       & gemini  & v0.14 & Deferred \\
+RC-20 & Computational scalability limits above $2\times10^{10}$    & gemini  & v0.14 & Deferred \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+
+\paragraph{RC-7. \S4 Step~3: $K(g,h)$ undefined; shifted path identity unproved.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+Step~3 of the algorithm invokes the carry polynomial $K(g,h)$ and a shifted
+path identity relating oracle outputs across consecutive depths.
+Neither object is defined within this paper, and the forward references to
+Paper~76 do not supply page or theorem numbers.
+A reader working through the algorithm in isolation cannot verify Step~3 without
+an inline definition or a precise citation.
+
+\paragraph{RC-8. \S5: Beatty-sequence identification without proof.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The proof in \S5 already showed greedy output $=$ Sturmian word by induction on
+$e_k = \lceil k\theta \rceil$.  A closing sentence now explicitly closes the
+triangle: Theorem~12.6 of~\cite{paper76} gives mediant word $=$ Sturmian word at
+interior positions, so all three coincide.
+
+\paragraph{RC-9. \S8.1: Laurent symmetry introduced without motivation.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+Section~\ref{sec:laurent-prelim} now introduces Laurent polynomials and
+self-reciprocal polynomials in the Preliminaries, explaining the general mechanism
+by which palindromic words force the carry polynomial to be self-reciprocal.
+Section~\ref{sec:laurent} references this foundation rather than asserting the
+symmetry without motivation.
+The reader is left to reconstruct why this symmetry is relevant, increasing the
+cognitive load at a critical juncture.
+
+\paragraph{RC-10. \S3: OO-free $\Leftrightarrow$ realisable unargued.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+Section~3 now gives both directions explicitly.  Necessity ($\Rightarrow$): each
+odd step produces an even result, so an $\OO\OO$ is impossible in a deterministic
+trajectory.  Sufficiency ($\Leftarrow$): the strict $\kappa$-tuple condition
+ensures $\gcd(g^o, h^{e+1})=1$ and Step~4 of the pipeline produces a valid $x_0$,
+citing~\cite{paper71}.
+
+\paragraph{RC-11. \S1: Mean-estimate formula without derivation.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The derivation is now sketched inline: from the cycle closure identity
+$(h^e - g^o)x_0 = qK$, the product-form identity of~\cite{eliahou1993,paper21}
+gives $\hat{x} = q/(h^{e/o} - g)$ as the geometric mean of the odd cycle
+elements, with the min/max bound following from the definition of mean.
+
+\paragraph{RC-12. \S4 Step~4: modular-inversion hypotheses silent.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+Step~4 now states explicitly that $(g^o)^{-1} \pmod{h^{e+1}}$ exists because
+$\gcd(g,h)=1$ implies $\gcd(g^o, h^{e+1})=1$, citing the system hypothesis.
+
+\paragraph{RC-17. Heuristic dynamical bridge: tree weights to trajectory lengths.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+Exact arithmetic properties of the mediant trees are rigorously proved, but
+connecting tree depths to physical Collatz/Syracuse stopping-time dynamics
+relies on structural bridging assumptions that are not made explicit.  Strict
+reviewers will separate pure tree combinatorics from asymptotic orbit behaviour,
+requiring a tighter probabilistic or deterministic argument for how tree weights
+map to trajectory lengths.
+
+\paragraph{RC-18. Density and measure-zero exceptions unaddressed.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+The manuscript makes implicit assumptions about the distribution or natural
+density of exceptional trajectories under Syracuse map iterations.  If
+exceptional sets cannot be bounded strictly in measure or cardinality,
+asymptotic claims about global trajectory behaviour remain vulnerable to
+counterexamples in sparse residue classes.
+
+\paragraph{RC-19. Modular residue transport degeneracies at high moduli.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+The analysis of modular residue transport relies heavily on properties observed
+modulo~5 and modulo~6.  Extending these dynamics to higher composite moduli
+risks encountering resonance phenomena or degeneracies that could break
+local-to-global assumptions.
+
+\paragraph{RC-20. Computational scalability limits above $2\times10^{10}$.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+Computational tests for the Bridging Machine architecture are benchmarked up
+to $2\times10^{10}$.  Scaling tests further to probe asymptotic limits faces
+exponential state-space or memory bottlenecks, leaving the behaviour at extreme
+scales unverified empirically.
 
 \end{document}

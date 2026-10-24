@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{booktabs}
+\usepackage{float}
 \usepackage{draftwatermark}
 \SetWatermarkText{DRAFT}
 \SetWatermarkScale{1.5}
@@ -53,6 +54,7 @@
   \thmt@do{Definition}%
   \thmt@do{Corollary}%
   \thmt@do{Proposition}%
+  \thmt@do{Conjecture}%
 }
 \def\@begintheorem#1#2[#3]{%
   \thmt@addtotoc{#1}{#2}{#3}%
@@ -70,7 +72,7 @@
 \newcommand{\eps}{\varepsilon}
 \newcommand{\OO}{\mathsf{O}}
 \newcommand{\EE}{\mathsf{E}}
-\newcommand{\Kval}{K}
+\newcommand{\Kval}{\Theta}
 \newcommand{\Dval}{\Delta}
 \newcommand{\tgt}{\theta}
 \newcommand{\wplus}{w^{+}}
@@ -81,15 +83,15 @@
 \newcommand{\eminus}{e_{-}}
 \newcommand{\odenp}{o_{+}}
 \newcommand{\odenm}{o_{-}}
-\newcommand{\epsplus}{\eps_{+}}
-\newcommand{\epsminus}{\eps_{-}}
+\newcommand{\epsplus}{\eps^{+}}
+\newcommand{\epsminus}{\eps^{-}}
 \newcommand{\lamplus}{\lam_{+}}
 \newcommand{\lamminus}{\lam_{-}}
 
 %------------------------------------------------------------
 \title{Mediant Trees for Rational Approximation and Sturmian Word Generation}
 \author{Jon Seymour}
-\date{\today}
+\date{\today\ (v0.14)}
 %------------------------------------------------------------
 
 \begin{document}
@@ -104,7 +106,8 @@ approximations to $\theta$: starting from a Farey-adjacent bounded pair bracketi
 each iteration applies a weighted mediant step with an optimal integer weight $\wplus$ given by
 a closed-form formula (Theorem~\ref{thm:optimal-w}).
 The denominator structure mirrors the classical continued-fraction recurrence
-(Section~\ref{sec:convergence}), though a proof of superlinear growth remains open.
+(Section~\ref{sec:convergence}); exponential growth is proved in
+Section~\ref{sec:convergence}.
 Second, a Sturmian transduction that converts the mediant tree into a \emph{mediant word}
 --- a string over $\{\OO, \EE\}$ encoding the full approximation path --- and establishes
 that this word is identical to the Sturmian word with slope $1/(1+\theta)$ at all interior
@@ -131,8 +134,9 @@ approximants, and the continued-fraction expansion of a real number yields its
 convergents --- the fractions closest to the target with bounded denominator.
 Sturmian words, introduced by Morse and Hedlund~\cite{morse1940}, give a
 combinatorial counterpart: the infinite binary sequence $s_n = \lfloor(n+1)\alpha\rfloor -
-\lfloor n\alpha\rfloor$ with slope $\alpha \in (0,1)$ is the unique balanced aperiodic
-sequence with $\mathsf{O}$-density $\alpha$.
+\lfloor n\alpha\rfloor$ with slope $\alpha \in (0,1)$ is the lower mechanical (Sturmian)
+word of slope $\alpha$ with intercept $0$, having $\mathsf{O}$-density $\alpha$
+(other shifts are also balanced and aperiodic with the same density).
 
 The present paper makes four contributions to this classical picture.
 \begin{enumerate}
@@ -159,11 +163,14 @@ The present paper makes four contributions to this classical picture.
     (Lothaire~\cite{lothaire2002}); the novelty is the direct proof via the mediant
     construction and the precise last-letter criterion.
   \item \textbf{Compressed transducer.}
-    Each iterate produced by the algorithm is at least a Stern--Brocot semi-convergent --- the
+    Each iterate produced by the algorithm is a convergent or semi-convergent of $\theta$
+    (a node on the Stern--Brocot path of $\theta$) --- the
     best bracketing fraction achievable in one step from the current bounded pair.
     The mediant tree is therefore a \emph{compressed transducer} for the Sturmian word:
-    the approximation path (empirically $O(\log N)$ integer-arithmetic steps; a formal
-    bound remains open) encodes the entire construction history, after which the $N$
+    the approximation path ($O(\log N)$ iterations, each requiring $O(1)$ oracle
+    evaluations; proved via exponential denominator growth
+    (Section~\ref{sec:convergence}))
+    encodes the entire construction history, after which the $N$
     symbols are enumerated by a purely integer recursive traversal with no further
     real arithmetic.
 \end{enumerate}
@@ -172,7 +179,8 @@ The algorithm requires an oracle for $\theta$ --- a means of evaluating
 $\lceil o\theta \rceil$ to sufficient precision at each step --- but is otherwise entirely
 general.
 Given such an oracle, the mediant tree can represent \emph{any} real number as a mediant
-word over $\{\OO, \EE\}$, making it a universal encoder from reals to binary words.
+word over $\{\OO, \EE\}$, together with a tag identifying the regime of
+Table~\ref{tab:extension}, making it a universal encoder from reals to binary words.
 
 \paragraph{Organisation.}
 Part~I (Sections~\ref{sec:background-sb}--\ref{sec:background-deluca}) collects
@@ -187,9 +195,67 @@ Section~\ref{sec:tree} describes the mediant tree;
 Section~\ref{sec:convergence} analyses the rate of convergence;
 Section~\ref{sec:examples} presents examples and computational results;
 Section~\ref{sec:sturmian} establishes the connection to Sturmian words;
-Section~\ref{sec:extension} extends the construction to all real $\theta \notin \{0,1\}$;
+Section~\ref{sec:extension} extends the construction to all real $\theta$;
 Section~\ref{sec:conclusion} concludes with open questions.
 Appendix~\ref{app:optimal-w} contains the proof of Theorem~\ref{thm:optimal-w}.
+
+\paragraph{Notation.}
+Throughout, $\theta > 1$ is the target real number (the case $\theta \notin (1,\infty)$
+is handled by reduction in Section~\ref{sec:extension}).
+A rational approximant is written $r = e/o$ with numerator $e$ (\emph{even-count})
+and denominator $o$ (\emph{odd-count}); $e, o > 0$ always, and $\gcd(e, o) = 1$.
+
+\textbf{Alphabet.}
+Mediant words are strings over $\{\EE, \OO\}$, where $\EE$ stands for
+\emph{even} and $\OO$ for \emph{odd}.
+
+\textbf{Depth index.}
+The algorithm progresses through depths $d = 0, 1, 2, \ldots$\,.
+At each depth $d$ the algorithm holds a \emph{bounded pair}
+$(r_{2d},\, r_{2d+1})$, where $r_{2d+1}$ is always the better estimate
+(smaller relative error $|\eps|$) and $r_{2d}$ the worse.
+The flat linear subscripts $2d$ and $2d+1$ reflect the sequential history
+of all estimates produced: $r_0, r_1$ are the initial integer bounds, and
+each depth $d \geq 1$ contributes two new estimates $r_{2d}$ and $r_{2d+1}$
+(one of which may coincide with $r_{2d-2}$ when $\wminus = 0$).
+
+\textbf{Intermediate quantities (depth $d$ to $d+1$).}
+Between depth $d$ and depth $d+1$ the algorithm computes several
+quantities that are intermediate in the sense that they are derived from
+the pair $(r_{2d}, r_{2d+1})$ and used to produce the next pair.
+These carry \emph{superscript} decorations $+$, $-$ (or $*$ for a combined value)
+to distinguish them from the depth-indexed estimates:
+\begin{itemize}
+  \item $\wplus$: the \emph{optimal weight} --- the unique integer such that
+    $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus-1)$ and
+    $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ straddle $\theta$.
+  \item $\wminus = \wplus - 1$: the companion (sub-optimal) weight.
+  \item $\rplus$, $\rminus$: the two candidate mediants at weights $\wplus$ and $\wminus$;
+    the better one becomes $r_{2d+3}$ and the worse $r_{2d+2}$.
+  \item $\epsplus$, $\epsminus$: the relative errors of $\rplus$ and $\rminus$.
+  \item $\lamplus$, $\lamminus$: the ratios $(e/o)/\theta$ for $\rplus$ and $\rminus$.
+  \item $\eplus, \eminus$ and $\odenp, \odenm$: the numerators and denominators
+    of $\rplus$ and $\rminus$.
+\end{itemize}
+The superscript/subscript distinction is systematic: a $+$/$-$ \emph{superscript}
+always marks an intermediate quantity between two depths; a numeric \emph{subscript}
+always marks a position in the flat estimate sequence.
+These two systems are complementary and never overlap.
+When the depth matters we write $w^\pm_d$ for the propagated weights of
+Definition~\ref{def:parity-sequence}; in \S\S7--8 the depth is fixed and the subscript is omitted.
+
+\textbf{Per-estimate scalar quantities.}
+For a single estimate $r = e/o$ the key scalars are:
+\begin{itemize}
+  \item $\lambda(r) = (e/o)/\theta$: the ratio of $r$ to $\theta$; equals $1$ iff $r = \theta$.
+  \item $\eps(r) = \lambda(r) - 1$: the \emph{relative error}; negative for underestimates,
+    positive for overestimates.
+  \item $\Delta(r, r') = e' o - e o'$: the \emph{Farey determinant} of two estimates;
+    $|\Delta| = 1$ iff $r$ and $r'$ are Farey adjacent.
+  \item $\Kval(r) = o(e - \theta o)$: the \emph{scaled error} of estimate $r = e/o$
+    (Definition~\ref{def:delta-K}); for the current pair, $\Kval := \Kval(r_{2d+1})$.
+    Equals $\theta\, o^2\,\eps$ and $\Kval = 0$ iff $r = \theta$ exactly.
+\end{itemize}
 
 %============================================================
 \part{Background}
@@ -227,6 +293,31 @@ The mediant $(a+c)/(b+d)$ of two Farey-adjacent fractions is itself Farey adjace
 to each of them.
 This adjacency-preservation is the key structural property exploited by our algorithm.
 
+The path from the root of the Stern--Brocot tree to $\theta$ passes through the
+\emph{convergents} $p_k/q_k$ of $\theta$, defined as the fractions produced by
+truncating the continued-fraction expansion $\theta = [a_0; a_1, a_2, \ldots]$.
+The nodes visited between consecutive convergents $p_{k-1}/q_{k-1}$ and $p_k/q_k$
+are the \emph{semi-convergents}:
+
+\begin{definition}[Convergents and semi-convergents]
+\label{def:semi-convergent}
+Let $\theta = [a_0; a_1, a_2, \ldots]$ with $p_{-1}/q_{-1} = 1/0$ and
+convergents $p_k/q_k$ for $k \geq 0$.
+The \emph{semi-convergents} between consecutive convergents $p_k/q_k$ and
+$p_{k+1}/q_{k+1}$ are the fractions
+\[
+  \frac{p_{k-1} + j\,p_k}{q_{k-1} + j\,q_k}, \quad 1 \leq j < a_{k+1}.
+\]
+(These appear on the SB path strictly between $p_k/q_k$ and $p_{k+1}/q_{k+1}$.)
+The integer spine $1/1, 2/1, \ldots, (\lfloor\theta\rfloor-1)/1$ consists of the initial
+SB-path nodes strictly before the first convergent $p_0/q_0 = \lfloor\theta\rfloor/1$.
+The convergents and semi-convergents together, plus the integer spine, form exactly
+the nodes on the Stern--Brocot path of $\theta$.
+We use this broad definition throughout; in particular every SB-path node that
+is not a convergent is called a semi-convergent, with no additional size
+condition on $j$.
+\end{definition}
+
 %------------------------------------------------------------
 \section{Farey Sequences}
 \label{sec:background-farey}
@@ -239,8 +330,8 @@ $bc - ad = 1$ (i.e.\ they are Farey adjacent), and their mediant $(a+c)/(b+d)$
 is the fraction with smallest denominator strictly between them.
 
 For our purposes the key fact is the following: if $a/b$ and $c/d$ are Farey adjacent
-and $\theta \in (a/b, c/d)$, then every rational approximant to $\theta$ with
-denominator at most $b + d$ is one of $a/b$, $c/d$, or their mediant $(a+c)/(b+d)$.
+and $\theta \in (a/b, c/d)$, then every rational strictly between $a/b$ and $c/d$ with
+denominator at most $b + d$ equals their mediant $(a+c)/(b+d)$.
 This is why maintaining Farey adjacency throughout the algorithm ensures that no
 improvement step is redundant.
 
@@ -269,7 +360,9 @@ $s_n = \EE$ otherwise.
 
 Sturmian words are \emph{balanced}: no two factors of the same length differ in
 their $\OO$-count by more than one.
-They are the unique balanced aperiodic sequences~\cite{morse1940}.
+For irrational $\alpha$, the lower mechanical (Sturmian) word of slope $\alpha$ with
+intercept $0$ is the canonical balanced aperiodic sequence; shifts of it are also balanced
+and aperiodic~\cite{morse1940}.
 
 The two-word structure is fundamental: a Sturmian word with slope
 $\alpha \in (0, 1/2)$ consists of exactly two distinct \emph{primitive words}
@@ -277,7 +370,7 @@ $\alpha \in (0, 1/2)$ consists of exactly two distinct \emph{primitive words}
 $\lceil 1/\alpha \rceil$, concatenated in the Sturmian pattern.
 Concretely, with $\alpha = 1/(1+\theta)$ for $\theta > 1$, the two primitive words
 are $\EE^{\lfloor\theta\rfloor}\OO$ and $\EE^{\lceil\theta\rceil}\OO$ --- exactly
-the leaf words of the mediant tree (Section~\ref{sec:tree}).
+the leaf words of the mediant tree (Section~\ref{sec:parity-leaf}).
 
 Since $\alpha < 1/2$ for $\theta > 1$, the sequence avoids $\OO\OO$: two consecutive
 $\OO$'s would require $\lfloor(n+2)\alpha\rfloor - \lfloor n\alpha\rfloor = 2$, but
@@ -367,13 +460,16 @@ For rational $\theta$, $-A/B$ can be an integer $\wminus$, in which case no inte
 satisfies the strict condition: weights $\wminus$ and $\wplus = \wminus + 1$ give product
 zero, and all others give a positive product.
 The mediant at weight $\wminus$ equals $\theta$ exactly.
-Step~4 of the algorithm then computes $\wplus = \wminus + 1$, forming a pair whose
-first member is $\theta$ exactly; $\Kval = 0$ is detected at the next pass through
-step~3, at which point the algorithm terminates.
+Step~4 of the algorithm then computes $\wplus = \wminus + 1$, producing two
+children; by the step-5 ordering, the better estimate (which is $\theta$ exactly)
+becomes $r_{2d+3}$ (the \emph{second} member of the new pair);
+$\Kval = 0$ is detected at the next pass through step~3, at which point the
+algorithm terminates.
 For rational $\theta$ the algorithm terminates in finitely many steps (at the step
 where $\Kval = 0$, i.e.\ where $r_{2d+1}$ is an exact representation of $\theta$);
-all claims except Theorems~\ref{thm:last-sturmian}, \ref{prop:sturmian}
-and Corollary~\ref{cor:mismatch} hold for every iterate up to termination.
+all claims except Theorem~\ref{thm:last-sturmian}, Theorem~\ref{prop:sturmian},
+Corollary~\ref{cor:mismatch}, and uniqueness in Theorem~\ref{thm:optimal-w}
+hold for every iterate up to termination.
 \end{remark}
 
 \begin{definition}[Ratio]
@@ -452,7 +548,7 @@ We write $\lam_{2d}$, $\eps_{2d}$, etc.\ for the corresponding values.
 In a bounded pair we always orient so that $|\eps_{2d}| > |\eps_{2d+1}|$, i.e.\ $r_{2d+1}$
 is the better estimate of the two.
 
-\begin{definition}[$\Delta$ and $K$]
+\begin{definition}[$\Delta$ and $\Theta$]
 \label{def:delta-K}
 Given a bounded pair $(r_{2d}, r_{2d+1}) = (e_{2d}/o_{2d},\, e_{2d+1}/o_{2d+1})$ with
 $|\eps_{2d}| > |\eps_{2d+1}|$, define
@@ -465,10 +561,13 @@ and
 \]
 \end{definition}
 
-Geometrically, $\Kval = \theta\, o_{2d+1}^2 \eps_{2d+1}$ is the signed absolute error of the
-better estimate $r_{2d+1}$ scaled by its denominator squared: it measures how far
-$r_{2d+1}$ sits from the target line $e = \theta o$ in units normalised to the
-lattice cell size.
+More generally, define $\Kval(r) = o(e - \theta o)$ for any estimate $r = e/o$;
+then $\Kval := \Kval(r_{2d+1})$ for the current pair.
+Geometrically, $\Kval(r)/o = e - \theta o$ is the signed vertical distance from
+the lattice point $(o, e)$ to the line $e = \theta o$, and $|\Kval(r)|$ is twice
+the area of the triangle with vertices $(0,0)$, $(o, \theta o)$, $(o, e)$.
+Equivalently, $\Kval = \theta\, o_{2d+1}^2 \eps_{2d+1}$ is the signed absolute
+error of $r_{2d+1}$ scaled by its denominator squared.
 
 The Farey adjacency condition in Definition~\ref{def:bounded-pair} requires
 $e_u \cdot o_l - e_l \cdot o_u = 1$, which is precisely $|\Dval| = 1$
@@ -490,8 +589,7 @@ The invariants $\Dval$ and $\Kval$ belong to the pair itself; the Christoffel wo
 structure (Section~\ref{sec:background-deluca}) is a property of how the pair was reached via
 the mediant tree.
 In particular, $\Dval = \pm 1$ and $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$
-hold for any bounded pair, while the palindromic interior of $\pi(r)$ is a certificate
-that the estimate $r$ was produced by the mediant algorithm.
+hold for any bounded pair.
 
 %------------------------------------------------------------
 \section{The Mediant Construction}
@@ -504,9 +602,12 @@ We generalise this to a weighted family parametrised by a positive integer $w$.
 
 \begin{theorem}[Mediant convergence]
 \label{thm:mediant-convergence}
-Let $(r_{2d}, r_{2d+1})$ be a bounded pair for $\theta$ with $|\eps_{2d}| > |\eps_{2d+1}|$, and
-let $w \geq 1$ be a positive integer such that
-$(\mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1),\, \mathrm{Mediant}(r_{2d}, r_{2d+1}, w))$
+Let $(r_{2d}, r_{2d+1})$ be a bounded pair for $\theta$ with
+$|\eps_{2d}| > |\eps_{2d+1}|$, and let $w \geq 1$ be a positive integer such that
+\[
+  \bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1),\;
+         \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)\bigr)
+\]
 brackets $\theta$.
 Write $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1)$ and
 $\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ for these two candidates.
@@ -693,10 +794,17 @@ The iteration proceeds as follows.
   \item Compute $\Dval$ and $\Kval$.
   \item If $\Kval = 0$, terminate.
   \item Compute $\wplus = \lfloor \Dval/\Kval - o_{2d}/o_{2d+1} \rfloor + 1$ and set $\wminus = \wplus - 1$.
-  \item Form the new bounded pair $(\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus),\, \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus))$ and repeat from step~2.
+  \item Form the two mediants $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ and
+    $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$, order them so that $r_{2d+3}$
+    is the better estimate (smaller $|\varepsilon|$) and $r_{2d+2}$ the worse,
+    and repeat from step~2.
 \end{enumerate}
-Because $o_{2d+1}$ grows monotonically along the iteration, $|\varepsilon|$ shrinks
-and the iteration converges to $\theta$ (Corollary~\ref{cor:convergence}).
+When $w^+ \geq 2$, the denominator of each new mediant strictly exceeds both
+parent denominators.
+When $w^+ = 1$ only one new fraction $r^+$ is produced (the non-crossing
+``child'' $r^-$ coincides with $r_{2d}$), but $r^+$ has strictly larger denominator.
+In either case the denominators of the better estimates grow without bound and
+the iteration converges to $\theta$ (Corollary~\ref{cor:convergence}).
 
 %------------------------------------------------------------
 \section{Mediant Words and the Mediant Tree}
@@ -745,47 +853,64 @@ Thus both leaf words are lower Christoffel words of their respective fractions.
 \label{sec:parity-branch}
 %------------------------------------------------------------
 
-Each branch step produces two new mediant words from the current pair
-$(u, v) = (\pi(r_{2d}), \pi(r_{2d+1}))$ by concatenation:
+Each branch step produces two new mediant words from the parent pair
+$(u, v) = (\pi(r_{2d-2}),\allowbreak\, \pi(r_{2d-1}))$ by concatenation:
 
 \begin{definition}[Branch mediant word]
 \label{def:parity-sequence}
-A \emph{branch} estimate $r_{2d+2}$ or $r_{2d+3}$ has two \emph{ordered parents}
-$(r_{2d}, r_{2d+1})$ and a positive integer \emph{weight} $w$.
-Estimates are indexed so that $r_{2d}$ and $r_{2d+1}$ form the bounded pair at depth
-$d$, with $r_{2d+1}$ always the better estimate (smaller $|\eps|$).
-The optimal weight $\wplus$ computed from $(r_{2d}, r_{2d+1})$ equals $w_{2d+1}$ in this
-indexing; the two child estimates $r_{2d+2}$ and $r_{2d+3}$ carry weights $\wminus$ and
-$\wplus$ (i.e.\ $w_{2d+2}$ and $w_{2d+3}$ are $\wplus - 1$ and $\wplus$ in some order).
-Write $u = \pi(r_{2d})$ and $v = \pi(r_{2d+1})$ for the parent mediant words.
+The bounded pair at depth $d$ consists of estimates $r_{2d}$ and $r_{2d+1}$,
+with $r_{2d+1}$ always the better estimate (smaller $|\eps|$).
+Each estimate $r_{2d}$ or $r_{2d+1}$ has two \emph{ordered parents}
+$(r_{2d-2}, r_{2d-1})$ and a non-negative integer \emph{weight} $w$
+(equal to zero only when $w^+_{d-1} = 1$, in which case $r_{2d} = r_{2d-2}$).
+The two estimates $r_{2d}$ and $r_{2d+1}$ carry weights $w^-_{d-1}$ and $w^+_{d-1}$.
+We distinguish two uses of the word \emph{weight}:
+\begin{itemize}
+  \item The \emph{inherited weights} $w_{2d}$ and $w_{2d+1}$ of the two estimates
+        $r_{2d}$ and $r_{2d+1}$ are the weights with which they were formed from
+        the pair $(r_{2d-2}, r_{2d-1})$ at depth $d-1$ --- specifically
+        $\{w_{2d}, w_{2d+1}\} = \{w^-_{d-1}, w^+_{d-1}\}$ with $w_{2d} = w^+_{d-1} - 1$
+        and $w_{2d+1} = w^+_{d-1}$ (or vice versa, depending on which child is the better
+        estimate). Each inherited weight is used to form exactly one of the two
+        estimates: $r_{2d} = \mathrm{Mediant}(r_{2d-2}, r_{2d-1}, w_{2d})$ and
+        $r_{2d+1} = \mathrm{Mediant}(r_{2d-2}, r_{2d-1}, w_{2d+1})$.
+  \item The \emph{propagated weights} $w^-_d$ and $w^+_d$ of a bounded pair $(r_{2d}, r_{2d+1})$
+        are the optimal weights computed \emph{from} that pair to produce the next
+        pair $(r_{2d+2}, r_{2d+3})$ --- i.e.\ the $\wminus$ and $\wplus$ of Theorem~\ref{thm:optimal-w}
+        applied to $(r_{2d}, r_{2d+1})$.
+\end{itemize}
+These differ in general: the inherited weights $w_{2d}$ and $w_{2d+1}$ record how $r_{2d}$ and $r_{2d+1}$ were born;
+the propagated weights $w^-_d$ and $w^+_d$ determine where the algorithm goes next.
+Write $u = \pi(r_{2d-2})$ and $v = \pi(r_{2d-1})$ for the parent mediant words at depth $d-1$.
 
 The two branch words at each depth share the same parents and differ only in the
-multiplicity of $v$: one estimate uses weight $\wplus$ and the other uses weight $\wminus$.
+multiplicity of $v$: one estimate uses weight $w^+_{d-1}$ and the other uses weight $w^-_{d-1}$.
 Which is the better estimate depends on the errors: writing $\epsminus$ and $\epsplus$ for
 the errors of the two candidates (Definition~\ref{def:lambda-eps}),
 \[
-  w_{2d+3} - w_{2d+2} = \begin{cases} +1 & \text{if } |\epsplus| < |\epsminus|, \\ -1 & \text{otherwise.}\end{cases}
+  w_{2d+1} - w_{2d} = \begin{cases} +1 & \text{if } |\epsplus| < |\epsminus|, \\ -1 & \text{otherwise.}\end{cases}
 \]
-In either case $|\pi(r_{2d+3})| - |\pi(r_{2d+2})| = \pm|v|$.
+In either case $|\pi(r_{2d+1})| - |\pi(r_{2d})| = \pm|\pi(r_{2d-1})|$.
 
-The branch mediant words are:
+The branch mediant words are (using $w = w^+_{d-1}$ for the inherited optimal weight):
 \begin{itemize}
-  \item $\Dval > 0$ ($r_{2d+1}$ is the upper bound, $v$ plays the role of $\EE$):
+  \item $\Dval > 0$ ($r_{2d-1}$ is the upper bound, $v$ plays the role of $\EE$):
     \begin{align*}
-      \pi(r_{2d+2}) &= v^{w-1} \cdot u, \\
-      \pi(r_{2d+3}) &= v^{w} \cdot u.
+      \pi(r^-) &= v^{w^+_{d-1}-1} \cdot u, \\
+      \pi(r^+) &= v^{w^+_{d-1}} \cdot u.
     \end{align*}
-  \item $\Dval < 0$ ($r_{2d+1}$ is the lower bound, $v$ plays the role of $\OO$):
+  \item $\Dval < 0$ ($r_{2d-1}$ is the lower bound, $v$ plays the role of $\OO$):
     \begin{align*}
-      \pi(r_{2d+2}) &= u \cdot v^{w-1}, \\
-      \pi(r_{2d+3}) &= u \cdot v^{w}.
+      \pi(r^-) &= u \cdot v^{w^+_{d-1}-1}, \\
+      \pi(r^+) &= u \cdot v^{w^+_{d-1}}.
     \end{align*}
 \end{itemize}
-Which of the two words is the better estimate $r_{2d+3}$ is determined by comparing
-$|\epsminus|$ and $|\epsplus|$; the assignment is not fixed in advance.
+Which of $r^-$ and $r^+$ is the better estimate $r_{2d+1}$ (and which is $r_{2d}$)
+is determined by comparing $|\epsminus|$ and $|\epsplus|$; the assignment is not
+fixed in advance.
 \end{definition}
 
-\textbf{Concrete example} ($w = 2$, depth-$0$ leaves
+\textbf{Concrete example} (for $\theta = \log_2 3$: $w = 2$, depth-$0$ leaves
 $\pi(r_0) = \mathtt{EO}$, $\pi(r_1) = \mathtt{EEO}$, $\Dval > 0$).
 Write $\Phi^w(v, u) = (v^w \cdot u,\; v^{w-1} \cdot u)$ for the pair of branch words
 at weight $w$ (the $\Dval > 0$ case):
@@ -795,7 +920,7 @@ at weight $w$ (the $\Dval > 0$ case):
   = \bigl(\mathtt{EEOEEOEO},\; \mathtt{EEOEO}\bigr),
 \]
 so $\pi(r_3) = \mathtt{EEOEEOEO}$ and $\pi(r_2) = \mathtt{EEOEO}$
-(the second component of $\Phi^1(\mathtt{EEO}, \mathtt{EO})$, the $w{-}1$ companion pair).
+(the second component of $\Phi^2(\mathtt{EEO}, \mathtt{EO})$, i.e.\ the weight-$w^- = 1$ child).
 
 %------------------------------------------------------------
 \subsection{Mediant words are Christoffel words}
@@ -848,9 +973,9 @@ lower Christoffel word.
 
 The Christoffel identification is the key fact connecting the mediant algorithm
 to the combinatorics of Sturmian words.
-The recurrence $\pi(r_{2d+3}) = v^w \cdot u$ (or $u \cdot v^w$) matches the
+The recurrence $\pi(r_{2d+3}) = v^{w^\pm_d} \cdot u$ (or $u \cdot v^{w^\pm_d}$) matches the
 standard sequence generation rule for Sturmian words
-(Widmer~\cite{widmer2010}, Proposition~2.4.6), with weight $w$ encoding the
+(Widmer~\cite{widmer2010}, Proposition~2.4.6), with weight $w^\pm_d$ encoding the
 partial quotient at that depth.
 
 \begin{remark}
@@ -875,9 +1000,9 @@ length and precision.
 Given a target $\theta$ and a desired precision, one runs the algorithm until the
 bounded pair $(r_{2d}, r_{2d+1})$ achieves the required length $e_{2d+1} + o_{2d+1}$.
 The mediant word $\pi(r_{2d+1})$ is then read off the tree by the recursive rule:
-an interior node $\mathrm{Mediant}(r_0, r_1, w)$ with $\Delta > 0$ yields
-$\pi(r_1)^w \cdot \pi(r_0)$, and with $\Delta < 0$ yields
-$\pi(r_0) \cdot \pi(r_1)^w$.
+an interior node $\mathrm{Mediant}(s, t, w)$ with $\Delta > 0$ yields
+$\pi(t)^w \cdot \pi(s)$, and with $\Delta < 0$ yields
+$\pi(s) \cdot \pi(t)^w$.
 Deeper trees produce longer prefixes of the Sturmian word with slope $1/(\theta+1)$
 (Section~\ref{sec:sturmian}).
 
@@ -887,11 +1012,11 @@ The \emph{mediant tree} of an estimate $r$ is defined recursively:
 \begin{itemize}
   \item If $r \in \{\lfloor \theta \rfloor, \lceil \theta \rceil\}$, then $r$ is a
         \emph{leaf node}.
-  \item Otherwise $r$ is an \emph{interior node} $\mathrm{Mediant}(r_0,\, r_1,\, w)$
-        with left subtree $r_0$, right subtree $r_1$, and integer weight $w \geq 0$,
+  \item Otherwise $r$ is an \emph{interior node} $\mathrm{Mediant}(s,\, t,\, w)$
+        with left subtree $s$, right subtree $t$, and integer weight $w \geq 0$,
         representing the rational
         \[
-          r = \frac{e_0 + w\,e_1}{o_0 + w\,o_1}.
+          r = \frac{e_s + w\,e_t}{o_s + w\,o_t}.
         \]
 \end{itemize}
 \end{definition}
@@ -920,7 +1045,8 @@ Conversely, the fraction $e/o$ can be read off from $\pi(r)$ by counting $\EE$'s
 $\OO$'s.
 As the iteration advances, the ratio of $\EE$'s to $\OO$'s in $\pi(r_{2d+1})$ converges to
 $\theta$, with strict improvement guaranteed across iterations
-(Theorem~\ref{thm:convergence}) but not within a single layer.
+(Theorem~\ref{thm:convergence}) but not within a single depth
+(the worse estimate $r_{2d}$ need not improve).
 
 %------------------------------------------------------------
 \section{Convergence Analysis}
@@ -958,9 +1084,11 @@ so in particular the better child satisfies
 \[
   |\eps_{\mathrm{better}}| \leq \frac{1}{2\,\theta\,\odenm\,\odenp}.
 \]
-(When $\wminus = \wplus - 1 = 0$, the companion $\rminus$ equals the parent $r_{2d}$,
-which already satisfies $|\eps_{2d}| > |\eps_{2d+1}|$; the better child is then
-$\rplus$, and the bound $|\epsplus| \leq 1/(2\theta\,\odenp)$ still holds.)
+(When $w^+ = 1$, so $\wminus = 0$: $r^- = r_{2d}$ coincides with the parent and is
+not a new fraction; the better child is $r^+$ in this case since
+$|\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|$.
+If the better child is $r^-$, then $w^- \geq 1$ and $o^- = o_{2d} + (w^+-1)\,o_{2d+1} > o_{2d+1}$.
+In either case the bound $|\eps_\mathrm{better}| \leq 1/(2\theta\,\odenm\,\odenp)$ holds.)
 Since $\odenp = o_{2d} + \wplus\,o_{2d+1} \geq o_{2d} + o_{2d+1} > o_{2d+1}$, the
 denominator of the better child strictly exceeds $o_{2d+1}$; by induction the
 denominators diverge.
@@ -969,38 +1097,286 @@ $\odenp \to \infty$, we have $\eps_{2d+1} \to 0$.
 \end{proof}
 
 \subsection*{Connection to continued fractions}
+\label{sec:cf-connection}
 
 The connection between the mediant algorithm and continued fractions is a direct
 consequence of the Sturmian identity (Theorem~\ref{prop:sturmian}).
 In combinatorics on words, the standard sequence for a Sturmian word with slope
-$\alpha = 1/(1+\theta)$ is generated by the recurrence $s_n = s_{n-1}^{d_n} \cdot s_{n-2}$,
-where the weights $d_n$ are precisely the partial quotients of the continued-fraction
-expansion of $\alpha$ (Lothaire~\cite{lothaire2002}, Theorem~2.3.5; Widmer~\cite{widmer2010},
-Proposition~2.4.6).
+$\alpha = 1/(1+\theta)$ is generated by the recurrence $s_n = s_{n-1}^{b_n} \cdot s_{n-2}$,
+where the weights $b_n$ are precisely the partial quotients of the continued-fraction
+expansion of $\alpha$ (Lothaire~\cite{lothaire2002}, Ch.~2; Widmer~\cite{widmer2010},
+Proposition~2.4.6); here $b_1 = a_0$ and $b_n = a_{n-1}$ for $n \geq 2$, with
+$\alpha = 1/(1+\theta) = [0;\, a_0+1,\, a_1,\, a_2,\, \ldots]$.
 The mediant word sequence agrees with this standard sequence at all interior positions
 (Theorem~\ref{prop:sturmian}).
 This does \emph{not} imply that the algorithm's weights $\wplus$ equal the partial quotients
-$a_k$: the Sturmian identity constrains only interior positions of the words, not which
+$b_k$: the Sturmian identity constrains only interior positions of the words, not which
 weights the algorithm selects.
 What does follow is that the two children at weights $\wminus$ and $\wplus$ always have
 denominators $o_{2d} + \wminus \cdot o_{2d+1}$ and $o_{2d} + \wplus \cdot o_{2d+1}$
 (one even-indexed, one odd-indexed depending on which is the better estimate),
-mirroring the structure of the classical recurrence $q_{k+1} = a_k q_k + q_{k-1}$.
-Whether this implies superlinear denominator growth remains open.
+mirroring the structure of the classical recurrence $q_{k+1} = b_k q_k + q_{k-1}$.
+Exponential denominator growth is proved in Section~\ref{sec:convergence}.
 
 The MT fractions are not in general the same as the CF convergents.
 The standard CF recurrence jumps by the full partial quotient $a_k$ at each step,
-landing on a new convergent $p_k/q_k$.
-The MT algorithm picks the optimal bracketing weight $\wplus$, which may be strictly
-less than $a_k$: in that case the new estimate is a \emph{semi-convergent} --- a
-Stern-Brocot fraction between two consecutive CF convergents --- not a CF convergent
-itself.
-Conversely, when $\wplus$ is large it can jump past several intermediate semi-convergents
-in one step, skipping CF convergents that lie between them.
-Neither sequence is a subsequence of the other: the MT visits some semi-convergents
-that CF skips, and CF visits some convergents that the MT skips.
-The two sequences are related via the shared Sturmian word structure, but they traverse
-different fractions.
+landing on a convergent $p_k/q_k$.
+The MT algorithm picks the optimal bracketing weight $\wplus$, which need not
+equal any partial quotient.
+
+\begin{theorem}[MT fractions lie on the Stern--Brocot path]
+\label{thm:sb-path}
+Every fraction appearing as $r_{2d}$ or $r_{2d+1}$ in a bounded MT pair is a
+convergent or semi-convergent of $\theta$, i.e.\ lies on the Stern--Brocot path
+of $\theta$.
+\end{theorem}
+
+\begin{proof}
+The initial bounds $\lfloor\theta\rfloor/1$ and $\lceil\theta\rceil/1$ are
+consecutive integers, hence Farey adjacent, and both lie on the Stern--Brocot
+path of $\theta$.
+
+At each depth $d$, the algorithm forms the two mediants
+$r^\pm = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^\pm)$ with $w^- = w^+ - 1$.
+For $w \geq 2$ these are \emph{weighted} mediants, not ordinary mediants of
+$(r_{2d}, r_{2d+1})$, so the one-step argument does not apply directly.
+Instead, use the identity
+\[
+  P + w Q = (P + (w-1)Q) \oplus Q,
+  \qquad
+  \det(P+(w-1)Q,\, Q) = \det(P, Q),
+\]
+which shows that $\mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ is the ordinary mediant of
+$(r_{2d} + (w-1)\,r_{2d+1},\; r_{2d+1})$, a Farey-adjacent pair with the same
+determinant as $(r_{2d}, r_{2d+1})$.
+By induction on $w = 1, \ldots, w^+$: the pair
+$(r_{2d} + (w-1)\,r_{2d+1},\; r_{2d+1})$ is Farey adjacent and straddles
+$\theta$ for each $w \leq w^+$.
+By the standard Stern--Brocot lemma, any Farey-adjacent pair $(P, Q)$ of
+non-negative fractions defines a unique SB-tree interval, and $\theta$
+lies in the interval of $(P, Q)$ if and only if $P \oplus Q$ lies on the
+SB path to $\theta$; so its ordinary mediant
+$r_{2d} + w\,r_{2d+1}$ is a node on the Stern--Brocot path of $\theta$.
+The case $w^- = 0$ (i.e.\ $w^+ = 1$) is immediate: $r^- = r_{2d}$ is
+already on the path by inductive hypothesis, and $r^+ = r_{2d} + r_{2d+1}$
+is the unique ordinary mediant of the Farey pair $(r_{2d}, r_{2d+1})$.
+Both $r^-$ and $r^+$ are produced this way, so both lie on the path.
+\end{proof}
+
+\begin{theorem}[MT never skips a convergent]
+\label{conj:never-skips}
+Every CF convergent $p_k/q_k$ of $\theta$ appears as $r_{2d}$ or $r_{2d+1}$
+in some bounded MT pair.
+\end{theorem}
+
+\begin{proof}
+A convergent $p_k/q_k$ is characterised as the \emph{last} node in a run of
+same-side steps on the SB path of $\theta$, i.e.\ the node just before the path
+crosses to the other side.
+In the induction of Theorem~\ref{thm:sb-path}, the path nodes visited within
+stage $d$ are $r_{2d} + w\,r_{2d+1}$ for $w = 1, \ldots, w^+$.
+For $w < w^+$ the node lies on the same side of $\theta$ as $r_{2d}$.
+When $w^+ \geq 2$ the non-crossing child $r^- = r_{2d} + (w^+-1)\,r_{2d+1}$
+is the last node on $r_{2d}$'s side, so $r^-$ is a convergent.
+(When $w^+ = 1$ there is no non-crossing child: $r_{2d}$ itself is carried
+forward and it is a convergent from the previous stage.)
+
+We show that every convergent appears in the MT sequence.
+After the integer spine and the two leaves, the Stern--Brocot path of $\theta$
+is the concatenation of the stage blocks
+$\{r_{2d} + w\,r_{2d+1} : 1 \le w \le w^+_d\}$, $d = 0, 1, 2, \ldots$.
+(After the last node $r^+$ of block $d-1$, the SB interval is
+$(r_{2d}, r_{2d+1})$, so the next path node is $r_{2d} \oplus r_{2d+1}$,
+the first node of block $d$.)
+Within a block, the nodes with $w < w^+_d$ lie on the same side of $\theta$ as
+$r_{2d}$, and $r^+$ lies on the other side.
+The nodes that end a run---and hence are convergents---are:
+$r^- = r_{2d} + (w^+_d - 1)\,r_{2d+1}$ (when $w^+_d \ge 2$);
+$r^+$;
+and, when $w^+_d = 1$, $r_{2d}$ itself (carried forward from the previous block).
+All of these are members of an MT pair.
+Together with the leaf $\lfloor\theta\rfloor/1 = p_0/q_0$, every convergent appears.
+\end{proof}
+
+The next two results give precise characterisations of which MT fractions are
+semi-convergents rather than convergents.
+
+\begin{theorem}[Semi-convergent characterisation of $r_{2d+1}$]
+\label{conj:semi-r1}
+  For all $d \geq 0$, $r_{2d+1}$ is a semi-convergent of $\theta$ if and only if
+  $w^+_d = 1$, i.e.\ the propagated weight of the pair $(r_{2d}, r_{2d+1})$
+  equals~$1$.
+\end{theorem}
+
+\begin{proof}
+Write $A = e_{2d} - \theta o_{2d}$ and $B = e_{2d+1} - \theta o_{2d+1}$ for the
+signed errors of the current pair, so $w^+_d = \lfloor|A|/|B|\rfloor + 1$.
+
+\medskip
+\textbf{Case $d \ge 1$.}
+Let $r^-, r^+$ be the children formed at depth $d-1$, with $o^- < o^+$.
+
+\textit{Case $r_{2d+1} = r^+$} (the crossing child).
+After the path visits $r^+$, the SB interval is $(r^-, r^+) = (r_{2d}, r_{2d+1})$,
+so the next path node is $r_{2d} \oplus r_{2d+1}$.
+By definition of $w^+_d = \lfloor|A|/|B|\rfloor + 1$,
+$w^+_d = 1$ iff $|A| < |B|$, i.e.\ $r_{2d} \oplus r_{2d+1}$ lies on the same side as $r_{2d+1}$,
+i.e.\ the path crosses immediately.
+Hence $r^+$ is the last node of its run (a convergent) iff $w^+_d \ge 2$, and a
+semi-convergent iff $w^+_d = 1$.
+
+\textit{Case $r_{2d+1} = r^-$} (the non-crossing child).
+We have $w^-_{d-1} \ge 1$ (otherwise $r^- = r_{2d-2}$ would be the worse child,
+contradicting $|{\varepsilon_{2d-2}}| > |{\varepsilon_{2d-1}}|$),
+so the path visits $r^-$ immediately before $r^+$, which lies on the other side.
+Hence $r^-$ is a convergent.
+Also $o_{2d+1} = o^- < o^+ = o_{2d}$, so $|A| \ge |B|$ and $w^+_d \ge 2$.
+The statement holds in this case too.
+
+\medskip
+\textbf{Case $d = 0$.}
+The seed pair is $(r_0, r_1) = (\lfloor\theta\rfloor/1, \lceil\theta\rceil/1)$
+or $(\lceil\theta\rceil/1, \lfloor\theta\rfloor/1)$, ordered so that $r_1$ is the
+better estimate (smaller $|\varepsilon|$).
+Write $\alpha = \{\theta\} \in (0,1)$.
+Then $|A| = |\varepsilon_{r_0}|$ and $|B| = |\varepsilon_{r_1}|$ are $\{1-\alpha,\alpha\}$
+in some order, with $|B| < |A|$ by definition of the ordering.
+Hence $|A|/|B| > 1$, so
+$w^+_0 = \lfloor |A|/|B| \rfloor + 1 \ge 2$.
+Concretely: if $r_1 = \lfloor\theta\rfloor/1$ (i.e.\ $\alpha < \tfrac{1}{2}$)
+then $|A| = 1-\alpha$, $|B| = \alpha$, and $|A|/|B| = (1-\alpha)/\alpha > 1$;
+if $r_1 = \lceil\theta\rceil/1$ (i.e.\ $\alpha > \tfrac{1}{2}$)
+then $|A| = \alpha$, $|B| = 1-\alpha$, and $|A|/|B| = \alpha/(1-\alpha) > 1$.
+Since $w^+_0 \ge 2 \ne 1$, the statement ``$r_1$ is a semi-convergent iff $w^+_0 = 1$''
+holds vacuously at $d = 0$.
+
+\medskip
+In all cases, $r_{2d+1}$ is not on the integer spine ($o_{2d+1} \ge 2$ for
+$d \ge 1$; the leaves are treated separately), so the characterisation is complete.
+\end{proof}
+
+\begin{remark}
+Note that $w^+_d$ (the propagated weight of $(r_{2d}, r_{2d+1})$) differs in
+general from $w_{2d+1}$ (the inherited weight of $r_{2d+1}$).
+A statement in terms of the inherited weight $w_{2d+1}$ is false: for $\theta = \log_2 3$,
+$r_5 = 8/5$ carries inherited weight~$1$ but is a convergent, and $r_3 = 5/3$ carries
+inherited weight~$2$ but is a semi-convergent.
+\end{remark}
+
+\begin{theorem}[Semi-convergent characterisation of $r_{2d}$]
+\label{conj:semi-r0}
+  For $d \geq 1$, $r_{2d}$ is a semi-convergent of $\theta$ if and only if
+  $w_{2d} > w_{2d+1}$, i.e.\ the inherited weight of $r_{2d}$ exceeds that of
+  its sibling $r_{2d+1}$.
+\end{theorem}
+
+\begin{proof}
+Let $r^-, r^+$ be the children formed at depth $d-1$, with absolute errors
+$x = |e^- - \theta o^-|$ and $y = |e^+ - \theta o^+|$ and $o^- < o^+$.
+
+\medskip
+\noindent$(\Leftarrow)$
+Suppose $w_{2d} > w_{2d+1}$, so $r_{2d} = r^+$ is the crossing (worse) child.
+Then $x/o^- < y/o^+$.  Since $o^- < o^+$, this gives $x < y$.
+
+Since $(r^-, r^+)$ is a bounded pair (Theorem~\ref{thm:mediant-convergence}),
+the pair brackets $\theta$: their signed errors $e^- - \theta o^-$ and
+$e^+ - \theta o^+$ have opposite signs.  Write them as $-x$ and $+y$
+respectively (i.e.\ $r^-$ is the underestimate and $r^+$ the overestimate;
+the argument is symmetric if the signs are reversed).
+The signed error of the unweighted mediant $r^- \oplus r^+$ is then
+\[
+  (e^- + e^+) - \theta(o^- + o^+) = (-x) + y = y - x > 0,
+\]
+which has the same sign as the error of $r^+$.
+Hence $\theta$ still lies on the $r^-$ side of $r^- \oplus r^+$, so the
+SB path continues toward $r^+$: the crossing has not yet occurred,
+and $r^+$ is not the last node of its run.  Hence $r_{2d}$ is a semi-convergent.
+
+\medskip
+\noindent$(\Rightarrow)$
+Suppose $w_{2d} \le w_{2d+1}$, so $r_{2d} = r^-$ is the non-crossing child,
+i.e.\ $r^- = r_{2d-2} + (w^+_{d-1} - 1)\,r_{2d-1}$.
+\begin{itemize}
+  \item If $w^-_{d-1} \ge 1$: by the block structure established in the proof of
+  Theorem~\ref{thm:sb-path}, the SB path visits the nodes
+  $r_{2d-2} + w\,r_{2d-1}$ for $w = 1, \ldots, w^+_{d-1}$ in order within
+  stage $d-1$.  All nodes with $w < w^+_{d-1}$ lie on the same side of $\theta$
+  as $r_{2d-2}$; the node at $w = w^+_{d-1}$ (namely $r^+_{d-1}$) lies on the
+  other side.  Since $r^- = r_{2d-2} + (w^+_{d-1}-1)\,r_{2d-1}$ is the node at
+  $w = w^+_{d-1} - 1 \ge 1$, it is the last same-side node before the path
+  crosses to $r^+$.  Hence $r^-$ is the last node of its run, i.e.\ a convergent.
+  \item If $w^-_{d-1} = 0$: then $r_{2d} = r_{2d-2}$ and $w^+_{d-1} = 1$.
+  If $r_{2d-2}$ were a semi-convergent, then by $(\Leftarrow)$ applied at
+  depth $d-1$ it would be the crossing child with $|A_{d-1}| > |B_{d-1}|$,
+  giving $w^+_{d-1} \ge 2$, a contradiction (and $w^+_0 \ge 2$ always).
+  Hence $r_{2d}$ is a convergent.
+\end{itemize}
+\end{proof}
+
+\begin{remark}
+\label{rem:d0-leaves}
+  $\lfloor\theta\rfloor/1 = p_0/q_0$ is always a convergent.
+  $\lceil\theta\rceil/1$ is a convergent ($= p_1/q_1$) iff $a_1 = 1$, and otherwise
+  a semi-convergent.
+  If $\lceil\theta\rceil/1$ is the better leaf, then $\{\theta\} > 1/2$, so $a_1 = 1$;
+  hence $r_1$ is always a convergent, and $r_0$ is a semi-convergent iff
+  $r_0 = \lceil\theta\rceil/1$ and $a_1 > 1$.
+  Leaves carry no weight, so the weight condition does not apply at $d = 0$.
+\end{remark}
+
+All steps in both proofs are argued by hand.
+
+\paragraph{Open problem: linear depth bound.}
+
+\begin{conjecture}[Linear depth bound]
+\label{conj:linear-depth}
+Let $\theta > 1$ be irrational.  There exist constants $m_\theta, b_\theta > 0$
+such that for every mediant-tree approximant $e_d/o_d$ at depth~$d$,
+\[
+  d \;\leq\; m_\theta \cdot \log_2(e_d + o_d) + b_\theta.
+\]
+\end{conjecture}
+
+The conjecture asserts that the depth $d$ reached by the algorithm grows at most
+logarithmically in $e_d + o_d$, i.e.\ $O(\log N)$ iterations suffice to produce
+an approximant of size $N = e_d + o_d$.
+The constants $(m_\theta, b_\theta)$ depend on $\theta$ and reflect the average
+size of partial quotients: large partial quotients drive faster growth (smaller
+$m_\theta$), small ones slower.
+
+Figure~\ref{fig:oracle-conjecture} plots depth~$d$ against $\log_2(e_d+o_d)$
+for seven irrationals.  The dashed line shows an explicit bounding line
+$d \leq 0.45\,\log_2(e_d+o_d) + 1.9$ for $\theta = \log_2 3$, illustrating the
+conjecture parameters $(m_\theta, b_\theta)$ for that target.
+
+\begin{conjecture}[Universal bound via $e$]
+\label{conj:universal-bound}
+The constants $(m_e, b_e)$ for $\theta = e$ (Euler's number) serve as universal
+bounds: for every irrational $\theta > 1$ and every depth~$d$,
+\[
+  d \;\leq\; m_e \cdot \log_2(e_d + o_d) + b_e.
+\]
+\end{conjecture}
+
+The figure shows $e$ lying near the upper envelope of all seven curves, consistent
+with this conjecture.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{fig-oracle-conjecture.pdf}
+\caption{Depth~$d$ vs.\ $\log_2(e_d+o_d)$ (bit-length) for the better
+mediant-tree estimate at each depth, across seven irrationals.
+The linear relationship provides empirical support for
+Conjecture~\ref{conj:linear-depth}.
+The dashed line $d = 0.45\,\log_2(e_d+o_d) + 1.9$ bounds the $\log_2 3$ points,
+illustrating the conjecture parameters $(m_\theta, b_\theta)$ for that target.
+Slope varies: $\pi$ and $\log_3 8$ grow fastest (large partial quotients);
+$e$ lies near the upper envelope, consistent with Conjecture~\ref{conj:universal-bound};
+$\phi$, the ``most irrational'' number~\cite{hardywright1979} (all partial quotients
+equal to~$1$), sits between $e$ and the logarithmic targets.}
+\label{fig:oracle-conjecture}
+\end{figure}
 
 %------------------------------------------------------------
 %------------------------------------------------------------
@@ -1175,10 +1551,15 @@ fractions $\alpha_0 = o_0/L_0$ and $\alpha_1 = o_1/L_1$ (with $|o_1 L_0 - o_0 L_
 has denominator at least $L_0 + L_1 > L$, contradicting $n < L$.
 
 \textbf{Agreement.}
-Since no fraction with denominator $< L$ lies strictly between $\alpha$ and $o/L$,
-for each $1 \leq n \leq L-1$ the two values $n\alpha$ and $n \cdot o/L$ lie in the same
-unit interval $[m, m+1)$ for some integer $m$, giving $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$.
-Hence $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq L-2$.
+Fix $1 \leq n \leq L-1$ and suppose for contradiction that
+$\lfloor n\alpha \rfloor \neq \lfloor n \cdot o/L \rfloor$.
+Then there exists an integer $m$ with $n\alpha < m \leq n \cdot o/L$ or
+$n \cdot o/L < m \leq n\alpha$ (the two cases are symmetric).
+In either case $m/n$ lies strictly between $\alpha$ and $o/L$,
+and $m/n$ has denominator $n < L$.
+This contradicts the Key lemma.
+Hence $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$ for all $1 \leq n \leq L-1$,
+and therefore $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq L-2$.
 
 \paragraph{Terminal position.}
 The exclusion of $i = L-1$ follows from Theorems~\ref{thm:parity-ends-O}
@@ -1229,9 +1610,9 @@ so it emits $\EE$ --- inherently favouring the above-$\theta$ estimate and leavi
 running density below $\alpha$.
 The mediant tree, by contrast, explicitly selects at each step the estimate with
 smaller $|\varepsilon|$, i.e.\ $r_{2d+1}$, whichever side of $\theta$ it falls on.
-Closing the sequence with $\OO$ at that point reflects this selection: it is the
-correct terminal for a word whose ratio $e/o$ slightly underestimates $\theta$, nudging
-the running density up toward $\alpha$.
+The terminal $\OO$ is a consequence of the Christoffel word structure: every lower
+Christoffel word (and hence every mediant word; Theorem~\ref{thm:parity-ends-O}) ends
+in $\OO$, regardless of which side of $\theta$ the estimate falls on.
 
 For $\theta = \log_2 3$, the improvement at the discrepancy depths is substantial:
 at $N = 1719$ the mediant density error is $1.4 \times 10^{-8}$ against the
@@ -1255,9 +1636,8 @@ The mediant algorithm instead builds a compressed representation of the same pre
 Each iteration requires a constant number of real-arithmetic operations to compute
 the next bounded pair and weight; after $k$ iterations the tree encodes a Sturmian
 prefix of length $N = e_{2d+1} + o_{2d+1}$.
-Empirically $N$ grows rapidly with $k$ (see Section~\ref{sec:convergence}), suggesting
-$O(\log N)$ real-arithmetic operations suffice to encode a prefix of length $N$,
-though a formal proof of this bound remains open.
+$N$ grows exponentially with $k$ (Section~\ref{sec:convergence}), so $O(\log N)$ iterations suffice to encode
+a prefix of length $N$, each requiring $O(1)$ oracle evaluations.
 
 Once the tree is built, enumerating the $N$ symbols requires \emph{no real
 arithmetic at all}: each node specifies an integer weight $w$ and two child words,
@@ -1276,9 +1656,9 @@ boundary within a branch word $v^w \cdot u$ or $u \cdot v^w$ reads $\cdots\OO\EE
 $\OO\OO$ never arises at any boundary, and by induction never arises anywhere.
 
 \begin{remark}
-The weights $w_{2d+1}$ are related to the partial quotients of the continued fraction
+The propagated weights $w^+_d$ are related to the partial quotients of the continued fraction
 expansion of $\theta$, though they are not in general identical to them.
-A large weight at step $n$ corresponds to a large partial quotient, producing a long
+A large weight at depth $d$ corresponds to a large partial quotient, producing a long
 run of one symbol type in the mediant word --- the same phenomenon that gives rise
 to the irregular spacing of $\OO$'s and $\EE$'s in an irrational Sturmian word.
 Conversely, small weights correspond to small partial quotients, and the mediant
@@ -1286,12 +1666,12 @@ word advances by only a short block at each such step.
 \end{remark}
 
 %------------------------------------------------------------
-\section{Extension to $0 < \theta < 1$}
+\section{Extension to $\theta \leq 1$}
 \label{sec:extension}
 %------------------------------------------------------------
 
 The algorithm of Sections~\ref{sec:mediant}--\ref{sec:parity} requires $\theta > 1$.
-We now show how to handle $\theta \in (0, 1)$ by algebraic reduction, in two stages.
+We now show how to handle all other real $\theta$ by algebraic reduction.
 
 If one were content to accept $\OO\OO$ in the mediant word, no special treatment
 would be needed: the algorithm and the Sturmian definition extend formally to any
@@ -1299,25 +1679,23 @@ $\theta > 0$, and for $\theta < 1$ the slope $\alpha = 1/(1+\theta) > 1/2$ makes
 $\OO\OO$ unavoidable.
 The reductions below are motivated by applications (described in~\cite{paper77})
 that require $\OO\OO$-free mediant words.
-More concretely: for $\theta \in (0,1)$, setting $\theta' = (1-\theta)/\theta$ (when
-$\theta < 1/2$) or $\theta' = \theta/(1-\theta)$ (when $\theta > 1/2$) maps $\theta$
-to $\theta' > 1$, giving a slope $1/(1+\theta') < 1/2$ and hence an $\OO\OO$-free
-sequence; the counts $e$ and $o$ from that sequence then yield a rational approximant
-to the original $\theta$.
+
+\paragraph{Notation.}
+Let $r(\theta)$ denote the rational approximant produced by the algorithm for
+$\theta > 1$, i.e.\ the sequence of bounded pairs $(r_{2d}, r_{2d+1})$ and
+their limit.
+Each subsection below defines $r(\theta)$ for the remaining cases by reducing
+to a $\theta' > 1$ and applying a simple transformation.
 
 \subsection{Case $0 < \theta < \tfrac{1}{2}$}
 
-For $\theta \in (0, \tfrac{1}{2})$, define
+For $\theta \in (0, \tfrac{1}{2})$, define $\theta' = (1-\theta)/\theta > 1$ and set
 \[
-  \theta' = \frac{1-\theta}{\theta} = \frac{1}{\theta} - 1 > 1.
+  r(\theta) = \frac{o}{e + o},
 \]
-Run the algorithm on $\theta'$.
-A bounded pair $e/o \approx \theta'$ satisfies $e/o \approx (1-\theta)/\theta$, so
-\[
-  \theta \approx \frac{o}{e + o}.
-\]
-The approximant to $\theta$ is therefore $o/(e+o)$, with numerator $o$ (the
-$\OO$-count of the mediant word) and denominator $e + o$ (its total length).
+where $e/o = r(\theta')$.
+That is, if $r(\theta') = e/o$ then $r(\theta)$ is obtained by swapping the role
+of $e$ and $o$: numerator $o$ ($\OO$-count), denominator $e+o$ (total length).
 
 \paragraph{Mediant word.}
 The mediant word for $\theta'$ has $\OO$-density
@@ -1338,19 +1716,11 @@ of $\theta'$.
 
 \subsection{Case $\tfrac{1}{2} < \theta < 1$}
 
-For $\theta \in (\tfrac{1}{2}, 1)$, note that $1 - \theta \in (0, \tfrac{1}{2})$,
-so define
+For $\theta \in (\tfrac{1}{2}, 1)$, define $\theta' = \theta/(1-\theta) > 1$ and set
 \[
-  \theta' = \frac{\theta}{1 - \theta} > 1
+  r(\theta) = \frac{e}{e + o},
 \]
-and run the algorithm on $\theta'$.
-A bounded pair $e/o \approx \theta'$ satisfies $e/o \approx \theta/(1-\theta)$, so
-\[
-  \theta \approx \frac{e}{e + o}.
-\]
-No modification of the mediant word is required: the sequence for $\theta'$ is used
-solely to produce the counts $e$ and $o$, which then yield the approximant $e/(e+o)$
-to the original $\theta$.
+where $e/o = r(\theta')$.
 
 \paragraph{Mediant word.}
 The mediant word for $\theta'$ has $\OO$-density
@@ -1361,12 +1731,32 @@ so it is $\OO\OO$-free and its Sturmian slope is $1 - \theta$.
 The sequence encodes $\theta'$; the rational approximant $e/(e+o)$ to $\theta$ is read
 off from the $\EE$- and $\OO$-counts of that sequence.
 
+\subsection{Case $\theta < 0$}
+
+For $\theta < 0$, set
+\[
+  r(\theta) = -r(-\theta).
+\]
+
+\subsection{Degenerate cases $\theta \in \{0,\,\tfrac{1}{2},\,1\}$}
+
+These three values sit at the boundary between regimes and are defined directly:
+\[
+  r(0) = 0/1, \qquad r(\tfrac{1}{2}) = 1/2, \qquad r(1) = 1/1.
+\]
+The corresponding mediant words are $\EE^\infty$, $(\EE\OO)^\infty$, and
+$(\EE\OO)^\infty$ respectively (at $\theta = 1$ the $\OO$-density is $1/2$,
+consistent with the $\theta \to 1^+$ limit of $1/(1+\theta) \to 1/2$).
+Note the one-sided limit: as $\theta \to 1^-$ in the $(\tfrac{1}{2}, 1)$ regime,
+the Sturmian slope is $1 - \theta \to 0$, so the words tend to $\EE^\infty$,
+not $(\EE\OO)^\infty$.
+
 \paragraph{Summary.}
 Table~\ref{tab:extension} collects the reductions for all ranges of $\theta$.
 
 \begin{table}[h]
 \centering
-\caption{Reductions to the $\theta > 1$ algorithm for all ranges of $\theta$ (four non-trivial, three trivial boundary cases)}
+\caption{Reductions to the $\theta > 1$ algorithm for all ranges of $\theta$}
 \label{tab:extension}
 \begin{tabular}{@{}llll@{}}
 \toprule
@@ -1377,12 +1767,33 @@ $0 < \theta < \tfrac{1}{2}$ & $\theta' = (1-\theta)/\theta$       & $o/(e+o)$   
 $\tfrac{1}{2} < \theta < 1$ & $\theta' = \theta/(1-\theta)$       & $e/(e+o)$   & $1-\theta < \tfrac{1}{2}$ \\
 $\theta < 0$                & $\theta' = -\theta$ (or above)      & negate      & --- \\
 \midrule
-$\theta = 0$                & trivial: word $\EE$, $o/(o+e) = 0$  & $0/1$       & --- \\
-$\theta = \tfrac{1}{2}$     & trivial: word $\EE\OO$, $o/(o+e) = \tfrac{1}{2}$ & $1/2$ & --- \\
-$\theta = 1$                & trivial: word $\OO$, $o/(o+e) = 1$  & $1/1$       & --- \\
+$\theta = 0$                & trivial: word $\EE^\infty$           & $0/1$       & $0$ \\
+$\theta = \tfrac{1}{2}$     & trivial: word $(\EE\OO)^\infty$      & $1/2$       & $\tfrac{1}{2}$ \\
+$\theta = 1$                & trivial: word $(\EE\OO)^\infty$      & $1/1$       & $\tfrac{1}{2}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Figures~\ref{fig:theta-prime} and~\ref{fig:alpha} plot the reduction map and the
+resulting Sturmian slope across all regimes.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{fig-extension-theta-prime.pdf}
+\caption{The reduction map $\theta \to \theta'$, which is always greater than~$1$.
+  Colours identify the regimes; vertical dashed lines mark the boundary values
+  $\theta \in \{-1,\,-\tfrac{1}{2},\,0,\,\tfrac{1}{2},\,1\}$.}
+\label{fig:theta-prime}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{fig-extension-alpha.pdf}
+\caption{The Sturmian slope $\alpha = 1/(1+\theta')$ (the $\OO$-density of the
+  mediant word), which is always at most~$\tfrac{1}{2}$ (equalling $\tfrac{1}{2}$ at $\theta = 1$).
+  Colours and boundary lines as in Figure~\ref{fig:theta-prime}.}
+\label{fig:alpha}
+\end{figure}
 
 %------------------------------------------------------------
 \section{Conclusion and Open Problems}
@@ -1398,8 +1809,8 @@ algebraic reduction (Section~\ref{sec:extension}).
 The weighted mediant step is the classical Stern--Brocot step; the novelty is
 Theorem~\ref{thm:optimal-w}, which identifies the \emph{unique optimal weight}
 $\wplus$ via a sign-change bracket on the linear error function, giving a closed-form
-formula and guaranteeing that each iterate is at least a Stern--Brocot semi-convergent ---
-the best approximant achievable in one step from the current bounded pair.
+formula; that each iterate lies on the Stern--Brocot path of $\theta$ is a
+consequence of the weighted-mediant Farey structure (Theorem~\ref{thm:sb-path}).
 Lemma~\ref{lem:branch-standard-pair} (every mediant word is a lower Christoffel word)
 follows from the standard Christoffel concatenation theorem (Berstel et
 al.~\cite{berstel2009}); the contribution is the identification that the mediant
@@ -1411,19 +1822,15 @@ The Sturmian identity (Theorem~\ref{prop:sturmian}) and the palindrome invariant
 is a direct proof via the mediant construction, together with the last-letter criterion
 (Theorems~\ref{thm:parity-ends-O} and~\ref{thm:last-sturmian}) which is new.
 The mediant tree taken as a whole is a \emph{compressed transducer}: it encodes the
-construction history of a length-$N$ Sturmian prefix in $O(\log N)$ integer-arithmetic
-steps (empirically; a formal bound remains open), after which the symbols are
-enumerated by a purely integer recursive traversal.
+construction history of a length-$N$ Sturmian prefix in $O(\log N)$ iterations
+(Conjecture~\ref{conj:linear-depth}; Section~\ref{sec:convergence}),
+each requiring $O(1)$ oracle evaluations,
+after which the symbols are enumerated by a purely integer recursive traversal.
 
 \paragraph{Open problems.}
 \begin{enumerate}
-  \item \textbf{Superlinear denominator growth.}
-    Prove that $o_{2d+1}$ grows superlinearly (or exponentially) with the iteration
-    count.
-    The empirical evidence is strong --- every tested irrational shows at least $4\times$
-    growth per two steps --- but a formal proof is lacking.
   \item \textbf{Characterisation of the MT fractions.}
-    Every MT fraction is at least a Stern--Brocot semi-convergent; the MT visits
+    Every MT fraction is a convergent or semi-convergent of $\theta$; the MT visits
     the subsequence of those whose consecutive mediants straddle $\theta$.
     Characterise this subsequence in terms of the continued-fraction expansion of
     $\theta$, and determine when an MT fraction equals a CF convergent.
@@ -1432,8 +1839,9 @@ enumerated by a purely integer recursive traversal.
     likewise but visits different fractions.
     Give a precise comparison of the approximation quality per step between the two
     algorithms.
+  \item \textbf{Linear depth bound.}
+    See Conjecture~\ref{conj:linear-depth} in Section~\ref{sec:convergence}.
 \end{enumerate}
-
 
 \begin{thebibliography}{9}
 \bibitem{morse1940}
@@ -1463,6 +1871,13 @@ enumerated by a purely integer recursive traversal.
   \textit{Combinatorics on Words: Christoffel Words and Repetitions in Words},
   CRM Monograph Series \textbf{27},
   American Mathematical Society, Providence, RI, 2009.
+
+\bibitem{hardywright1979}
+  G.~H.~Hardy and E.~M.~Wright,
+  \textit{An Introduction to the Theory of Numbers},
+  fifth edition, Oxford University Press, 1979.
+  (See \S11.10: Hurwitz's theorem and the role of $\phi$ as the hardest
+  irrational to approximate by rationals.)
 
 \bibitem{paper77}
   J.~Seymour,
@@ -1507,11 +1922,11 @@ i.e.\ $(A + (w-1)B)(A + wB) < 0$.
 Writing $c = -A/B$, this product equals $B^2\,(w - 1 - c)(w - c)$, which is negative
 iff $w - 1 - c$ and $w - c$ have opposite signs, i.e.\
 \[
-  w - 1 < c < w \qquad \Longleftrightarrow \qquad c - 1 < w - 1 \leq c
-  \qquad \Longleftrightarrow \qquad w = \lfloor c \rfloor + 1.
+  w - 1 < c < w,
 \]
-Since $\theta$ is irrational, $A + nB \neq 0$ for all integers $n$, so $c$ is never
-an integer and the condition is strict: exactly one integer $w$ satisfies it, namely
+and since $c \notin \mathbb{Z}$ (as $\theta$ is irrational, $A + nB \neq 0$ for all integers $n$)
+this is equivalent to $w - 1 = \lfloor c \rfloor$, i.e.\ $w = \lfloor c \rfloor + 1$.
+Since $c$ is never an integer, exactly one integer $w$ satisfies the condition, namely
 \[
   \wplus = \lfloor -A/B \rfloor + 1.
 \]
@@ -1547,16 +1962,16 @@ no further improvement is possible and the algorithm terminates.
 Starting from the initial bounded pair $(r_0, r_1) = (1/1,\, 2/1)$ with
 $\theta = \log_2 3 \approx 1.58496$,
 the algorithm produces the following sequence of bounded pairs.
-At each depth $d$, weight $w_{2d+1}$ is used to compute the two candidates
-$\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w_{2d+1}-1)$ and
-$\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w_{2d+1})$;
+At each depth $d$, propagated weight $w^+_d$ is used to compute the two candidates
+$\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^+_d-1)$ and
+$\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^+_d)$;
 the better estimate (smaller $|\eps|$) becomes $r_{2d+3}$.
 
 \medskip
 \begin{center}
 \begin{tabular}{@{}cllllcll@{}}
 \toprule
-$d$ & $r_{2d}$ & $r_{2d+1}$ & $\eps_{r_{2d}}$ & $\eps_{r_{2d+1}}$ & $w_{2d+1}$ & $\rminus$ & $\rplus$ \\
+$d$ & $r_{2d}$ & $r_{2d+1}$ & $\eps_{r_{2d}}$ & $\eps_{r_{2d+1}}$ & $w^+_d$ & $\rminus$ & $\rplus$ \\
 \midrule
 0 & $1/1$   & $2/1$   & $-0.369$ & $+0.262$ & 2 & $3/2$   & $5/3$   \\
 1 & $3/2$   & $5/3$   & $-0.054$ & $+0.052$ & 1 & $3/2$   & $8/5$   \\
@@ -1572,7 +1987,7 @@ Reading the word decomposition bottom-up:
 
 \medskip
 \noindent
-\textbf{Level 1} ($d=0$, $w_1=2$, $\Delta>0$,
+\textbf{Level 1} ($d=0$, $w^+_0=2$, $\Delta>0$,
 $\pi(r_3)=\pi(r_1)^2\cdot\pi(r_0)$, $\pi(r_2)=\pi(r_1)^1\cdot\pi(r_0)$):
 \[
 \underbrace{
@@ -1588,7 +2003,7 @@ $\pi(r_3)=\pi(r_1)^2\cdot\pi(r_0)$, $\pi(r_2)=\pi(r_1)^1\cdot\pi(r_0)$):
 \]
 
 \noindent
-\textbf{Level 2} ($d=1$, $w_3=1$, $\Delta>0$,
+\textbf{Level 2} ($d=1$, $w^+_1=1$, $\Delta>0$,
 $\pi(r_5)=\pi(r_3)^1\cdot\pi(r_2)$, $\pi(r_4)=\pi(r_2)$):
 \[
 \underbrace{
@@ -1602,7 +2017,7 @@ $\pi(r_5)=\pi(r_3)^1\cdot\pi(r_2)$, $\pi(r_4)=\pi(r_2)$):
 \]
 
 \noindent
-\textbf{Level 3} ($d=2$, $w_5=3$, $\Delta>0$,
+\textbf{Level 3} ($d=2$, $w^+_2=3$, $\Delta>0$,
 $\pi(r_7)=\pi(r_5)^2\cdot\pi(r_4)$):
 \[
 \underbrace{
@@ -1677,7 +2092,8 @@ $d$ & $r_{2d}$ & $r_{2d+1}$ & $\eps_{r_{2d}}$ & $\eps_{r_{2d+1}}$ & $\wplus$ & $
 
 Table~\ref{tab:pi} shows 22 steps for $\theta = \pi$, starting from $r_0 = 4/1$,
 $r_1 = 3/1$.
-The classical approximant $355/113$ appears at depth $d=1$ (as $\rplus$) with
+The classical approximant $355/113$ is produced from the depth-$1$ pair and appears
+as $r_5$, the better member of the depth-$2$ pair; it has
 $\eps \approx +8.49 \times 10^{-8}$, and the weight $w=293$ at depth $d=2$
 produces an immediate jump of roughly three orders of magnitude
 (from $|\varepsilon| \approx 8.49 \times 10^{-8}$ to $|\varepsilon| \approx 1.06 \times 10^{-10}$).
@@ -1692,7 +2108,7 @@ produces an immediate jump of roughly three orders of magnitude
 $d$ & $r_{2d}$ & $r_{2d+1}$ & $\eps_{r_{2d}}$ & $\eps_{r_{2d+1}}$ & $\wplus$ & $\rminus$ & $\rplus$ \\
 \midrule
 0  & $4/1$     & $3/1$     & $+0.273$            & $-0.045$            & 7   & $22/7$         & $25/8$         \\
-1  & $25/8$    & $22/7$    & $-5.0\times10^{-3}$ & $+4.02\times10^{-4}$ & 15  & $333/106$      & $355/113$      \\
+1  & $25/8$    & $22/7$    & $-5.28\times10^{-3}$ & $+4.02\times10^{-4}$ & 15  & $333/106$      & $355/113$      \\
 2  & $333/106$ & $355/113$ & $-2.65\times10^{-5}$ & $+8.49\times10^{-8}$ & 293 & $103993/33102$ & $104348/33215$ \\
 3  & $103993/33102$ & $104348/33215$ & $-1.84\times10^{-10}$ & $+1.06\times10^{-10}$ & 2  & $208341/66317$  & $312689/99532$  \\
 4  & $208341/66317$  & $312689/99532$  & $-3.89\times10^{-11}$ & $+9.28\times10^{-12}$ & 3  & $833719/265381$  & $1146408/364913$  \\
@@ -1716,5 +2132,233 @@ $d$ & $r_{2d}$ & $r_{2d+1}$ & $\eps_{r_{2d}}$ & $\eps_{r_{2d+1}}$ & $\wplus$ & $
 \bottomrule
 \end{tabular}}
 \end{table}
+
+%------------------------------------------------------------
+\section*{Disclosures}
+\addcontentsline{toc}{section}{Disclosures}
+\label{sec:disclosures}
+%------------------------------------------------------------
+
+\subsection*{Use of Artificial Intelligence}
+
+Large language models played a substantial role in the development of this paper,
+and the author considers it important to describe that role honestly.
+
+\textbf{Review and gap identification.}
+Claude (Anthropic) and Gemini (Google) were used as critical reviewers across
+multiple structured review rounds.
+Each model was presented with the manuscript and asked to identify mathematical
+gaps, proof obligations, notational inconsistencies, and expository weaknesses.
+The resulting issue lists directly drove successive revisions and are documented
+in the paper's revision history.
+
+\textbf{Theorem formulation.}
+The boundary between the author identifying a result and an AI model identifying
+it is not always sharp.
+In several instances the need for a theorem or lemma was recognised during
+AI-assisted review rather than by the author independently.
+The author regards this as a genuine intellectual contribution by the models
+involved, not merely automated checking.
+
+\textbf{Proof development.}
+On several occasions, Aristotle (the code name used for the AI reviewer in
+this project's review workflow) did not merely flag a conjecture as unproven
+but supplied the proof that elevated it to a theorem.
+Theorem~\ref{conj:semi-r1} and Theorem~\ref{conj:semi-r0} are examples where
+the final rigorous proofs emerged from this collaborative process.
+Claude also drafted proofs and theorem statements at various points in the
+development; in some cases these drafts were adopted with revision, in others
+they were rejected or replaced.
+
+\textbf{Exposition.}
+Claude was used to assist with drafting, restructuring, and checking revised
+passages of mathematical exposition.
+No AI-generated text was incorporated without review and revision by the author.
+
+\textbf{Responsibility.}
+The overall research programme, the framing of results, all decisions about
+what to accept, defer, or reject, and final responsibility for the correctness
+of the paper rest with the author.
+The author does not regard AI assistance as diminishing the paper's validity,
+but believes readers are entitled to a complete account of how it was produced.
+
+\subsection*{Lean~4 Verification Status}
+
+During peer review, a reviewer produced an independent Lean~4 formalisation
+of selected results from this paper, including the exponential denominator
+growth theorem and the weighted-mediant identity.
+The author is grateful for this contribution, which helped identify and
+correct several proof gaps during the review process.
+
+The author has chosen not to publish the Lean~4 development at this stage.
+Accordingly, \textbf{this paper makes no claim of Lean~4 certification or
+machine-checked verification}.
+Every theorem, lemma, and proof in this paper stands solely on its
+hand-argued proof as written in the text.
+Readers should not infer formal verification status from any part of this
+manuscript.
+A complete Lean~4 formalisation of the results in this paper is left for
+future work.
+
+%------------------------------------------------------------
+\section*{Reviewer's Comments}
+\addcontentsline{toc}{section}{Reviewer's Comments}
+\label{sec:reviewers-comments}
+%------------------------------------------------------------
+
+The following items identify open proof obligations, gaps, and vulnerabilities
+in this manuscript.  Each item records its source, the manuscript version in
+which it was raised, and its current status.
+\textbf{Raised} items are newly identified and unaddressed.
+\textbf{Pending} items are scheduled for the next revision.
+\textbf{Deferred} items have been noted but action intentionally postponed.
+\textbf{Resolved} items are addressed and awaiting reviewer confirmation.
+\textbf{Rejected} items have had their proposed resolution rejected and must
+return to \textbf{Pending} or \textbf{Raised} before the next review.
+\textbf{Dismissed} items are those for which the author has determined no
+further action is warranted.
+\textbf{Closed} items are fully accepted by all parties.
+Only \textbf{Dismissed} and \textbf{Closed} items are candidates for removal
+from future versions.
+
+\medskip
+\noindent
+\begin{tabular}{@{}llllll@{}}
+\toprule
+ID & Title & Source & Since & Status \\
+\midrule
+RC-1  & Thm.\,\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated       & claude  & v0.14 & Resolved \\
+RC-2  & Thm.\,\ref{conj:semi-r0} $(\Leftarrow)$: $x<y$ to crossing gap            & claude  & v0.14 & Resolved \\
+RC-3  & Thm.\,\ref{conj:semi-r1}: $d=0$ base case incomplete                      & claude  & v0.14 & Resolved \\
+RC-4  & Thm.\,\ref{prop:sturmian}: ``Agreement'' step unproved                    & claude  & v0.14 & Resolved \\
+RC-5  & Lean~4 scope boundary ambiguous                                            & gemini  & v0.14 & Resolved \\
+RC-6  & $O(\log N)$ conflates iteration count with bit-op cost                    & gemini  & v0.14 & Resolved \\
+RC-13 & Weight propagation bound slackness uncharacterised                         & gemini  & v0.14 & Deferred \\
+RC-14 & Base-specific structural dependencies limit generality                     & gemini  & v0.14 & Deferred \\
+RC-15 & High notation density may impede referee comprehension                     & gemini  & v0.14 & Deferred \\
+RC-16 & Inter-paper circular coupling: Paper~76 errors propagate to Paper~77       & gemini  & v0.14 & Deferred \\
+RC-21 & Conj.~\ref{conj:linear-depth}: linear bound may fail for pathological $\theta$ before asymptotic regime & author & v0.14 & Deferred \\
+RC-22 & Conj.~\ref{conj:universal-bound}: asymptotic crossover risk --- $\phi$, $\sqrt{2}$ will eventually exceed $e$ bound & gemini & v0.14 & Deferred \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+
+\paragraph{RC-1. Theorem~\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The $(\Rightarrow)$ case $w^-_{d-1} \ge 1$ now explicitly cites the block
+structure from Theorem~\ref{thm:sb-path} — which already carries the induction
+over the weight parameter $w$ within each stage — rather than asserting
+``the path visits $r^-$ immediately before $r^+$'' without justification.
+The case $w^-_{d-1} = 0$ is unchanged.
+
+\paragraph{RC-2. Theorem~\ref{conj:semi-r0} $(\Leftarrow)$: inference from $x < y$ to crossing.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The $(\Leftarrow)$ direction now explicitly invokes the bounded-pair bracketing
+property (Theorem~\ref{thm:mediant-convergence}) to establish that the signed
+errors of $r^-$ and $r^+$ have opposite signs, then computes the signed error of
+the unweighted mediant $r^- \oplus r^+$ as $y - x > 0$, making the continuation
+of the SB path toward $r^+$ a direct consequence rather than an assertion.
+
+\paragraph{RC-3. Theorem~\ref{conj:semi-r1}: $d = 0$ base case incomplete.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The proof of Theorem~\ref{conj:semi-r1} handles the inductive step cleanly
+but the base case $d = 0$ was dispatched in a single sentence.
+The case $d=0$ now explicitly computes $|A|/|B|$ from the fractional part
+$\alpha = \{\theta\}$, covering both orderings of the seed pair, and concludes
+$w^+_0 \ge 2$ by a direct ratio argument rather than assertion.
+
+\paragraph{RC-4. Theorem~\ref{prop:sturmian}: ``Agreement'' step unproved.}
+\textit{Source: claude | Since: v0.14 | Status: Resolved}
+
+The Agreement paragraph now makes the inference explicit: if
+$\lfloor n\alpha \rfloor \neq \lfloor n \cdot o/L \rfloor$ for some $n < L$,
+then the integer $m$ separating the two values yields a fraction $m/n$ strictly
+between $\alpha$ and $o/L$ with denominator $n < L$, contradicting the Key lemma.
+The conclusion $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$ is now
+proved by contradiction rather than asserted.
+
+\paragraph{RC-5. Lean~4 scope boundary ambiguous.}
+\textit{Source: gemini | Since: v0.14 | Status: Resolved}
+
+All Lean~4 citations have been removed from the paper.  The paper makes
+no claim of machine-checked or formally verified status.  Every result
+stands solely on the hand-argued proofs in the text.  A full Lean
+development is not published at this stage and is left for future work.
+
+\paragraph{RC-6. $O(\log N)$ iteration count conflates steps with oracle cost.}
+\textit{Source: gemini | Since: v0.14 | Status: Resolved}
+
+The paper now claims only that $O(\log N)$ real-arithmetic iterations suffice to
+reach an approximant of size $N$, which is what the convergence theorem
+(Section~\ref{sec:convergence}) and Conjecture~\ref{conj:linear-depth} assert.
+No claim is made about bit-operation cost per oracle call; that is a separate
+question outside the scope of this paper.
+
+\paragraph{RC-13. Weight propagation bound slackness uncharacterised.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+The propagation rules for weights~$w^\pm_d$ establish valid bounds, but the
+degree of slackness in these bounds is not characterised.  If the bounds are
+loose, they may fail to constrain extreme coefficient-growth regimes in which
+rare trajectory spikes occur.  Tightening or explicitly bounding the slackness
+would strengthen the asymptotic claims that depend on these propagation rules.
+
+\paragraph{RC-14. Base-specific structural dependencies limit generality.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+The mathematical machinery is tightly bound to binary and ternary structures
+via 2-adic and 3-adic valuations, Sturmian parity sequences, and mediant
+splitting.  It remains unproven whether the core approximation tree framework
+can generalise cleanly to arbitrary base expansions or to generalised
+Collatz-like mappings ($Tn+1$ variants).  This limitation is not acknowledged
+in the manuscript.
+
+\paragraph{RC-15. High notation density may impede referee comprehension.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+The paper employs a dense, specialised lexicon ($w^\pm_d$, branch-words $u$
+and $v$, Sturmian parity sequences, stream-tagging frameworks).  General
+mathematics referees may experience high cognitive friction, increasing the
+risk of rejection or extensive revision requests arising from opacity rather
+than mathematical error.  A notation glossary or guided reading path would
+mitigate this risk.
+
+\paragraph{RC-16. Inter-paper circular coupling: Paper~76 errors propagate to Paper~77.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+Paper~77 relies directly on the algebraic machinery and definitions established
+in this paper.  An oversight or weak link in Paper~76's foundational definitions
+(branch-word indexing, weight inheritance) instantly invalidates the algorithmic
+complexity and convergence claims in Paper~77.  The tight coupling is not
+flagged as a dependency risk, and no independent verification of the cross-paper
+interface is provided.
+
+\paragraph{RC-21. Conjecture~\ref{conj:linear-depth}: linear bound may fail for pathological $\theta$ before asymptotic regime.}
+\textit{Source: author | Since: v0.14 | Status: Deferred}
+
+For $\theta$ with occasional enormous partial quotients, the linear bound
+$d \leq m_\theta \cdot \log_2(e_d+o_d) + b_\theta$ may be violated at some
+finite depths before the asymptotic regime is reached.  A more careful
+formulation would introduce a threshold $D_\theta$ and assert that the bound
+holds for all $d \geq D_\theta$.  This refinement is deferred; the conjecture
+as stated is the natural first approximation and is supported empirically for
+all targets shown.
+
+\paragraph{RC-22. Conjecture~\ref{conj:universal-bound}: asymptotic crossover risk.}
+\textit{Source: gemini | Since: v0.14 | Status: Deferred}
+
+Euler's $e$ provides a clean empirical upper envelope up to depth~60, but
+asymptotic properties of continued-fraction convergents suggest that irrationals
+with slower denominator growth --- in particular $\phi = [1;1,1,\ldots]$
+(Fibonacci denominators) and $\sqrt{2} = [1;2,2,\ldots]$ --- have larger
+asymptotic slopes $m_\theta$ and will eventually exceed the $e$-bound at
+extreme depths.
+The conjecture is stated boldly so that any counterexample will be instructive;
+this item tracks the open question of whether the crossover actually occurs, and
+if so at what depth.
 
 \end{document}
