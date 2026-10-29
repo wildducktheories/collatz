@@ -7,7 +7,9 @@
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{booktabs}
+\usepackage{longtable}
 \usepackage{float}
+\usepackage{placeins}
 \usepackage{draftwatermark}
 \SetWatermarkText{DRAFT}
 \SetWatermarkScale{1.5}
@@ -77,21 +79,21 @@
 \newcommand{\tgt}{\theta}
 \newcommand{\wplus}{w^{+}}
 \newcommand{\wminus}{w^{-}}
-\newcommand{\rplus}{r_{+}}
-\newcommand{\rminus}{r_{-}}
-\newcommand{\eplus}{e_{+}}
-\newcommand{\eminus}{e_{-}}
-\newcommand{\odenp}{o_{+}}
-\newcommand{\odenm}{o_{-}}
+\newcommand{\rplus}{r^{+}}
+\newcommand{\rminus}{r^{-}}
+\newcommand{\eplus}{e^{+}}
+\newcommand{\eminus}{e^{-}}
+\newcommand{\odenp}{o^{+}}
+\newcommand{\odenm}{o^{-}}
 \newcommand{\epsplus}{\eps^{+}}
 \newcommand{\epsminus}{\eps^{-}}
-\newcommand{\lamplus}{\lam_{+}}
-\newcommand{\lamminus}{\lam_{-}}
+\newcommand{\lamplus}{\lam^{+}}
+\newcommand{\lamminus}{\lam^{-}}
 
 %------------------------------------------------------------
 \title{Mediant Trees for Rational Approximation and Sturmian Word Generation}
 \author{Jon Seymour}
-\date{\today\ (v0.15)}
+\date{\today\ (v0.22)}
 %------------------------------------------------------------
 
 \begin{document}
@@ -99,26 +101,31 @@
 \maketitle
 
 \begin{abstract}
-Given an oracle for a real number $\theta$ of sufficient precision, we present four
-contributions.
-First, an algorithm that constructs a \emph{mediant tree} of increasingly precise rational
-approximations to $\theta$: starting from a Farey-adjacent bounded pair bracketing $\theta$,
-each iteration applies a weighted mediant step with an optimal integer weight $\wplus$ given by
-a closed-form formula (Theorem~\ref{thm:optimal-w}).
-The denominator structure mirrors the classical continued-fraction recurrence
-(Section~\ref{sec:convergence}); exponential denominator growth is proved in
-Theorem~\ref{conj:linear-depth}.
-Second, a Sturmian transduction that converts the mediant tree into a \emph{mediant word}
---- a string over $\{\OO, \EE\}$ encoding the full approximation path --- and establishes
-that this word is identical to the Sturmian word with slope $1/(1+\theta)$ at all interior
-positions, with the terminal symbol of each finite prefix fully characterised by whether
-$r$ is an overestimate or underestimate of $\theta$ (Theorem~\ref{prop:sturmian}).
-Third, we prove two structural invariants of mediant words: every non-leaf word begins
-with $\EE\EE$ (Theorem~\ref{prop:EE-prefix}), and the interior slice
-$\pi(r)[1{:}L{-}1]$ of any mediant word of length $L \geq 2$ is a palindrome
-(Theorem~\ref{prop:palindrome}).
-Fourth, we show how to extend both algorithms to real numbers $\theta \in (0, 1)$ and
-$\theta < 0$ via simple algebraic reductions to the $\theta > 1$ case.
+Given an oracle for a real number $\theta$ of sufficient precision, we present the
+following contributions.
+First, a closed-form formula for the unique optimal integer weight $\wplus$
+(Theorem~\ref{thm:optimal-w}): the weight whose weighted mediant of a
+Farey-adjacent bounded pair straddles $\theta$.
+This yields an algorithm that constructs a \emph{mediant tree} of increasingly
+precise rational approximations to $\theta$, with every iterate (except, for
+rational $\theta$, the final companion of the exact step) lying on the
+Stern--Brocot path of $\theta$ (Theorem~\ref{thm:sb-path}).
+Second, structural theorems underpinning the algorithm's efficiency: exponential
+denominator growth (Lemma~\ref{lem:denominator-growth}) and the no-consecutive-unit-weights
+property (Lemma~\ref{lem:no-consecutive-unit-weights}) together imply that $O(\log N)$
+iterations suffice to produce an approximant of size $N$
+(Theorem~\ref{thm:linear-depth}).
+Third, the mediant tree can be encoded as a \emph{mediant word} --- a string over
+$\{\OO, \EE\}$ --- and this word is identical to the Sturmian word
+(the binary sequence $s_n = \lfloor(n{+}1)\alpha\rfloor - \lfloor n\alpha\rfloor$
+with slope $\alpha = 1/(1{+}\theta)$) at all interior positions, with the terminal
+symbol characterised by whether $r$ is an overestimate or underestimate of $\theta$
+(Theorem~\ref{prop:sturmian}).
+Two structural invariants follow: every non-leaf mediant word begins with $\EE\EE$
+(Theorem~\ref{prop:EE-prefix}), and the interior slice $\pi(r)[1{:}L{-}1]$ of any
+mediant word of length $L \geq 2$ is a palindrome (Theorem~\ref{prop:palindrome}).
+Fourth, we show how to extend both algorithms to all real $\theta$ via simple
+algebraic reductions to the $\theta > 1$ case.
 \end{abstract}
 
 \tableofcontents
@@ -163,13 +170,14 @@ The present paper makes four contributions to this classical picture.
     (Lothaire~\cite{lothaire2002}); the novelty is the direct proof via the mediant
     construction and the precise last-letter criterion.
   \item \textbf{Compressed transducer.}
-    Each iterate produced by the algorithm is a convergent or semi-convergent of $\theta$
+    Each iterate produced by the algorithm (except, for rational $\theta$, the final
+    companion $r^+$ of the exact step) is a convergent or semi-convergent of $\theta$
     (a node on the Stern--Brocot path of $\theta$) --- the
     best bracketing fraction achievable in one step from the current bounded pair.
     The mediant tree is therefore a \emph{compressed transducer} for the Sturmian word:
     the approximation path ($O(\log N)$ real-arithmetic iterations, each requiring $O(1)$ oracle
     evaluations; proved via exponential denominator growth,
-    Theorem~\ref{conj:linear-depth})
+    Theorem~\ref{thm:linear-depth})
     encodes the entire construction history, after which the $N$
     symbols are enumerated by a purely integer recursive traversal with no further
     real arithmetic.
@@ -187,23 +195,25 @@ Part~I (Sections~\ref{sec:background-sb}--\ref{sec:background-deluca}) collects
 background on the Stern--Brocot tree, Farey sequences, Sturmian words, and Christoffel
 words.
 Part~II develops the algorithm and its theory:
-Section~\ref{sec:definitions} introduces the core definitions;
-Section~\ref{sec:mediant} develops the mediant construction and straddling inequality;
+Section~\ref{sec:definitions} introduces the primitive definitions (bounded pair,
+approximant, $\lambda$, $\varepsilon$);
+Section~\ref{sec:derived-quantities} introduces the derived quantities ($\Delta$,
+$\Theta$, step types) used throughout Sections~\ref{sec:optimal-w}--\ref{sec:sturmian};
 Section~\ref{sec:optimal-w} derives the optimal weight formula;
+Section~\ref{sec:mediant} develops the mediant construction and straddling inequality;
 Section~\ref{sec:parity} introduces mediant words;
 Section~\ref{sec:tree} describes the mediant tree;
-Section~\ref{sec:convergence} analyses the rate of convergence;
-Section~\ref{sec:examples} presents examples and computational results;
+Section~\ref{sec:convergence} analyses the rate of convergence (including denominator growth and the $O(\log N)$ depth bound, Section~\ref{sec:denominator-growth});
 Section~\ref{sec:sturmian} establishes the connection to Sturmian words;
 Section~\ref{sec:extension} extends the construction to all real $\theta$;
 Section~\ref{sec:conclusion} concludes with open questions.
-Appendix~\ref{app:optimal-w} contains the proof of Theorem~\ref{thm:optimal-w}.
 
 \paragraph{Notation.}
 Throughout, $\theta > 1$ is the target real number (the case $\theta \notin (1,\infty)$
 is handled by reduction in Section~\ref{sec:extension}).
 A rational approximant is written $r = e/o$ with numerator $e$ (\emph{even-count})
-and denominator $o$ (\emph{odd-count}); $e, o > 0$ always, and $\gcd(e, o) = 1$.
+and denominator $o$ (\emph{odd-count}); $e, o > 0$ always, and $\gcd(e, o) = 1$
+unless otherwise stated.
 
 \textbf{Alphabet.}
 Mediant words are strings over $\{\EE, \OO\}$, where $\EE$ stands for
@@ -211,9 +221,13 @@ Mediant words are strings over $\{\EE, \OO\}$, where $\EE$ stands for
 
 \textbf{Depth index.}
 The algorithm progresses through depths $d = 0, 1, 2, \ldots$\,.
-At each depth $d$ the algorithm holds a \emph{bounded pair}
+At each depth $d$ (for rational $\theta$, up to but not including the
+terminal depth) the algorithm holds a \emph{bounded pair}
 $(r_{2d},\, r_{2d+1})$, where $r_{2d+1}$ is always the better estimate
 (smaller relative error $|\eps|$) and $r_{2d}$ the worse.
+We call $r_{2d}$ the \emph{older sibling} and $r_{2d+1}$ the \emph{younger
+sibling} of the pair at depth $d$; the older sibling is always the worse
+estimate and the younger sibling always the better.
 The flat linear subscripts $2d$ and $2d+1$ reflect the sequential history
 of all estimates produced: $r_0, r_1$ are the initial integer bounds, and
 each depth $d \geq 1$ contributes two new estimates $r_{2d}$ and $r_{2d+1}$
@@ -226,9 +240,14 @@ the pair $(r_{2d}, r_{2d+1})$ and used to produce the next pair.
 These carry \emph{superscript} decorations $+$, $-$ (or $*$ for a combined value)
 to distinguish them from the depth-indexed estimates:
 \begin{itemize}
-  \item $\wplus$: the \emph{optimal weight} --- the unique integer such that
+  \item $\wplus$: the \emph{optimal weight}, i.e.\ the weight computed in Step~4 of the
+    algorithm (Section~\ref{sec:optimal-w}).
+    At rational approximation steps it is the unique integer such that
     $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus-1)$ and
     $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ straddle $\theta$.
+    At the exact step no weight straddles $\theta$ strictly; Step~4 then returns the integer
+    one above the weight whose mediant equals $\theta$
+    (Lemma~\ref{lem:exact-step}).
   \item $\wminus = \wplus - 1$: the companion (sub-optimal) weight.
   \item $\rplus$, $\rminus$: the two candidate mediants at weights $\wplus$ and $\wminus$;
     the better one becomes $r_{2d+3}$ and the worse $r_{2d+2}$.
@@ -237,12 +256,45 @@ to distinguish them from the depth-indexed estimates:
   \item $\eplus, \eminus$ and $\odenp, \odenm$: the numerators and denominators
     of $\rplus$ and $\rminus$.
 \end{itemize}
+\textbf{Superscript convention.}
+The $+$ superscript marks the candidate mediant produced at the \emph{optimal}
+weight $\wplus$, and the $-$ superscript marks the candidate at the
+\emph{sub-optimal} weight $\wminus = \wplus - 1$.
+At \emph{rational approximation} steps (those at which the weight that straddles $\theta$ is unique;
+see \emph{Step types} in Section~\ref{sec:derived-quantities}), $\wplus$ is the unique weight
+at which the mediant switches to the opposite side of $\theta$, so $\rplus$ lies on the
+opposite side of $\theta$ from $r_{2d}$, while $\rminus$ lies on the same side as $r_{2d}$.
+At the \emph{exact} step (which occurs only for rational $\theta$ and is the last step),
+$\rminus = \theta$ exactly (on neither side), and $\rplus$ still lies strictly on the
+opposite side of $\theta$ from $r_{2d}$, i.e.\ on the side of $r_{2d+1}$
+(Lemma~\ref{lem:exact-step}).
 The superscript/subscript distinction is systematic: a $+$/$-$ \emph{superscript}
 always marks an intermediate quantity between two depths; a numeric \emph{subscript}
 always marks a position in the flat estimate sequence.
 These two systems are complementary and never overlap.
 When the depth matters we write $w^\pm_d$ for the propagated weights of
 Definition~\ref{def:parity-sequence}; in \S\S7--8 the depth is fixed and the subscript is omitted.
+
+\textbf{Gender.}
+A rational approximant $r = e/o$ is called \emph{female} if it overestimates
+$\theta$ (i.e.\ $e/o > \theta$, signed error $> 0$) and \emph{male} if it
+underestimates $\theta$ (i.e.\ $e/o < \theta$, signed error $< 0$).
+At every approximation depth (every depth for irrational $\theta$; every depth before the
+terminal one for rational $\theta$) the pair contains exactly one male and one female
+member --- the \emph{bracketing invariant}.
+At the terminal depth for rational $\theta$ the better member is $\theta$ itself, which
+is neither male nor female; the other member is male if the exact step had $B < 0$ and
+female if $B > 0$.
+The exact step, in which $\rminus = \theta$ becomes the younger sibling, is
+gender-changing only in the formal sense of the definition below.
+
+A generation at depth $d \geq 0$ is called \emph{gender-changing} if $\rminus$
+becomes the younger sibling of the depth-$(d+1)$ pair (i.e.\ $\rminus$ is the
+better estimate), and \emph{gender-preserving} otherwise (i.e.\ $\rplus$ is the
+younger sibling).
+Lemma~\ref{lem:no-consecutive-unit-weights} (Section~\ref{sec:convergence}) states that $w^+_0 \ge 2$ always, and
+that no two consecutive weights $w^+_d$ equal $1$.
+Unit-weight ($w^+_d = 1$) generations are gender-preserving, but not conversely.
 
 \textbf{Per-estimate scalar quantities.}
 For a single estimate $r = e/o$ the key scalars are:
@@ -272,26 +324,12 @@ Graham, Knuth, and Patashnik~\cite{gkp1994}).
 It is constructed by repeated \emph{mediant} insertion: starting from the pair
 $(0/1, 1/0)$, the mediant of two adjacent fractions $a/b$ and $c/d$ is
 $(a+c)/(b+d)$, and inserting it between them yields two new adjacent pairs.
+Every pair of fractions on adjacent branches of the Stern--Brocot tree satisfies
+$bc - ad = 1$; this is the Farey adjacency condition (Definition~\ref{def:farey-adjacency},
+Section~\ref{sec:background-farey}).
 The Stern--Brocot tree encodes continued-fraction expansions as paths from the root:
 a partial quotient of $k$ corresponds to $k$ steps in the same direction before
 the first reversal.
-
-\begin{definition}[Farey adjacency]
-\label{def:farey-adjacency}
-Two fractions $a/b$ and $c/d$ (in lowest terms, $a/b < c/d$) are
-\emph{Farey adjacent} if
-\[
-  bc - ad = 1.
-\]
-Equivalently, they are adjacent in some Farey sequence $F_n$, or they lie on
-adjacent branches of the Stern--Brocot tree.
-Farey adjacency is equivalent to the condition that no rational with denominator
-at most $\max(b, d)$ lies strictly between $a/b$ and $c/d$.
-\end{definition}
-
-The mediant $(a+c)/(b+d)$ of two Farey-adjacent fractions is itself Farey adjacent
-to each of them.
-This adjacency-preservation is the key structural property exploited by our algorithm.
 
 The path from the root of the Stern--Brocot tree to $\theta$ passes through the
 \emph{convergents} $p_k/q_k$ of $\theta$, defined as the fractions produced by
@@ -325,20 +363,31 @@ condition on $j$.
 
 The \emph{Farey sequence} $F_n$ is the increasing sequence of fractions in $[0,1]$
 with denominator at most $n$, arranged in order.
-Its fundamental property is that consecutive terms $a/b < c/d$ in $F_n$ satisfy
-$bc - ad = 1$ (i.e.\ they are Farey adjacent), and their mediant $(a+c)/(b+d)$
-is the fraction with smallest denominator strictly between them.
 
-For our purposes the key fact is the following: if $a/b$ and $c/d$ are Farey adjacent
-and $\theta \in (a/b, c/d)$, then every rational strictly between $a/b$ and $c/d$ with
-denominator at most $b + d$ equals their mediant $(a+c)/(b+d)$.
-This is why maintaining Farey adjacency throughout the algorithm ensures that no
-improvement step is redundant.
+\begin{definition}[Farey adjacency]
+\label{def:farey-adjacency}
+Two fractions $a/b$ and $c/d$ (in lowest terms, $a/b < c/d$) are
+\emph{Farey adjacent} if
+\[
+  bc - ad = 1.
+\]
+Equivalently, $|bc - ad| = 1$ for an unordered pair.
+Consecutive terms in any Farey sequence $F_n$ are Farey adjacent, and
+Farey-adjacent fractions lie on adjacent branches of the Stern--Brocot tree.
+Farey adjacency is equivalent to the condition that no rational with denominator
+at most $\max(b, d)$ lies strictly between $a/b$ and $c/d$.
+\end{definition}
+
+The mediant $(a+c)/(b+d)$ of two Farey-adjacent fractions is itself Farey adjacent
+to each of them; their mediant $(a+c)/(b+d)$ is also the unique fraction with
+smallest denominator strictly between them.
+This adjacency-preservation is the key structural property exploited by our algorithm.
 
 %------------------------------------------------------------
-\section{Sturmian Sequences}
+\section{Sturmian Words}
 \label{sec:background-sturmian}
 %------------------------------------------------------------
+
 
 \emph{Sturmian words} were introduced by Morse and Hedlund~\cite{morse1940} as
 the simplest aperiodic symbolic sequences.
@@ -349,6 +398,8 @@ The \emph{lower Sturmian word} with slope $\alpha$ is defined by
 \]
 Encoding $s_n = 1$ as $\OO$ and $s_n = 0$ as $\EE$, this is a binary sequence
 with $\OO$-density exactly $\alpha$.
+Since $\alpha < 1$, we have $s_0 = \lfloor\alpha\rfloor = 0$, so the Sturmian word
+always begins with $\EE$.
 
 \begin{definition}[Sturmian word]
 \label{def:sturmian}
@@ -414,15 +465,15 @@ given $\gcd(e,o) = 1$, the pair $(e,o)$ is uniquely determined by $o/(e+o)$.
 
 \begin{theorem}[Christoffel concatenation (Berstel~\cite{berstel2009}, Theorem~1.5.1)]
 \label{thm:christoffel-concat}
-Let $\mathrm{Ch}^-(e_0, o_0)$ and $\mathrm{Ch}^-(e_1, o_1)$ be two lower Christoffel
-words with $o_0/L_0 < o_1/L_1$ (where $L_k = e_k + o_k$) satisfying the Farey
-adjacency condition $o_1 L_0 - o_0 L_1 = 1$.
+Let $\mathrm{Ch}^-(e_a, o_a)$ and $\mathrm{Ch}^-(e_b, o_b)$ be two lower Christoffel
+words with $o_a/L_a < o_b/L_b$ (where $L_a = e_a + o_a$, $L_b = e_b + o_b$) satisfying the Farey
+adjacency condition $o_b L_a - o_a L_b = 1$.
 Then for any integer $w \geq 1$:
 \begin{align*}
-  \mathrm{Ch}^-(e_0, o_0)^w \cdot \mathrm{Ch}^-(e_1, o_1)
-  &\;=\; \mathrm{Ch}^-(w\,e_0 + e_1,\; w\,o_0 + o_1), \\
-  \mathrm{Ch}^-(e_0, o_0) \cdot \mathrm{Ch}^-(e_1, o_1)^w
-  &\;=\; \mathrm{Ch}^-(e_0 + w\,e_1,\; o_0 + w\,o_1).
+  \mathrm{Ch}^-(e_a, o_a)^w \cdot \mathrm{Ch}^-(e_b, o_b)
+  &\;=\; \mathrm{Ch}^-(w\,e_a + e_b,\; w\,o_a + o_b), \\
+  \mathrm{Ch}^-(e_a, o_a) \cdot \mathrm{Ch}^-(e_b, o_b)^w
+  &\;=\; \mathrm{Ch}^-(e_a + w\,e_b,\; o_a + w\,o_b).
 \end{align*}
 In the first identity the smaller-slope word is repeated; in the second the
 larger-slope word is repeated.
@@ -443,54 +494,34 @@ Section~\ref{sec:extension} handles all other real numbers by reduction to this 
 We write $\NN$ for the positive integers and $\lfloor \cdot \rfloor$, $\lceil \cdot \rceil$
 for floor and ceiling.
 
-\begin{remark}[Rational vs.\ irrational $\theta$]
-\label{rem:rationality}
-Most of the combinatorial claims in these sections --- the Christoffel word structure
-(Lemma~\ref{lem:branch-standard-pair}), the palindrome invariant
-(Theorem~\ref{prop:palindrome}), and the $\EE\EE$-prefix theorem
-(Theorem~\ref{prop:EE-prefix}) --- hold for all real $\theta > 1$, rational or not.
-The Sturmian identity (Theorem~\ref{prop:sturmian}) and the last-letter theorem
-(Theorem~\ref{thm:last-sturmian}) require $\theta$ to be irrational, since the
-Sturmian word is only well-defined for irrational slope $\alpha = 1/(1+\theta)$.
-The uniqueness of $\wplus$ (Theorem~\ref{thm:optimal-w}) also requires irrationality.
-The formula $\wplus = \lfloor -A/B \rfloor + 1$ rests on $-A/B$ being non-integer: the strict
-bracketing condition $(A+(w-1)B)(A+wB) < 0$ holds for exactly one integer $w$ iff $-A/B$
-is not an integer.
-For rational $\theta$, $-A/B$ can be an integer $\wminus$, in which case no integer
-satisfies the strict condition: weights $\wminus$ and $\wplus = \wminus + 1$ give product
-zero, and all others give a positive product.
-The mediant at weight $\wminus$ equals $\theta$ exactly.
-Step~4 of the algorithm then computes $\wplus = \wminus + 1$, producing two
-children; by the step-5 ordering, the better estimate (which is $\theta$ exactly)
-becomes $r_{2d+3}$ (the \emph{second} member of the new pair);
-$\Kval = 0$ is detected at the next pass through step~3, at which point the
-algorithm terminates.
-For rational $\theta$ the algorithm terminates in finitely many steps (at the step
-where $\Kval = 0$, i.e.\ where $r_{2d+1}$ is an exact representation of $\theta$);
-all claims except Theorem~\ref{thm:last-sturmian}, Theorem~\ref{prop:sturmian},
-Corollary~\ref{cor:mismatch}, and uniqueness in Theorem~\ref{thm:optimal-w}
-hold for every iterate up to termination.
-\end{remark}
-
-\begin{definition}[Ratio]
-\label{def:ratio}
-A \emph{ratio} is a 2-tuple $r = (e, o) \in \NN^2$ with $\gcd(e, o) = 1$,
-representing the rational number $e/o$.
-A ratio $r = (e, o)$ is a \emph{rational estimate} of $\theta$ when used in that context.
+\begin{definition}[Approximant]
+\label{def:approximant}
+An \emph{approximant} is an ordered pair $r = (e, o) \in \NN^2$ denoting
+the rational number $e/o$.  The \emph{canonical} form satisfies
+$\gcd(e, o) = 1$; this is assumed unless otherwise stated.  A non-canonical
+representation is permitted when only the value $e/o$ matters.
+An approximant $r = (e, o)$ is a \emph{rational estimate} of $\theta$ when used in that context.
 \end{definition}
 
 \begin{definition}[Mediant]
 \label{def:mediant}
-Given two ratios $r = (e, o)$ and $r' = (e', o')$ and a non-negative integer $w \geq 0$,
-the \emph{mediant} of $r$ and $r'$ with weight $w$ is the ratio
+Given two approximants $r = (e, o)$ and $r' = (e', o')$ and a non-negative integer $w \geq 0$,
+the \emph{mediant} of $r$ and $r'$ with weight $w$ is the approximant
 \[
-  \mathrm{Mediant}(r,\, r',\, w) = (e + w\,e',\; o + w\,o').
+  \mathrm{Mediant}(r,\, r',\, w) = (e + w\,e',\; o + w\,o'),
 \]
-The degenerate case $w = 0$ gives $\mathrm{Mediant}(r, r', 0) = r$.
-The Farey determinant of the pair $(r, r')$ is
+which is in canonical form whenever $r$ and $r'$ are Farey-adjacent
+(Lemma~\ref{lem:mediant-farey}(4)); in general it need not be.
+The \emph{Farey determinant} of the pair $(r, r')$ is
 \[
   \Delta(r, r') = e' o - e o'.
 \]
+The pair $(r, r')$ is \emph{Farey-adjacent} when $|\Delta(r, r')| = 1$
+(Definition~\ref{def:farey-adjacency}).
+The degenerate case $w = 0$ gives $\mathrm{Mediant}(r, r', 0) = r$.
+Throughout this paper, when $\mathrm{Mediant}(r, r', w)$ is used as a rational
+approximation of $\theta$, the convention is that $r'$ is the better estimate
+in the sense that $|\eps'| < |\eps|$, i.e.\ $|r'/\theta - 1| < |r/\theta - 1|$.
 \end{definition}
 
 \begin{definition}[Good estimate]
@@ -518,10 +549,6 @@ and they satisfy the \emph{Farey adjacency condition}
 \]
 \end{definition}
 
-The Farey adjacency condition ensures that the pair lies on adjacent branches of the
-Stern--Brocot tree (Section~\ref{sec:background-sb}) and that no rational with smaller
-denominator lies strictly between $e_l/o_l$ and $e_u/o_u$.
-
 \begin{definition}[$\lambda$ and $\varepsilon$]
 \label{def:lambda-eps}
 For an estimate $e/o$ of $\theta$, define the \emph{relative ratio}
@@ -537,6 +564,64 @@ a lower-bound good estimate satisfies $\lam \leq 1$ (so $\eps \leq 0$).
 In both cases $|\eps|$ is small when $o$ is large.
 \end{definition}
 
+\begin{definition}[Age ordering]
+\label{def:age}
+For approximants $r_i$ and $r_j$ produced by the mediant tree, define
+\[
+  \mathrm{age}(r_i, r_j) = (r_{\min(i,j)},\; r_{\max(i,j)}).
+\]
+Writing $(u, v) = \mathrm{age}(r_i, r_j)$ gives $u = r_{\min(i,j)}$ and
+$v = r_{\max(i,j)}$, so $u$ was produced no later than $v$ in the mediant tree
+($u$ is the \emph{older} estimate; siblings produced at the same step are ordered
+by subscript).
+\end{definition}
+
+\begin{definition}[Height ordering]
+\label{def:height}
+For approximants $r$ and $r'$ with $\eps \neq \eps'$, define
+\[
+  \mathrm{height}(r, r') = (r_{\mathrm{lo}},\; r_{\mathrm{hi}}),
+\]
+where $\eps_{\mathrm{lo}} < \eps_{\mathrm{hi}}$ (signed-error order).
+Writing $(u, v) = \mathrm{height}(r, r')$ gives $\eps_u < \eps_v$.
+When $r$ and $r'$ bracket $\theta$, $u$ is the \emph{underestimate}
+($u/\theta < 1$) and $v$ is the \emph{overestimate} ($v/\theta \geq 1$);
+in general only the signed-error ordering is guaranteed.
+\end{definition}
+
+\begin{definition}[Fit ordering]
+\label{def:fit}
+For a target $\theta$ and approximants $r$, $r'$ with $|\eps| \neq |\eps'|$
+(where $\eps = e/o - \theta$ evaluated at each), define
+\[
+  \mathrm{fit}(\theta,\, r,\, r') = (r_{\mathrm{worse}},\; r_{\mathrm{better}}),
+\]
+where $|\eps_{\mathrm{worse}}| > |\eps_{\mathrm{better}}|$ (absolute-error order).
+Writing $(u, v) = \mathrm{fit}(\theta, r, r')$ gives $|\eps_u| > |\eps_v|$:
+$u$ is the \emph{worse} estimate and $v$ is the \emph{better} estimate.
+\end{definition}
+
+\begin{definition}[Alpha transformation]
+\label{def:alpha-transform}
+For real or rational numbers $x, y \geq 0$, define
+\[
+  \mathrm{alpha}(x, y) = \Bigl(\frac{1}{1+y},\; \frac{1}{1+x}\Bigr).
+\]
+The key invariant is that $x \mapsto 1/(1+x)$ is strictly decreasing, so
+\[
+  \frac{1}{1+y} \leq \frac{1}{1+x} \iff x \leq y.
+\]
+Writing $(u, v) = \mathrm{alpha}(x, y)$, the pair $(u, v)$ preserves the size
+relations of $(x, y)$: $u \leq v \iff x \leq y$.
+If $x$ and $y$ are Farey-adjacent approximants then so are $u$ and $v$
+(Lemma~\ref{lem:farey-image}), with $\Delta(u, v) = \Delta(x, y)$.
+The map $\mathrm{alpha}$ corresponds to the change of variable $\theta \mapsto \alpha = 1/(1+\theta)$
+that relates the mediant algorithm for $\theta$ to the Sturmian slope $\alpha$;
+it is named \textup{alpha} (not $\alpha$) to avoid clash with that symbol.
+\end{definition}
+
+\subsection*{Index convention}
+
 Estimates are indexed so that $r_{2d}$ and $r_{2d+1}$ form the bounded pair at depth $d$,
 with $r_{2d+1}$ always the better estimate (smaller $|\eps|$).
 Their children are $r_{2d+2}$ and $r_{2d+3}$, the bounded pair at depth $d+1$.
@@ -544,10 +629,76 @@ We write $\lam_{2d}$, $\eps_{2d}$, etc.\ for the corresponding values.
 In a bounded pair we always orient so that $|\eps_{2d}| > |\eps_{2d+1}|$, i.e.\ $r_{2d+1}$
 is the better estimate of the two.
 
+\subsection*{Farey adjacency and the Stern--Brocot tree}
+
+The Farey adjacency condition in Definition~\ref{def:bounded-pair} ensures that the pair
+lies on adjacent branches of the Stern--Brocot tree (Section~\ref{sec:background-sb}) and
+that no rational with smaller denominator lies strictly between $e_l/o_l$ and $e_u/o_u$.
+In terms of $\Dval$, the condition is precisely $|\Dval| = 1$;
+the sign depends on which of $r_{2d}$, $r_{2d+1}$ is the upper bound.
+
+\subsection*{Domain restriction}
+
+The definitions in this section assume $\theta > 1$.
+Section~\ref{sec:extension} shows how to reduce all other real numbers to this case.
+
+\subsection*{Rational vs.\ irrational $\theta$}
+\label{rem:rationality}
+
+For rational $\theta$, $-A/B$ can be an integer $\wminus$; the depth is then
+\emph{exact} (Section~\ref{sec:derived-quantities}, \emph{Step types}).
+No integer satisfies the strict straddling condition: weights $\wminus$ and
+$\wplus = \wminus + 1$ give product zero, and all others give a positive product.
+The mediant at weight $\wminus$ equals $\theta$, Step~4 computes $\wplus = \wminus + 1$,
+Step~5 places $\theta$ second, and the next depth is terminal
+(Lemma~\ref{lem:exact-step}).
+Hence for rational $\theta$ the algorithm terminates after finitely many steps.
+All claims of Sections~\ref{sec:mediant}--\ref{sec:sturmian} hold at every approximation
+depth and at every depth up to termination, with the following exceptions.
+\begin{itemize}
+  \item Theorems~\ref{prop:sturmian}, \ref{thm:never-skips}, \ref{thm:semi-r0},
+        and Corollary~\ref{cor:mismatch} require $\theta$ irrational.
+  \item \emph{At the exact step.}  The hypotheses of Theorem~\ref{thm:optimal-w},
+        Corollary~\ref{cor:children-bounded-pair}, and the strict bracketing hypothesis
+        of Theorem~\ref{thm:mediant-convergence} and Corollary~\ref{cor:straddling} are
+        unmet.  The conclusions of Theorem~\ref{thm:mediant-convergence} and the second
+        inequality of Corollary~\ref{cor:straddling} still hold by direct argument; the
+        first conclusion of Corollary~\ref{cor:straddling} fails ($\epsminus\epsplus = 0$);
+        the conclusion of Corollary~\ref{cor:children-bounded-pair} holds if and only if
+        $B < 0$.
+        Theorems~\ref{thm:semi-r1} and~\ref{thm:semi-r0} are also excluded:
+        at an exact depth, $\theta = r_{2d} \oplus r_{2d+1}$
+        (Lemma~\ref{lem:exact-step}(3)), so $r_{2d+1}$ is one of the two
+        Stern--Brocot parents of $\theta$, and the convergent/semi-convergent
+        label of $r_{2d+1}$ is CF-convention-dependent;
+        Theorem~\ref{thm:semi-r0} requires irrational $\theta$.
+  \item \emph{At the terminal depth.}  $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$
+        fails ($\Kval = 0$, $|\Dval| = 1$); the pair is a bounded pair if and only if
+        $B < 0$ (with $B$ taken at the exact step); Theorem~\ref{thm:last-sturmian} applies to both $r_{2d+2}$ and $r_{2d+3} = \theta$
+        (part~(3) of that theorem covers $r = \theta$); and $r_{2d+2} = \rplus$ is a Stern--Brocot descendant of $\theta$, so
+        Theorems~\ref{thm:sb-path}, \ref{thm:never-skips}, and~\ref{thm:semi-r0}
+        are restricted to approximation depths (the latter two require irrational $\theta$
+        and so never encounter the terminal depth).
+\end{itemize}
+The pair produced at the exact step is $(r_{2d+2}, r_{2d+3}) = (\rplus, \theta)$, where
+$\rplus$ lies strictly on the side of $r_{2d+1}$, opposite to $r_{2d}$.
+If $B > 0$, both members satisfy $r \geq \theta$ and the pair is not a bounded pair.
+If $B < 0$, it is a bounded pair with $\theta$ as its upper member.
+
+%------------------------------------------------------------
+\section{Derived Quantities}
+\label{sec:derived-quantities}
+%------------------------------------------------------------
+
+The following quantities are defined in terms of the primitives of
+Section~\ref{sec:definitions} and are used throughout
+Sections~\ref{sec:mediant}--\ref{sec:sturmian}.
+
 \begin{definition}[$\Delta$ and $\Theta$]
 \label{def:delta-K}
-Given a bounded pair $(r_{2d}, r_{2d+1}) = (e_{2d}/o_{2d},\, e_{2d+1}/o_{2d+1})$ with
-$|\eps_{2d}| > |\eps_{2d+1}|$, define
+Given approximants $r_{2d} = e_{2d}/o_{2d}$ and $r_{2d+1} = e_{2d+1}/o_{2d+1}$ (in
+practice the pair held by the algorithm at depth $d$, which at every approximation depth is a
+bounded pair with $|\eps_{2d}| > |\eps_{2d+1}|$), define
 \[
   \Dval = e_{2d+1} o_{2d} - e_{2d} o_{2d+1}
 \]
@@ -557,6 +708,8 @@ and
 \]
 \end{definition}
 
+\subsection*{The invariants $\Delta$ and $\Theta$}
+
 More generally, define $\Kval(r) = o(e - \theta o)$ for any estimate $r = e/o$;
 then $\Kval := \Kval(r_{2d+1})$ for the current pair.
 Geometrically, $\Kval(r)/o = e - \theta o$ is the signed vertical distance from
@@ -564,19 +717,38 @@ the lattice point $(o, e)$ to the line $e = \theta o$, and $|\Kval(r)|$ is twice
 the area of the triangle with vertices $(0,0)$, $(o, \theta o)$, $(o, e)$.
 Equivalently, $\Kval = \theta\, o_{2d+1}^2 \eps_{2d+1}$ is the signed absolute
 error of $r_{2d+1}$ scaled by its denominator squared.
-
-The Farey adjacency condition in Definition~\ref{def:bounded-pair} requires
-$e_u \cdot o_l - e_l \cdot o_u = 1$, which is precisely $|\Dval| = 1$
-(the sign depends on which of $r_{2d}$, $r_{2d+1}$ is the upper bound).
 One checks that $|\Kval|/o_{2d+1} = |e_{2d+1} - \theta o_{2d+1}| < 1$ (the good-estimate
-condition), and that $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$ throughout
-the iteration.
+condition), and that $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$ at every non-terminal
+step (i.e.\ when $\Kval \neq 0$).
 
-\paragraph{Domain restriction.}
-The definitions in this section assume $\theta > 1$.
-Section~\ref{sec:extension} shows how to reduce all other real numbers to this case.
+\subsection*{Step types}
+\label{def:step-type}
 
-\paragraph{Bounded pairs and the mediant tree.}
+Let $(r_{2d}, r_{2d+1})$ be the pair held by the algorithm at depth $d$, and write
+$A = e_{2d} - \theta\,o_{2d}$ and $B = e_{2d+1} - \theta\,o_{2d+1}$ for the scaled
+errors of its members (the quantities of Section~\ref{sec:optimal-w}), so that
+$\Kval = o_{2d+1}B$.
+We call depth $d$
+\begin{itemize}
+  \item \emph{terminal} if $\Kval = 0$, i.e.\ $r_{2d+1} = \theta$: the algorithm halts
+        at Step~3 and produces no children;
+  \item \emph{approximation} if $\Kval \neq 0$.  An approximation depth is either
+  \begin{itemize}
+    \item \emph{rational approximation} if $-A/B \notin \mathbb{Z}$:
+          Theorem~\ref{thm:optimal-w} and
+          Corollary~\ref{cor:children-bounded-pair} apply, and $\wplus$ is the unique weight
+          whose consecutive mediants straddle $\theta$; or
+    \item \emph{exact} if $-A/B = \wminus \in \mathbb{Z}$: no integer weight straddles
+          $\theta$ strictly, the mediant at weight $\wminus$ equals $\theta$, and
+          Lemma~\ref{lem:exact-step} (Section~\ref{sec:optimal-w}) gives the full
+          description.  The exact step can occur only for rational $\theta$, and when
+          it does the next depth is terminal.
+  \end{itemize}
+\end{itemize}
+The word ``non-terminal'' is reserved for approximation depths (rational approximation or exact) as a group.
+
+\subsection*{Bounded pairs and the mediant tree}
+
 A bounded pair is a purely analytic object: any two good estimates that bracket $\theta$
 and satisfy the Farey adjacency condition qualify, regardless of how they were found.
 The mediant construction (Section~\ref{sec:mediant}) provides a canonical way to
@@ -584,8 +756,305 @@ The mediant construction (Section~\ref{sec:mediant}) provides a canonical way to
 The invariants $\Dval$ and $\Kval$ belong to the pair itself; the Christoffel word
 structure (Section~\ref{sec:background-deluca}) is a property of how the pair was reached via
 the mediant tree.
-In particular, $\Dval = \pm 1$ and $\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$
-hold for any bounded pair.
+In particular, $\Dval = \pm 1$ holds for any bounded pair;
+$\operatorname{sgn}(\Kval) = \operatorname{sgn}(\Dval)$ holds when $\Kval \neq 0$
+(i.e.\ at non-terminal steps).
+
+%------------------------------------------------------------
+\section{The Optimal Weight Formula}
+\label{sec:optimal-w}
+%------------------------------------------------------------
+
+A key question is: for which integer $w \geq 1$ do the two consecutive weighted mediants
+\[
+  \rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1), \qquad \rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)
+\]
+straddle $\theta$, i.e.\ satisfy the bracketing condition $(\lamminus - 1)(\lamplus - 1) < 0$?
+
+Writing $A = e_{2d} - \theta\,o_{2d}$ and $B = e_{2d+1} - \theta\,o_{2d+1}$ for the scaled
+errors, the bracketing condition becomes $(A + (w-1)B)(A + wB) < 0$.
+Observe that $A + (w-1)B$ and $A + wB$ are consecutive evaluations of the linear
+function $f(w) = A + wB$ at $w-1$ and $w$: their product is negative iff $f$ changes
+sign between $w-1$ and $w$, i.e.\ iff the zero $-A/B$ of $f$ lies in the interval
+$(w-1, w)$.
+Assuming $-A/B \notin \mathbb{Z}$ (the hypothesis of Theorem~\ref{thm:optimal-w}),
+this is equivalent to $w = \lfloor -A/B \rfloor + 1$, and exactly one such $w$ exists.
+(Note: $B = e_{2d+1} - \theta\,o_{2d+1} = \Theta/o_{2d+1}$, so $B \neq 0$ iff
+$\Theta \neq 0$; the theorem is only invoked at non-terminal steps where $\Theta \neq 0$,
+ensuring $-A/B$ is well-defined.)
+The unique integer satisfying this bracketing condition is given by the following
+closed-form expression.
+
+\begin{theorem}[Optimal weight]
+\label{thm:optimal-w}
+Let $(r_{2d}, r_{2d+1})$ be a bounded pair bracketing $\theta$ with $-A/B \notin \mathbb{Z}$
+(in particular when $\theta$ is irrational), where
+\[
+  A = e_{2d} - \theta\,o_{2d}, \qquad B = e_{2d+1} - \theta\,o_{2d+1},
+\]
+and set $\Dval = e_{2d+1}o_{2d} - e_{2d} o_{2d+1}$, $\Kval = o_{2d+1} B$.
+Then the unique integer $w \geq 1$ for which $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1)$
+and $\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ satisfy the bracketing condition
+$(\lamminus - 1)(\lamplus - 1) < 0$ is
+\[
+  \wplus = \left\lfloor \frac{-A}{B} \right\rfloor + 1
+      = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}} \right\rfloor + 1.
+\]
+\end{theorem}
+
+\begin{proof}
+We prove the closed-form formula $\wplus = \lfloor -A/B \rfloor + 1$ directly from
+the bracketing condition, using only a linear sign argument.
+
+Since $r_{2d}$ and $r_{2d+1}$ are on opposite sides of $\theta$ (so $A, B \neq 0$
+--- both are non-terminal estimates) we have $\operatorname{sgn}(A) = -\operatorname{sgn}(B)$,
+so $A/B < 0$ and $c := -A/B > 0$.
+The two weighted mediants are
+\[
+  \rminus = \frac{e_{2d} + (w-1)\,e_{2d+1}}{o_{2d} + (w-1)\,o_{2d+1}}, \qquad
+  \rplus = \frac{e_{2d} + w\,e_{2d+1}}{o_{2d} + w\,o_{2d+1}},
+\]
+with signed errors (numerators of $\epsminus$, $\epsplus$ up to positive denominators)
+\[
+  A + (w-1)B \qquad \text{and} \qquad A + wB.
+\]
+
+\paragraph{Bracketing condition.}
+
+The pair $(\rminus, \rplus)$ brackets $\theta$ iff $\epsminus$ and $\epsplus$ have opposite signs,
+i.e.\ $(A + (w-1)B)(A + wB) < 0$.
+Writing $c = -A/B$, this product equals $B^2\,(w - 1 - c)(w - c)$, which is negative
+iff $w - 1 - c$ and $w - c$ have opposite signs, i.e.\
+\[
+  w - 1 < c < w,
+\]
+and since $c = -A/B \notin \mathbb{Z}$ by hypothesis,
+this is equivalent to $w - 1 = \lfloor c \rfloor$, i.e.\ $w = \lfloor c \rfloor + 1$.
+The hypothesis ensures exactly one integer $w$ satisfies the condition, namely
+\[
+  \wplus = \lfloor -A/B \rfloor + 1.
+\]
+We also write $\wminus = \wplus - 1 = \lfloor -A/B \rfloor$ for the companion weight.
+
+\paragraph{Expression in terms of $\Dval$ and $\Kval$.}
+
+Recall $\Kval = o_{2d+1}B$ and $A\,o_{2d+1} - B\,o_{2d} = -\Dval$, giving
+$A = (Bo_{2d} - \Dval)/o_{2d+1}$, so
+\[
+  \frac{-A}{B} = \frac{\Dval}{o_{2d+1}B} - \frac{o_{2d}}{o_{2d+1}}
+               = \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}},
+\]
+and therefore
+\[
+  \wplus = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}} \right\rfloor + 1,
+\]
+completing the proof.
+
+\paragraph{Termination.}
+When $\Kval = 0$, $r_{2d+1}$ is an exact rational representation of $\theta$;
+no further improvement is possible and the algorithm terminates.
+\end{proof}
+
+When $\Kval = 0$, $r_{2d+1}$ is an exact rational representation of $\theta$
+and no further improvement is possible; the algorithm terminates.
+
+\begin{corollary}[Children at $\wplus$ form a bounded pair]
+\label{cor:children-bounded-pair}
+Under the conditions of Theorem~\ref{thm:optimal-w}, the two children
+$\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ and
+$\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ form a bounded pair.
+\end{corollary}
+
+\begin{proof}
+Farey adjacency $|\eplus\odenm - \eminus\odenp| = 1$ follows from
+Lemma~\ref{lem:mediant-farey}(3), since $\rminus = M_{\wminus}$ and $\rplus = M_{\wplus}$
+are consecutive mediants ($\wplus = \wminus + 1$).
+It remains to show both children are good estimates.
+Using $f(w) = A + wB$ from the Section~\ref{sec:optimal-w} preamble, for each
+$w^\dagger \in \{\wminus, \wplus\}$ set $r^\dagger = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^\dagger)$
+with components $(e^\dagger, o^\dagger)$; then $f(w^\dagger) = e^\dagger - \theta\, o^\dagger$
+(the scaled error of $r^\dagger$).
+The bracketing condition $f(\wminus)\,f(\wplus) < 0$ means the two values have opposite signs,
+so
+\[
+  |f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm
+  = |f(\wminus)\,\odenp - f(\wplus)\,\odenm|
+  = |\eminus\,\odenp - \eplus\,\odenm|
+  = |\Dval| = 1.
+\]
+Both terms on the left are in fact positive: the bracketing condition
+$f(\wminus)\,f(\wplus) < 0$ implies $f(\wminus) \neq 0$ and $f(\wplus) \neq 0$,
+so $|f(\wminus)|$ and $|f(\wplus)|$ are both nonzero; and $\odenm, \odenp \geq 1$.
+Since two positive terms sum to $1$, each is strictly less than $1$,
+i.e.\ $|\eminus - \theta \odenm| < 1$ and $|\eplus - \theta \odenp| < 1$,
+confirming both children are good estimates.
+Moreover, $\gcd(\eplus, \odenp) = \gcd(\eminus, \odenm) = 1$
+(Lemma~\ref{lem:mediant-farey}(4)), so the children are approximants in canonical form.
+\end{proof}
+
+\begin{lemma}[Tree approximants are good estimates]
+\label{lem:tree-good-estimate}
+Every approximant produced by the mediant tree is a good estimate of $\theta$.
+\end{lemma}
+
+\begin{proof}
+By induction on depth.  The inductive hypothesis is: the pair at depth $d$ is
+a bounded pair of good estimates (valid for all depths at which the algorithm
+steps, i.e.\ while $\Kval \neq 0$).  The seed pair $(r_0, r_1)$ satisfies this by
+assumption.
+
+At each subsequent step, let $(r_{2d}, r_{2d+1})$ be the depth-$d$ bounded pair.
+Two cases arise.
+
+\emph{Case 1: $-A/B \notin \mathbb{Z}$.}  The bracketing condition
+$f(\wminus)\,f(\wplus) < 0$ implies both $f$-values are nonzero.
+The proof of Corollary~\ref{cor:children-bounded-pair} gives
+$|f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm = 1$, with both terms positive and
+$\odenm, \odenp \geq 1$, so each term is strictly less than~$1$.
+Hence $|\eminus - \theta\,\odenm| < 1$ and $|\eplus - \theta\,\odenp| < 1$:
+both children are good estimates.  By Corollary~\ref{cor:children-bounded-pair},
+they form a bounded pair.
+
+\emph{Case 2: $-A/B = \wminus \in \mathbb{Z}$.}
+Then $f(\wminus) = 0$, so $r^- = \theta$ exactly, which is trivially a good estimate.
+For the other child, $f(\wplus) = f(\wminus) + B = B$, and $|B| < 1$ because
+$r_{2d+1}$ is a good estimate (inductive hypothesis).
+Thus $|\eplus - \theta\,\odenp| = |B| < 1$, so $r^+$ is also a good estimate.
+(In this case the next depth is terminal; see Lemma~\ref{lem:exact-step}.)
+\end{proof}
+
+\begin{lemma}[The exact step]
+\label{lem:exact-step}
+Let depth $d$ be exact (\emph{Step types}, Section~\ref{sec:derived-quantities}):
+$(r_{2d}, r_{2d+1})$ is a bounded pair with $|\eps_{2d}| > |\eps_{2d+1}|$,
+$\Kval \neq 0$, and $-A/B = \wminus \in \mathbb{Z}$.
+Let $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ and
+$\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ with $\wplus = \wminus + 1$.
+Then:
+\begin{enumerate}
+  \item $\wminus \geq 1$, and Step~4 computes
+        $\lfloor \Dval/\Kval - o_{2d}/o_{2d+1} \rfloor + 1 = \wminus + 1 = \wplus$;
+        in particular $\wplus \geq 2$.
+  \item No integer $w$ satisfies $f(w-1)\,f(w) < 0$.
+  \item $\rminus = \theta$ exactly and $f(\wplus) = \eplus - \theta\,\odenp = B$;
+        moreover $\odenm B = \Dval$, so $|B| = 1/\odenm$ and
+        $\operatorname{sgn} B = \operatorname{sgn} \Dval$.
+  \item $\rplus$ lies strictly on the same side of $\theta$ as $r_{2d+1}$, i.e.\
+        strictly on the opposite side from $r_{2d}$.
+  \item $\epsminus = 0$, so $\epsminus\epsplus = 0$; $\epsplus \neq 0$ has the sign
+        of $\eps_{2d+1}$, and $|\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|$.
+  \item Both children are good estimates, $\eplus\odenm - \eminus\odenp = \Dval$, and
+        Step~5 assigns $r_{2d+3} = \rminus = \theta$ and $r_{2d+2} = \rplus$.
+  \item $(r_{2d+2}, r_{2d+3}) = (\rplus, \theta)$ is a bounded pair (lower member $\rplus$,
+        upper member $\theta$) if and only if $B < 0$.
+        If $B > 0$ both members are $\geq \theta$ and the pair is not a bounded pair in
+        either orientation.
+  \item Depth $d+1$ is terminal: $\Kval(r_{2d+3}) = 0$, while
+        $\Dval(r_{2d+2}, r_{2d+3}) = e_{2d+3}o_{2d+2} - e_{2d+2}o_{2d+3} = -\Dval = \mp 1$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+Since $(r_{2d}, r_{2d+1})$ is a bounded pair with $\Kval \neq 0$, and
+$r_{2d} \neq \theta$ (because $|\eps_{2d}| > |\eps_{2d+1}| \geq 0$), $A$ and $B$
+are nonzero with opposite signs; hence $\wminus = -A/B > 0$, i.e.\ $\wminus \geq 1$.
+(1)~$\Dval = Bo_{2d} - Ao_{2d+1}$, so
+$\Dval/\Kval - o_{2d}/o_{2d+1} = -A/B = \wminus$.
+(2)~With $A = -\wminus B$, $f(w-1)f(w) = B^2(w-1-\wminus)(w-\wminus) \geq 0$, a
+product of two consecutive integers times $B^2$.
+(3)~$f(\wminus) = 0$ gives $\eminus = \theta\,\odenm$, and $f(\wplus) = f(\wminus) + B = B$.
+Lemma~\ref{lem:mediant-farey}(3) gives $\eplus\odenm - \eminus\odenp = \Dval$;
+substituting $\eminus = \theta\odenm$ yields $\odenm(\eplus - \theta\odenp) = \Dval$.
+(4)~$f(\wplus) = B$ has the sign of $B$, which is opposite to that of $A$.
+(5)~$\epsminus = f(\wminus)/(\theta\odenm) = 0$, $\epsplus = B/(\theta\odenp)$ and
+$\eps_{2d+1} = B/(\theta\,o_{2d+1})$ with $\odenp > o_{2d+1}$.
+(6)~$\rminus = \theta$ is trivially a good estimate, and $|\eplus - \theta\odenp| = |B| < 1$
+because $r_{2d+1}$ is a good estimate; the Farey identity is Lemma~\ref{lem:mediant-farey}(3),
+and the assignment follows from $|\epsminus| = 0 < |\epsplus|$.
+(7)~If $B < 0$ then $\rplus < \theta = \rminus$, $\eplus = \lfloor\odenp\theta\rfloor$,
+$\eminus = \lceil\odenm\theta\rceil$, and by~(3) $\Dval = \odenm B < 0$, so $\Dval = -1$
+and $\eminus\odenp - \eplus\odenm = -\Dval = 1$.
+If $B > 0$ then $\rplus > \theta = \rminus$.
+(8)~$\Kval(r_{2d+3}) = \odenm(\eminus - \theta\odenm) = 0$, and the determinant is
+that of~(6) with the order reversed.
+\end{proof}
+
+\noindent
+For example, $\theta = 5/3$ with $(r_0, r_1) = (1/1, 2/1)$ has $B = 1/3 > 0$,
+$\wminus = 2$ and terminal pair $(7/4,\, 5/3)$, which is not a bounded pair;
+$\theta = 4/3$ with $(r_0, r_1) = (2/1, 1/1)$ has $B = -1/3 < 0$, $\wminus = 2$
+and terminal pair $(5/4,\, 4/3)$, which is a bounded pair.
+
+\subsection*{The continuous optimum and the discrete formula coincide}
+
+To see why $\wplus$ is the natural choice, consider treating $w$ as a real variable
+and finding the stationary point of the error product $f(w-1)\,f(w)$, where
+$f(w) = A + wB$.
+Differentiating with respect to $w$ and setting the derivative to zero:
+\[
+  \frac{d}{dw}\bigl[f(w-1)\,f(w)\bigr]
+  = B\bigl[(A + wB) + (A + (w-1)B)\bigr] = 0.
+\]
+Solving gives the unique real critical point
+\[
+  w^* = \tfrac{1}{2} - \frac{A}{B} = c + \tfrac{1}{2},
+\]
+where $c = -A/B > 0$.
+The product $f(w-1)\,f(w)$ has roots at $w = c$ (where $f(w)=0$) and $w = c+1$
+(where $f(w-1)=0$), and $w^* = c + \tfrac{1}{2}$ is their midpoint — the unique
+real maximum of $|f(w-1)\,f(w)|$ between the roots.
+The unique integer $w$ for which $f(w-1)$ and $f(w)$ have opposite signs
+satisfies $c < w < c+1$, i.e.\ $w = \lfloor c \rfloor + 1 = \wplus$.
+Since $w^* = c + \tfrac{1}{2}$ also lies in $(c,\, c+1)$, and $\wplus$ is the unique integer
+in that interval, $\wplus$ is the nearest integer to $w^*$: both the continuous stationary
+point and the sign-change bracket single out the same $\wplus$.
+
+\begin{remark}
+This analysis applies at rational approximation steps, where $c = -A/B \notin \mathbb{Z}$ so the
+interval $(c,\, c+1)$ contains exactly one integer.
+At the exact step $c \in \mathbb{Z}$ and the open interval $(c,\, c+1)$ contains no
+integer; instead $w^- = c$ and $w^+ = c+1$ are the two bracket endpoints, and both
+children are good estimates (Lemma~\ref{lem:exact-step}(1,2)).
+\end{remark}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{fig-optimal-weight}
+\caption{The product $p(w) = f(w-1)\,f(w)$ for two pairs from the mediant tree for
+$\theta = \log_2 3$, illustrating the optimal integer weight $\wplus$.
+\emph{Left:} pair $(3/2,\, 8/5)$ with $\Delta = +1$, $c \approx 2.260$, and $\wplus = 3$.
+\emph{Right:} pair $(65/41,\, 84/53)$ with $\Delta = -1$, $c \approx 5.490$, and $\wplus = 6$.
+In each case the roots of $p$ are at $c$ (where $f(w)=0$, green dashed) and $c+1$
+(where $f(w-1)=0$, green dotted); the continuous stationary point $w^* = c + \tfrac{1}{2}$ (red)
+is their midpoint; the unique integer in the shaded interval $(c,\,c+1)$ is $\wplus$ (black);
+and its companion $\wminus = \wplus - 1$ (grey dashed) lies just outside the interval on the left.
+Together $\wminus$ and $\wplus$ are the two weights whose mediants bracket $\theta$.
+The two panels illustrate both signs of $\Delta$.}
+\label{fig:optimal-weight}
+\end{figure}
+
+\paragraph{Algorithm.}
+The iteration proceeds as follows.
+\begin{enumerate}
+  \item Set $d = 0$ and $(r_0, r_1) = \mathrm{fit}(\theta,\, \lfloor\theta\rfloor/1,\, \lceil\theta\rceil/1)$.
+  \item Compute $\Dval$ and $\Kval$ for the current pair $(r_{2d}, r_{2d+1})$.
+  \item If $\Kval = 0$, terminate.
+  \item Compute $\wplus = \lfloor \Dval/\Kval - o_{2d}/o_{2d+1} \rfloor + 1$ and set $\wminus = \wplus - 1$.
+  \item Set
+    \[
+      r^- = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus), \qquad
+      r^+ = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus).
+    \]
+    Increment $d$ and set $(r_{2d}, r_{2d+1}) = \mathrm{fit}(\theta,\, r^-,\, r^+)$.
+    Repeat from step~2.
+\end{enumerate}
+When $w^+ \geq 2$, the denominator of each new mediant strictly exceeds both
+parent denominators.
+When $w^+ = 1$ only one new fraction $r^+$ is produced (the older sibling
+$r^-$ coincides with $r_{2d}$, so the generation is gender-preserving),
+but $r^+$ has strictly larger denominator.
+In either case the denominators of the better estimates grow without bound and
+the iteration converges to $\theta$ (Corollary~\ref{cor:convergence}).
 
 %------------------------------------------------------------
 \section{The Mediant Construction}
@@ -596,28 +1065,67 @@ The classical \emph{mediant} of two fractions $e_{2d}/o_{2d}$ and $e_{2d+1}/o_{2
 $(e_{2d} + e_{2d+1})/(o_{2d} + o_{2d+1})$.
 We generalise this to a weighted family parametrised by a non-negative integer $w$.
 
+\begin{lemma}[Farey-adjacency of mediants]
+\label{lem:mediant-farey}
+Let $(r, r')$ be a Farey-adjacent pair and $w \geq 0$.  Write
+$M_w = \mathrm{Mediant}(r, r', w)$.  Then:
+\begin{enumerate}
+\item $\Delta(M_w, r') = \Delta(r, r')$,
+      so $M_w$ is Farey-adjacent to $r'$ for all $w \geq 0$.
+\item $\Delta(r, M_w) = w \cdot \Delta(r, r')$,
+      so $M_w$ is Farey-adjacent to $r$ if and only if $w = 1$.
+\item $\Delta(M_{w-1}, M_w) = \Delta(r, r')$ for all $w \geq 1$,
+      so consecutive mediants $M_{w-1}$ and $M_w$ are Farey-adjacent.
+\item $M_w$ is in lowest terms, i.e.\ $\gcd(e + we', o + wo') = 1$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Write $M_w = (e + we', o + wo')$.
+For~(1): $\Delta(M_w, r') = e'(o + wo') - (e + we')o' = e'o - eo' = \Delta(r, r')$,
+so $|\Delta(M_w, r')| = 1$.
+For~(2): $\Delta(r, M_w) = (e + we')o - e(o + wo') = w(e'o - eo') = w \cdot \Delta(r, r')$.
+For~(3): $\Delta(M_{w-1}, M_w) = (e+we')(o+(w-1)o') - (e+(w-1)e')(o+wo')
+= e'o - eo' = \Delta(r,r')$, so $|\Delta(M_{w-1},M_w)| = 1$.
+For~(4): any common divisor $g$ of $e + we'$ and $o + wo'$ also divides
+$e'(o+wo') - o'(e+we') = e'o - eo' = \Delta(r,r')$, which has absolute value~$1$,
+so $g = 1$.
+\end{proof}
+
+\begin{lemma}[Farey adjacency under $x \mapsto 1/(1+x)$]
+\label{lem:farey-image}
+If $r = (e, o)$ and $r' = (e', o')$ are Farey-adjacent approximants, then
+$\hat{\alpha} = (o, e+o)$ and $\hat{\alpha}' = (o', e'+o')$
+(i.e.\ $1/(1+r) = o/(e+o)$ and $1/(1+r') = o'/(e'+o')$)
+are also Farey-adjacent.
+\end{lemma}
+\begin{proof}
+$\Delta(\hat{\alpha}, \hat{\alpha}') = o'(e+o) - o(e'+o') = o'e - oe' = -\Delta(r, r')$,
+so $|\Delta(\hat{\alpha}, \hat{\alpha}')| = |\Delta(r, r')| = 1$.
+\end{proof}
+
 \begin{theorem}[Mediant convergence]
 \label{thm:mediant-convergence}
 Let $(r_{2d}, r_{2d+1})$ be a bounded pair for $\theta$ with
-$|\eps_{2d}| > |\eps_{2d+1}|$, and let $w \geq 0$ be a non-negative integer such that
+$|\eps_{2d}| > |\eps_{2d+1}|$, and let $w \geq 1$ be a positive integer such that
 \[
   \bigl(\mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1),\;
          \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)\bigr)
 \]
-brackets $\theta$ (interpreting $\mathrm{Mediant}(r_{2d}, r_{2d+1}, -1) = r_{2d}$
-when $w = 0$, so that $r^- = r_{2d}$ is the parent itself).
+strictly brackets $\theta$ (i.e.\ $\eps^-\,\eps^+ < 0$, where
+$\eps^\pm = e^\pm - \theta\, o^\pm$ are the signed errors of the two candidates).
 Write $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1)$ and
 $\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ for these two candidates.
 Then
 \[
   |\epsminus| \leq |\eps_{2d}| \qquad \text{and} \qquad |\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|.
 \]
-(When $w = 0$, $\rminus = r_{2d}$ and $|\epsminus| = |\eps_{2d}|$; the bounds hold trivially.
-When $w = 1$, $\rminus = r_{2d}$ exactly so $|\epsminus| = |\eps_{2d}|$; otherwise
-$|\epsminus| < |\eps_{2d}|$.)
-Moreover $|\eplus\,\odenm - \eminus\,\odenp| = 1$, so $(\rminus, \rplus)$ is Farey-adjacent.
-The two mediants are assigned as $r_{2d+2}$ and $r_{2d+3}$, where $r_{2d+3}$ is
-whichever has the smaller $|\eps|$ (the better estimate), and $r_{2d+2}$ takes the other.
+(When $w = 1$, $\rminus = r_{2d}$ exactly so $|\epsminus| = |\eps_{2d}|$; when $w \geq 2$,
+$|\epsminus| < |\eps_{2d}|$ strictly.)
+Moreover $|\eplus\,\odenm - \eminus\,\odenp| = 1$ (Lemma~\ref{lem:mediant-farey}(3), since $\rminus = M_{w-1}$ and $\rplus = M_w$), so $(\rminus, \rplus)$ is Farey-adjacent.
+The two mediants are assigned by
+$(r_{2d+2}, r_{2d+3}) = \mathrm{fit}(\theta, \rminus, \rplus)$
+(Definition~\ref{def:fit}): $r_{2d+3}$ is the better estimate (smaller $|\eps|$)
+and $r_{2d+2}$ is the worse.
 Since $\rplus$ always satisfies $|\epsplus| < |\eps_{2d+1}|$, we have
 $|\eps_{2d+3}| < |\eps_{2d+1}|$ regardless of which candidate is assigned to $r_{2d+3}$.
 \end{theorem}
@@ -631,7 +1139,7 @@ The ratio $\lamminus$ is a weighted combination of $\lam_{2d}$ and $\lam_{2d+1}$
 \]
 When $w = 1$ this gives $\lamminus = \lam_{2d}$ exactly, so $|\epsminus| = |\eps_{2d}|$.
 When $w \geq 2$, $\rminus$ lies strictly between $r_{2d}$ and $r_{2d+1}$.
-Write $f(t) = A + tB$ where $A = e_{2d} - \theta o_{2d}$ and $B = e_{2d+1} - \theta o_{2d+1}$
+Write $f(w) = A + wB$ where $A = e_{2d} - \theta o_{2d}$ and $B = e_{2d+1} - \theta o_{2d+1}$
 are the scaled errors of $r_{2d}$ and $r_{2d+1}$; then $f(w) = \eplus - \theta\,\odenp$.
 From the bracketing hypothesis $f(w-1)f(w) < 0$ it follows that $B \neq 0$
 (otherwise $f$ would be constant and could not change sign), and that the zero
@@ -640,7 +1148,9 @@ Thus $f(w-1)$ has the sign of $A$ (the side of $r_{2d}$) and $f(w)$ has the sign
 (the side of $r_{2d+1}$).
 Since the bracketing condition places $\rminus$ on the same side of $\theta$ as $r_{2d}$,
 the ratio $\rminus/\theta$ lies between $r_{2d}/\theta$ and $1$,
-so $|\lamminus - 1| < |\lam_{2d} - 1|$, i.e.\ $|\epsminus| < |\eps_{2d}|$.
+so $|\lamminus - 1| < |\lam_{2d} - 1|$, i.e.\ $|\epsminus| < |\eps_{2d}|$
+(this strict inequality holds for $w \ge 2$; for $w = 1$, $\rminus = r_{2d}$ and equality holds,
+as noted in the statement).
 For $\rplus$ (weight $w \geq 1$), the bracketing condition places $\rplus$ on the same side
 of $\theta$ as $r_{2d+1}$, so $\rplus/\theta$ lies between $r_{2d+1}/\theta$ and $1$,
 giving $|\lamplus - 1| < |\lam_{2d+1} - 1|$, i.e.\ $|\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|$.
@@ -673,136 +1183,16 @@ For the second: $|\epsminus| \leq |\eps_{2d}|$ and $|\epsplus| < |\eps_{2d+1}|$
 $|\epsminus||\epsplus| \leq |\eps_{2d}||\epsplus| < |\eps_{2d}|\,|\eps_{2d+1}|$.
 \end{proof}
 
-%------------------------------------------------------------
-\section{The Optimal Weight Formula}
-\label{sec:optimal-w}
-%------------------------------------------------------------
-
-A key question is: for which integer $w \geq 1$ do the two consecutive weighted mediants
-\[
-  \rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1), \qquad \rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)
-\]
-straddle $\theta$, i.e.\ satisfy the bracketing condition $(\lamminus - 1)(\lamplus - 1) < 0$?
-
-Writing $A = e_{2d} - \theta\,o_{2d}$ and $B = e_{2d+1} - \theta\,o_{2d+1}$ for the scaled
-errors, the bracketing condition becomes $(A + (w-1)B)(A + wB) < 0$.
-Observe that $A + (w-1)B$ and $A + wB$ are consecutive evaluations of the linear
-function $f(w) = A + wB$ at $w-1$ and $w$: their product is negative iff $f$ changes
-sign between $w-1$ and $w$, i.e.\ iff the zero $-A/B$ of $f$ lies in the interval
-$(w-1, w)$, i.e.\ iff $w = \lfloor -A/B \rfloor + 1$.
-Since $\theta$ is irrational, $-A/B$ is never an integer, so exactly one such $w$
-exists.
-The unique integer satisfying this bracketing condition is given by the following
-closed-form expression.
-
-\begin{theorem}[Optimal weight]
-\label{thm:optimal-w}
-Let $(r_{2d}, r_{2d+1})$ be a bounded pair bracketing $\theta$, with
-\[
-  A = e_{2d} - \theta\,o_{2d}, \qquad B = e_{2d+1} - \theta\,o_{2d+1},
-\]
-and set $\Dval = e_{2d+1}o_{2d} - e_{2d} o_{2d+1}$, $\Kval = o_{2d+1} B$.
-Then the unique integer $w \geq 1$ for which $\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w-1)$
-and $\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ satisfy the bracketing condition
-$(\lamminus - 1)(\lamplus - 1) < 0$ is
-\[
-  \wplus = \left\lfloor \frac{-A}{B} \right\rfloor + 1
-      = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}} \right\rfloor + 1.
-\]
-A derivation is given in Appendix~\ref{app:optimal-w}.
-\end{theorem}
-
-When $\Kval = 0$, $r_{2d+1}$ is an exact rational representation of $\theta$
-and no further improvement is possible; the algorithm terminates.
-
-\begin{corollary}[Children at $\wplus$ form a bounded pair]
-\label{cor:children-bounded-pair}
-Under the conditions of Theorem~\ref{thm:optimal-w}, the two children
-$\rminus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ and
-$\rplus = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ form a bounded pair.
-\end{corollary}
-
-\begin{proof}
-Farey adjacency $|\eplus\odenm - \eminus\odenp| = 1$ follows from
-Theorem~\ref{thm:mediant-convergence}.
-It remains to show both children are good estimates.
-Write $f(w) = A + wB$ so that $f(w) = e_w - \theta o_w$ (the scaled error of $r_w$).
-The bracketing condition $f(\wminus)\,f(\wplus) < 0$ means the two values have opposite signs,
-so
-\[
-  |f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm
-  = |f(\wminus)\,\odenp - f(\wplus)\,\odenm|
-  = |\eminus\,\odenp - \eplus\,\odenm|
-  = |\Dval| = 1.
-\]
-Both terms on the left are in fact positive: since $\theta$ is irrational
-(Remark~\ref{rem:rationality}), $f(w) \neq 0$ for all integers $w$, so $|f(\wminus)|$
-and $|f(\wplus)|$ are both nonzero; and $\odenm, \odenp \geq 1$.
-Since two positive terms sum to $1$, each is strictly less than $1$,
-i.e.\ $|\eminus - \theta \odenm| < 1$ and $|\eplus - \theta \odenp| < 1$,
-confirming both children are good estimates.
-Moreover, $|\Dval| = 1$ directly gives $\gcd(\eplus, \odenp) = \gcd(\eminus, \odenm) = 1$,
-so the children are ratios in lowest terms.
-\end{proof}
-
-\subsection*{The continuous optimum and the discrete formula coincide}
-
-To see why $\wplus$ is the natural choice, consider treating $w$ as a real variable
-and finding the stationary point of the error product $f(w-1)\,f(w)$, where
-$f(w) = A + wB$.
-Differentiating with respect to $w$ and setting the derivative to zero:
-\[
-  \frac{d}{dw}\bigl[f(w-1)\,f(w)\bigr]
-  = B\bigl[(A + wB) + (A + (w-1)B)\bigr] = 0.
-\]
-Solving gives the unique real critical point
-\[
-  w^* = \tfrac{1}{2} - \frac{A}{B} = c + \tfrac{1}{2},
-\]
-where $c = -A/B > 0$.
-The product $f(w-1)\,f(w)$ has roots at $w = c$ (where $f(w)=0$) and $w = c+1$
-(where $f(w-1)=0$), and $w^* = c + \tfrac{1}{2}$ is their midpoint — the unique
-real maximum of $|f(w-1)\,f(w)|$ between the roots.
-The unique integer $w$ for which $f(w-1)$ and $f(w)$ have opposite signs
-satisfies $c < w < c+1$, i.e.\ $w = \lfloor c \rfloor + 1 = \wplus$.
-Since $w^* = c + \tfrac{1}{2}$ also lies in $(c,\, c+1)$, and $\wplus$ is the unique integer
-in that interval, $\wplus$ is the nearest integer to $w^*$: both the continuous stationary
-point and the sign-change bracket single out the same $\wplus$.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.95\textwidth]{fig-optimal-weight}
-\caption{The product $p(w) = f(w-1)\,f(w)$ for two pairs from the mediant tree for
-$\theta = \log_2 3$, illustrating the optimal integer weight $\wplus$.
-\emph{Left:} pair $(3/2,\, 8/5)$ with $\Delta = +1$, $c \approx 2.260$, and $\wplus = 3$.
-\emph{Right:} pair $(65/41,\, 84/53)$ with $\Delta = -1$, $c \approx 5.490$, and $\wplus = 6$.
-In each case the roots of $p$ are at $c$ (where $f(w)=0$, green dashed) and $c+1$
-(where $f(w-1)=0$, green dotted); the continuous stationary point $w^* = c + \tfrac{1}{2}$ (red)
-is their midpoint; the unique integer in the shaded interval $(c,\,c+1)$ is $\wplus$ (black);
-and its companion $\wminus = \wplus - 1$ (grey dashed) lies just outside the interval on the left.
-Together $\wminus$ and $\wplus$ are the two weights whose mediants bracket $\theta$.
-The two panels illustrate both signs of $\Delta$.}
-\label{fig:optimal-weight}
-\end{figure}
-
-\paragraph{Algorithm.}
-The iteration proceeds as follows.
-\begin{enumerate}
-  \item Start with an initial bounded pair $(r_0, r_1)$ for $\theta$.
-  \item Compute $\Dval$ and $\Kval$.
-  \item If $\Kval = 0$, terminate.
-  \item Compute $\wplus = \lfloor \Dval/\Kval - o_{2d}/o_{2d+1} \rfloor + 1$ and set $\wminus = \wplus - 1$.
-  \item Form the two mediants $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ and
-    $\mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$, order them so that $r_{2d+3}$
-    is the better estimate (smaller $|\varepsilon|$) and $r_{2d+2}$ the worse,
-    and repeat from step~2.
-\end{enumerate}
-When $w^+ \geq 2$, the denominator of each new mediant strictly exceeds both
-parent denominators.
-When $w^+ = 1$ only one new fraction $r^+$ is produced (the non-crossing
-``child'' $r^-$ coincides with $r_{2d}$), but $r^+$ has strictly larger denominator.
-In either case the denominators of the better estimates grow without bound and
-the iteration converges to $\theta$ (Corollary~\ref{cor:convergence}).
+\begin{remark}[The exact step]
+At the exact step (rational $\theta$, $-A/B = \wminus \in \mathbb{Z}$) the strict
+bracketing hypothesis of Theorem~\ref{thm:mediant-convergence} fails, because
+$f(\wminus) = 0$.  All conclusions of the theorem nevertheless hold: $|\epsminus| = 0 <
+|\eps_{2d}|$, $|\epsplus| < |\eps_{2d+1}| < |\eps_{2d}|$, $(\rminus, \rplus)$ is
+Farey-adjacent, and $|\eps_{2d+3}| = 0 < |\eps_{2d+1}|$
+(Lemma~\ref{lem:exact-step}).
+In Corollary~\ref{cor:straddling} the second inequality holds (its left side is~$0$),
+but the first fails: $\epsminus\epsplus = 0$.
+\end{remark}
 
 %------------------------------------------------------------
 \section{Mediant Words and the Mediant Tree}
@@ -837,8 +1227,13 @@ and $\lceil\theta\rceil/1$, ordered as $(r_0, r_1)$ so that $r_1$ is the better 
 (i.e.\ $|\eps_{r_1}| < |\eps_{r_0}|$).
 Their mediant words are $\EE^{\lfloor\theta\rfloor}\OO$ and $\EE^{\lceil\theta\rceil}\OO$
 respectively.
-Since $\theta$ is irrational, $\lceil\theta\rceil = \lfloor\theta\rfloor + 1$, so
-$\pi(r_0)$ and $\pi(r_1)$ differ by exactly one $\EE$.
+We assume $\theta \notin \mathbb{Z}$ (for $\theta \in \mathbb{Z}$ the approximant
+$\theta/1$ is exact and the algorithm is not needed).
+Then $\lceil\theta\rceil = \lfloor\theta\rfloor + 1$, so $\pi(r_0)$ and $\pi(r_1)$
+differ by exactly one $\EE$.
+If $\{\theta\} = 1/2$ the two leaves have equal $|\eps|$; we adopt the tie-break
+$r_1 = \lfloor\theta\rfloor/1$ (so $r_0 = \lceil\theta\rceil/1$),
+so depth~$0$ is an exact step with $\wminus = 1$.
 Each word $\EE^k\OO$ contains exactly one $\OO$, so it is not a power of a shorter
 word; both $\pi(r_0)$ and $\pi(r_1)$ are therefore primitive.
 Moreover, $\EE^k\OO$ is the lower Christoffel word $\mathrm{Ch}^-(k, 1)$
@@ -856,7 +1251,11 @@ $(u, v) = (\pi(r_{2d-2}),\allowbreak\, \pi(r_{2d-1}))$ by concatenation:
 
 \begin{definition}[Branch mediant word]
 \label{def:parity-sequence}
-The bounded pair at depth $d$ consists of estimates $r_{2d}$ and $r_{2d+1}$,
+Let $d \geq 1$ be such that depth $d-1$ is an approximation depth, so that the algorithm produced the
+pair $(r_{2d}, r_{2d+1})$ from $(r_{2d-2}, r_{2d-1})$.
+This includes the terminal pair for rational $\theta$; $(r_{2d}, r_{2d+1})$ is a bounded
+pair unless depth $d$ is terminal and the exact step had $B > 0$.
+The pair consists of estimates $r_{2d}$ and $r_{2d+1}$,
 with $r_{2d+1}$ always the better estimate (smaller $|\eps|$).
 Each estimate $r_{2d}$ or $r_{2d+1}$ has two \emph{ordered parents}
 $(r_{2d-2}, r_{2d-1})$ and a non-negative integer \emph{weight} $w$
@@ -874,12 +1273,14 @@ We distinguish two uses of the word \emph{weight}:
         $r_{2d+1} = \mathrm{Mediant}(r_{2d-2}, r_{2d-1}, w_{2d+1})$.
   \item The \emph{propagated weights} $w^-_d$ and $w^+_d$ of a bounded pair $(r_{2d}, r_{2d+1})$
         are the optimal weights computed \emph{from} that pair to produce the next
-        pair $(r_{2d+2}, r_{2d+3})$ --- i.e.\ the $\wminus$ and $\wplus$ of Theorem~\ref{thm:optimal-w}
-        applied to $(r_{2d}, r_{2d+1})$.
+        pair $(r_{2d+2}, r_{2d+3})$ --- computed by Step~4
+        (Theorem~\ref{thm:optimal-w} at rational approximation depths; Lemma~\ref{lem:exact-step}(1)
+        at the exact depth).
 \end{itemize}
 These differ in general: the inherited weights $w_{2d}$ and $w_{2d+1}$ record how $r_{2d}$ and $r_{2d+1}$ were born;
 the propagated weights $w^-_d$ and $w^+_d$ determine where the algorithm goes next.
-Write $u = \pi(r_{2d-2})$ and $v = \pi(r_{2d-1})$ for the parent mediant words at depth $d-1$.
+Write $u = \pi(r_{2d-2})$ and $v = \pi(r_{2d-1})$ for the \emph{parent} mediant words
+(at depth $d-1$; these become the parents of the depth-$d$ pair).
 
 The two branch words at each depth share the same parents and differ only in the
 multiplicity of $v$: one estimate uses weight $w^+_{d-1}$ and the other uses weight $w^-_{d-1}$.
@@ -952,21 +1353,24 @@ When $\Delta > 0$: $r_{2d+1}$ is the upper estimate so $e_{2d+1}/o_{2d+1} > \the
 giving $o_{2d+1}/L_{2d+1} < \alpha < o_{2d}/L_{2d}$.
 The new word is $v^w u = \pi(r_{2d+1})^w \cdot \pi(r_{2d})$: the smaller-slope word
 $\pi(r_{2d+1})$ repeated $w$ times, followed by $\pi(r_{2d})$ once.
-By Theorem~\ref{thm:christoffel-concat} (with $e_0 = e_{2d+1}$, $e_1 = e_{2d}$)
-this equals $\mathrm{Ch}^-(w\,e_{2d+1} + e_{2d},\; w\,o_{2d+1} + o_{2d})$.
+Since $(r_{2d}, r_{2d+1})$ is Farey-adjacent, Lemma~\ref{lem:farey-image} gives
+$o_{2d} L_{2d+1} - o_{2d+1} L_{2d} = 1$, the Farey hypothesis of
+Theorem~\ref{thm:christoffel-concat} (with $e_a = e_{2d+1}$, $e_b = e_{2d}$),
+so this equals $\mathrm{Ch}^-(w\,e_{2d+1} + e_{2d},\; w\,o_{2d+1} + o_{2d})$.
 
 When $\Delta < 0$: $r_{2d+1}$ is the lower estimate so $e_{2d+1}/o_{2d+1} < \theta$,
 giving $o_{2d}/L_{2d} < \alpha < o_{2d+1}/L_{2d+1}$.
 Thus $\pi(r_{2d})$ has the smaller slope and $\pi(r_{2d+1})$ has the larger slope.
 The new word is $u v^w = \pi(r_{2d}) \cdot \pi(r_{2d+1})^w$: the single smaller-slope
 word followed by the larger-slope word repeated $w$ times.
-By Theorem~\ref{thm:christoffel-concat} (with $e_0 = e_{2d}$, $e_1 = e_{2d+1}$,
-$o_0/L_0 < o_1/L_1$, Berstel~\cite{berstel2009} Theorem~1.5.1) this equals
-$\mathrm{Ch}^-(e_{2d} + w\,e_{2d+1},\; o_{2d} + w\,o_{2d+1})$.
+Since $(r_{2d}, r_{2d+1})$ is Farey-adjacent, Lemma~\ref{lem:farey-image} gives
+$o_{2d+1} L_{2d} - o_{2d} L_{2d+1} = 1$, the Farey hypothesis of
+Theorem~\ref{thm:christoffel-concat} (with $e_a = e_{2d}$, $e_b = e_{2d+1}$),
+so this equals $\mathrm{Ch}^-(e_{2d} + w\,e_{2d+1},\; o_{2d} + w\,o_{2d+1})$.
 
-In both cases $\gcd(e_{2d} + w e_{2d+1},\; o_{2d} + w o_{2d+1}) = 1$ by the Farey adjacency
-condition $|e_{2d+1} o_{2d} - e_{2d} o_{2d+1}| = 1$, confirming the result is a valid
-lower Christoffel word.
+In both cases $\gcd(e_{2d} + w e_{2d+1},\; o_{2d} + w o_{2d+1}) = 1$
+(Lemma~\ref{lem:mediant-farey}(4), since $(r_{2d}, r_{2d+1})$ is Farey-adjacent),
+confirming the result is a valid lower Christoffel word.
 \end{proof}
 
 The Christoffel identification is the key fact connecting the mediant algorithm
@@ -1061,6 +1465,9 @@ At each iteration of the algorithm, $|\eps_{2d+1}|$ strictly decreases.
 By Theorem~\ref{thm:mediant-convergence}, $|\epsplus| < |\eps_{2d+1}|$.
 The next iterate assigns the better of $\rminus$ and $\rplus$ as $r_{2d+3}$, so
 $|\eps_{2d+3}| \leq |\epsplus| < |\eps_{2d+1}|$.
+(At the exact step for rational $\theta$, $r^- = \theta$ exactly so
+$|\eps^-| = 0 < |\eps_{2d+1}|$ (Lemma~\ref{lem:exact-step}(3)); the better
+child is $r^-$ and the conclusion holds trivially.)
 \end{proof}
 
 \begin{corollary}[Convergence to $\theta$]
@@ -1069,13 +1476,17 @@ The sequence of better estimates produced by the algorithm satisfies $\eps_{2d+1
 \end{corollary}
 
 \begin{proof}
-From the proof of Corollary~\ref{cor:children-bounded-pair}, writing $f(w) = A + wB$ for
-the linear error function and $\odenp, \odenm$ for the two child denominators:
+From the proof of Corollary~\ref{cor:children-bounded-pair} (at a rational approximation step; at the
+exact step the same identity holds with $f(\wminus) = 0$, since
+$|f(\wminus)\odenp - f(\wplus)\odenm| = |\Dval| = 1$ for any two consecutive weights
+and the product $f(\wminus)f(\wplus) \leq 0$), with $f(w^\dagger) = A + w^\dagger B$
+the linear error function and $\odenp, \odenm$ the two child denominators:
 \[
   |f(\wminus)|\,\odenp + |f(\wplus)|\,\odenm = |\Dval| = 1.
 \]
-Since $f(w) = e_w - \theta\,o_w$ and $\eps_w = f(w)/(\theta\,o_w)$, substituting
-$|f(w)| = |\eps_w|\,\theta\,o_w$ gives
+Since $f(w^\dagger) = e^\dagger - \theta\,o^\dagger$ and $\eps^\dagger = f(w^\dagger)/(\theta\,o^\dagger)$
+for $r^\dagger = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^\dagger)$, substituting
+$|f(w^\dagger)| = |\eps^\dagger|\,\theta\,o^\dagger$ gives
 \[
   \bigl(|\epsminus| + |\epsplus|\bigr)\,\theta\,\odenm\,\odenp = 1,
 \]
@@ -1093,41 +1504,15 @@ denominator of the better child strictly exceeds $o_{2d+1}$; by induction the
 denominators diverge.
 Since $|\eps_{\mathrm{better}}| \leq 1/(2\,\theta\,\odenm\,\odenp)$ and
 $\odenp \to \infty$, we have $\eps_{2d+1} \to 0$.
+For rational $\theta$ the sequence is finite and its last term has $\eps = 0$.
 \end{proof}
-
-\subsection*{Connection to continued fractions}
-\label{sec:cf-connection}
-
-The connection between the mediant algorithm and continued fractions is a direct
-consequence of the Sturmian identity (Theorem~\ref{prop:sturmian}).
-In combinatorics on words, the standard sequence for a Sturmian word with slope
-$\alpha = 1/(1+\theta)$ is generated by the recurrence $s_n = s_{n-1}^{b_n} \cdot s_{n-2}$,
-where the weights $b_n$ are precisely the partial quotients of the continued-fraction
-expansion of $\alpha$ (Lothaire~\cite{lothaire2002}, Ch.~2; Widmer~\cite{widmer2010},
-Proposition~2.4.6); here $b_1 = a_0$ and $b_n = a_{n-1}$ for $n \geq 2$, with
-$\alpha = 1/(1+\theta) = [0;\, a_0+1,\, a_1,\, a_2,\, \ldots]$.
-The mediant word sequence agrees with this standard sequence at all interior positions
-(Theorem~\ref{prop:sturmian}).
-This does \emph{not} imply that the algorithm's weights $\wplus$ equal the partial quotients
-$b_k$: the Sturmian identity constrains only interior positions of the words, not which
-weights the algorithm selects.
-What does follow is that the two children at weights $\wminus$ and $\wplus$ always have
-denominators $o_{2d} + \wminus \cdot o_{2d+1}$ and $o_{2d} + \wplus \cdot o_{2d+1}$
-(one even-indexed, one odd-indexed depending on which is the better estimate),
-mirroring the structure of the classical recurrence $q_{k+1} = b_k q_k + q_{k-1}$.
-Exponential denominator growth is proved in Section~\ref{sec:convergence}.
-
-The MT fractions are not in general the same as the CF convergents.
-The standard CF recurrence jumps by the full partial quotient $a_k$ at each step,
-landing on a convergent $p_k/q_k$.
-The MT algorithm picks the optimal bracketing weight $\wplus$, which need not
-equal any partial quotient.
-
 \begin{theorem}[MT fractions lie on the Stern--Brocot path]
 \label{thm:sb-path}
-Every fraction appearing as $r_{2d}$ or $r_{2d+1}$ in a bounded MT pair is a
-convergent or semi-convergent of $\theta$, i.e.\ lies on the Stern--Brocot path
-of $\theta$.
+Every fraction appearing as $r_{2d}$ or $r_{2d+1}$ at an approximation depth, together with
+$\theta$ itself when $\theta$ is rational, is a convergent or semi-convergent of
+$\theta$, i.e.\ lies on the Stern--Brocot path of $\theta$.
+(For rational $\theta$ the other member $r_{2d+2} = \rplus$ of the terminal pair is a
+child of $\theta$ in the Stern--Brocot tree and is not on the path.)
 \end{theorem}
 
 \begin{proof}
@@ -1147,10 +1532,11 @@ Instead, use the identity
 \]
 which shows that $\mathrm{Mediant}(r_{2d}, r_{2d+1}, w)$ is the ordinary mediant of
 $(r_{2d} + (w-1)\,r_{2d+1},\; r_{2d+1})$, a Farey-adjacent pair with the same
-determinant as $(r_{2d}, r_{2d+1})$.
+determinant as $(r_{2d}, r_{2d+1})$ (Lemma~\ref{lem:mediant-farey}(1)).
 By induction on $w = 1, \ldots, w^+$: the pair
 $(r_{2d} + (w-1)\,r_{2d+1},\; r_{2d+1})$ is Farey adjacent and straddles
-$\theta$ for each $w \leq w^+$.
+$\theta$ for each $w \leq w^+$ at a rational approximation step, and for each $w \leq w^-$ at the
+exact step (where the node at $w = w^-$ is $\theta = r^-$, the end of the path).
 By the standard Stern--Brocot lemma, any Farey-adjacent pair $(P, Q)$ of
 non-negative fractions defines a unique SB-tree interval, and $\theta$
 lies in the interval of $(P, Q)$ if and only if $P \oplus Q$ lies on the
@@ -1159,13 +1545,18 @@ $r_{2d} + w\,r_{2d+1}$ is a node on the Stern--Brocot path of $\theta$.
 The case $w^- = 0$ (i.e.\ $w^+ = 1$) is immediate: $r^- = r_{2d}$ is
 already on the path by inductive hypothesis, and $r^+ = r_{2d} + r_{2d+1}$
 is the unique ordinary mediant of the Farey pair $(r_{2d}, r_{2d+1})$.
-Both $r^-$ and $r^+$ are produced this way, so both lie on the path.
+Both $r^-$ and $r^+$ are produced this way at a rational approximation step, so both lie on the path.
+(At the exact step $r^- = \theta = r_{2d+3}$ is the endpoint of the SB path and lies on
+the path by definition; $r^+ = r_{2d+2}$ lies on the same side of $\theta$ as $r_{2d+1}$
+(Lemma~\ref{lem:exact-step}(4)) and is a child of $\theta$ in the SB tree, hence not on
+the path --- which is why the theorem statement excludes it explicitly.)
 \end{proof}
 
 \begin{theorem}[MT never skips a convergent]
-\label{conj:never-skips}
-Every CF convergent $p_k/q_k$ of $\theta$ appears as $r_{2d}$ or $r_{2d+1}$
-in some bounded MT pair.
+\label{thm:never-skips}
+  Assume $\theta$ is irrational.
+  Every CF convergent $p_k/q_k$ of $\theta$ appears as $r_{2d}$ or $r_{2d+1}$
+  in some MT pair (a bounded pair at an approximation depth, or the terminal pair).
 \end{theorem}
 
 \begin{proof}
@@ -1175,10 +1566,10 @@ crosses to the other side.
 In the induction of Theorem~\ref{thm:sb-path}, the path nodes visited within
 stage $d$ are $r_{2d} + w\,r_{2d+1}$ for $w = 1, \ldots, w^+$.
 For $w < w^+$ the node lies on the same side of $\theta$ as $r_{2d}$.
-When $w^+ \geq 2$ the non-crossing child $r^- = r_{2d} + (w^+-1)\,r_{2d+1}$
-is the last node on $r_{2d}$'s side, so $r^-$ is a convergent.
-(When $w^+ = 1$ there is no non-crossing child: $r_{2d}$ itself is carried
-forward and it is a convergent from the previous stage.)
+When $w^+ \geq 2$, $r^- = r_{2d} + (w^+-1)\,r_{2d+1}$ has the same gender as
+$r_{2d}$ and is the last node on $r_{2d}$'s side, so $r^-$ is a convergent.
+(When $w^+ = 1$ the generation is gender-preserving and $r_{2d}$ itself is
+carried forward as the older sibling; it is a convergent from the previous stage.)
 
 We show that every convergent appears in the MT sequence.
 After the integer spine and the two leaves, the Stern--Brocot path of $\theta$
@@ -1200,36 +1591,65 @@ Together with the leaf $\lfloor\theta\rfloor/1 = p_0/q_0$, every convergent appe
 The next two results give precise characterisations of which MT fractions are
 semi-convergents rather than convergents.
 
+\begin{remark}[Integer leaves]
+\label{rem:d0-leaves}
+  $\lfloor\theta\rfloor/1 = p_0/q_0$ is always a convergent.
+  If $\lceil\theta\rceil/1$ is the better leaf (i.e.\ $|\varepsilon_{\lceil\theta\rceil}| <
+  |\varepsilon_{\lfloor\theta\rfloor}|$, which holds iff $\{\theta\} > 1/2$),
+  then $\{\theta\} > 1/2$ forces $a_1 = 1$, so $\lceil\theta\rceil/1 = p_1/q_1$ is the
+  first convergent.
+  If $\lfloor\theta\rfloor/1$ is the better leaf (i.e.\ $\{\theta\} < 1/2$),
+  then $\lceil\theta\rceil/1$ is a semi-convergent iff $a_1 > 1$, and a convergent iff
+  $a_1 = 1$.
+  In either ordering, the better leaf $r_1$ is always a convergent.
+  Leaves carry no weight, so the weight condition of Theorem~\ref{thm:semi-r1}
+  does not apply at $d = 0$; instead the $d = 0$ case is handled directly in the proof.
+\end{remark}
+
 \begin{theorem}[Semi-convergent characterisation of $r_{2d+1}$]
-\label{conj:semi-r1}
-  For all $d \geq 0$, $r_{2d+1}$ is a semi-convergent of $\theta$ if and only if
-  $w^+_d = 1$, i.e.\ the propagated weight of the pair $(r_{2d}, r_{2d+1})$
-  equals~$1$.
+\label{thm:semi-r1}
+  For all $d \geq 0$ such that depth $d$ is not exact, $r_{2d+1}$ is a
+  semi-convergent of $\theta$ if and only if $w^+_d = 1$, i.e.\ the propagated
+  weight of the pair $(r_{2d}, r_{2d+1})$ equals~$1$.
 \end{theorem}
 
 \begin{proof}
-Write $A = e_{2d} - \theta o_{2d}$ and $B = e_{2d+1} - \theta o_{2d+1}$ for the
-signed errors of the current pair, so $w^+_d = \lfloor|A|/|B|\rfloor + 1$.
+Write $A_d = e_{2d} - \theta o_{2d}$ and $B_d = e_{2d+1} - \theta o_{2d+1}$ for the
+signed errors of the current pair, so $w^+_d = \lfloor|A_d|/|B_d|\rfloor + 1$.
 
 \medskip
 \textbf{Case $d \ge 1$.}
-Let $r^-, r^+$ be the children formed at depth $d-1$, with $o^- < o^+$.
+Let $r^-_{d-1}, r^+_{d-1}$ be the children formed at depth $d-1$, with $o^-_{d-1} < o^+_{d-1}$.
+The new pair is $(r_{2d}, r_{2d+1}) = (r^-_{d-1}, r^+_{d-1})$ or $(r^+_{d-1}, r^-_{d-1})$ according to which
+has smaller $|\varepsilon|$; by convention $r_{2d+1}$ is the better estimate, so
+either $r_{2d+1} = r^+_{d-1}$ (a gender-preserving generation) or $r_{2d+1} = r^-_{d-1}$
+(a gender-changing generation).
 
-\textit{Case $r_{2d+1} = r^+$} (the crossing child).
-After the path visits $r^+$, the SB interval is $(r^-, r^+) = (r_{2d}, r_{2d+1})$,
+\textit{Case $r_{2d+1} = r^+_{d-1}$} (gender-preserving generation: $r^+_{d-1}$ is the younger sibling).
+After the path visits $r^+_{d-1}$, the SB interval narrows to $(r^-_{d-1}, r^+_{d-1}) = (r_{2d}, r_{2d+1})$,
 so the next path node is $r_{2d} \oplus r_{2d+1}$.
-By definition of $w^+_d = \lfloor|A|/|B|\rfloor + 1$,
-$w^+_d = 1$ iff $|A| < |B|$, i.e.\ $r_{2d} \oplus r_{2d+1}$ lies on the same side as $r_{2d+1}$,
-i.e.\ the path crosses immediately.
-Hence $r^+$ is the last node of its run (a convergent) iff $w^+_d \ge 2$, and a
+By definition of $w^+_d = \lfloor|A_d|/|B_d|\rfloor + 1$,
+$w^+_d = 1$ iff $|A_d| < |B_d|$, i.e.\ $r_{2d} \oplus r_{2d+1}$ lies on the same side as $r_{2d+1}$,
+i.e.\ the SB path continues on $r_{2d+1}$'s side; when this holds, $r^+_{d-1}$ is not the last node of its run.
+Hence $r^+_{d-1}$ is the last node of its run (a convergent) iff $w^+_d \ge 2$, and a
 semi-convergent iff $w^+_d = 1$.
 
-\textit{Case $r_{2d+1} = r^-$} (the non-crossing child).
-We have $w^-_{d-1} \ge 1$ (otherwise $r^- = r_{2d-2}$ would be the worse child,
-contradicting $|{\varepsilon_{2d-2}}| > |{\varepsilon_{2d-1}}|$),
-so the path visits $r^-$ immediately before $r^+$, which lies on the other side.
-Hence $r^-$ is a convergent.
-Also $o_{2d+1} = o^- < o^+ = o_{2d}$, so $|A| \ge |B|$ and $w^+_d \ge 2$.
+\textit{Case $r_{2d+1} = r^-_{d-1}$} (gender-changing generation: $r^-_{d-1}$ is the younger sibling).
+Since $r_{2d+1} = r^-_{d-1}$ is the better estimate, we have $o_{2d+1} = o^-_{d-1} < o^+_{d-1} = o_{2d}$
+(as $w^-_{d-1} < w^+_{d-1}$ implies $o^-_{d-1} < o^+_{d-1}$).
+By Theorem~\ref{thm:sb-path}, the SB path visits $r^-_{d-1}$ at weight $w = w^+_{d-1} - 1$
+within stage $d-1$, immediately before crossing to $r^+_{d-1}$ at weight $w^+_{d-1}$.
+Hence $r^-_{d-1}$ is the last same-side node before the crossing, i.e.\ a convergent.
+For the weight condition: since $r_{2d+1} = r^-_{d-1}$ is the better estimate,
+$|\varepsilon_{2d+1}| < |\varepsilon_{2d}|$, i.e.\ $|B_d|/o_{2d+1} < |A_d|/o_{2d}$ in terms
+of relative errors.
+In terms of scaled errors, $|A_d| = \theta\,o_{2d}\,|\varepsilon_{2d}|$ and
+$|B_d| = \theta\,o_{2d+1}\,|\varepsilon_{2d+1}|$, so
+\[
+  \frac{|A_d|}{|B_d|} = \frac{o_{2d}}{o_{2d+1}} \cdot \frac{|\varepsilon_{2d}|}{|\varepsilon_{2d+1}|} > 1,
+\]
+since both factors exceed $1$ ($o_{2d} > o_{2d+1}$ and $|\varepsilon_{2d}| > |\varepsilon_{2d+1}|$).
+Hence $|A_d| > |B_d|$ and $w^+_d = \lfloor|A_d|/|B_d|\rfloor + 1 \ge 2$.
 The statement holds in this case too.
 
 \medskip
@@ -1237,26 +1657,34 @@ The statement holds in this case too.
 The seed pair is $(r_0, r_1) = (\lfloor\theta\rfloor/1, \lceil\theta\rceil/1)$
 or $(\lceil\theta\rceil/1, \lfloor\theta\rfloor/1)$, ordered so that $r_1$ is the
 better estimate (smaller $|\varepsilon|$).
-Write $\alpha = \{\theta\} \in (0,1)$.
-Then $|A| = |\varepsilon_{r_0}|$ and $|B| = |\varepsilon_{r_1}|$ are $\{1-\alpha,\alpha\}$
-in some order, with $|B| < |A|$ by definition of the ordering.
-Hence $|A|/|B| > 1$, so
-$w^+_0 = \lfloor |A|/|B| \rfloor + 1 \ge 2$.
-Concretely: if $r_1 = \lfloor\theta\rfloor/1$ (i.e.\ $\alpha < \tfrac{1}{2}$)
-then $|A| = 1-\alpha$, $|B| = \alpha$, and $|A|/|B| = (1-\alpha)/\alpha > 1$;
-if $r_1 = \lceil\theta\rceil/1$ (i.e.\ $\alpha > \tfrac{1}{2}$)
-then $|A| = \alpha$, $|B| = 1-\alpha$, and $|A|/|B| = \alpha/(1-\alpha) > 1$.
-Since $w^+_0 \ge 2 \ne 1$, the biconditional requires $r_1$ not to be a
-semi-convergent when $w^+_0 \ne 1$.
-By Remark~\ref{rem:d0-leaves}, if $\lceil\theta\rceil/1$ is the better leaf then
-$\{\theta\} > \tfrac{1}{2}$, so $a_1 = 1$ and $\lceil\theta\rceil/1 = p_1/q_1$
-is the first convergent; and $\lfloor\theta\rfloor/1 = p_0/q_0$ is always a
-convergent.  Hence $r_1$ is a convergent (not a semi-convergent) at $d = 0$,
-and the statement holds.
+Write $\gamma = \{\theta\} \in (0,1)$ for the fractional part of $\theta$.
+For the integer leaves $o_0 = o_1 = 1$, the signed errors satisfy
+$|A_0| = \theta\,|\varepsilon_{r_0}|$ and $|B_0| = \theta\,|\varepsilon_{r_1}|$.
+The values $|\varepsilon_{r_0}|$ and $|\varepsilon_{r_1}|$ are $\{1-\gamma, \gamma-0\} = \{1-\gamma, \gamma\}$
+in some order (for $\lfloor\theta\rfloor/1$ the relative error is $\gamma/\theta$,
+for $\lceil\theta\rceil/1$ it is $(1-\gamma)/\theta$; scaled by $\theta$ these are $\gamma$ and $1-\gamma$).
+With $|B_0| < |A_0|$ by definition of the better-estimate ordering, we have
+$|A_0|/|B_0| = \max(\gamma,1-\gamma)/\min(\gamma,1-\gamma) > 1$,
+so $w^+_0 = \lfloor|A_0|/|B_0|\rfloor + 1 \ge 2$.
+Since $w^+_0 \ge 2 \ne 1$, the biconditional at $d = 0$ requires $r_1$ not to be a
+semi-convergent.  By Remark~\ref{rem:d0-leaves}, $r_1$ is always a convergent at $d = 0$.
+Hence the statement holds.
 
 \medskip
-In all cases, $r_{2d+1}$ is not on the integer spine ($o_{2d+1} \ge 2$ for
-$d \ge 1$; the leaves are treated separately), so the characterisation is complete.
+In all cases the characterisation is complete.
+
+\medskip
+\textbf{Exclusion of exact depths.}
+At an exact depth, $\theta = r_{2d} \oplus r_{2d+1}$ (Lemma~\ref{lem:exact-step}(3)),
+so $r_{2d+1}$ is one of the two Stern--Brocot parents of $\theta$.
+The theorem characterises $r_{2d+1}$ as a convergent or semi-convergent by asking
+whether it is the last same-side node before the SB path reaches $\theta$.
+But the SB path to a rational $\theta$ terminates at $\theta$, and which of its two
+parents is the ``last same-side node'' (i.e.\ a convergent) depends on which of the
+two standard CF expansions of $\theta$ is used.
+Since the paper does not fix a CF convention for rational $\theta$, the
+convergent/semi-convergent label of $r_{2d+1}$ at an exact depth is undefined, and
+the exact depth is excluded from the statement.
 \end{proof}
 
 \begin{remark}
@@ -1268,174 +1696,447 @@ inherited weight~$2$ but is a semi-convergent.
 \end{remark}
 
 \begin{theorem}[Semi-convergent characterisation of $r_{2d}$]
-\label{conj:semi-r0}
-  For $d \geq 1$, $r_{2d}$ is a semi-convergent of $\theta$ if and only if
-  $w_{2d} > w_{2d+1}$, i.e.\ the inherited weight of $r_{2d}$ exceeds that of
-  its sibling $r_{2d+1}$.
+\label{thm:semi-r0}
+  Assume $\theta$ is irrational.
+  For $d \geq 1$ such that depth $d$ is an approximation depth, $r_{2d}$ is a semi-convergent of
+  $\theta$ if and only if $w_{2d} > w_{2d+1}$, i.e.\ the inherited weight of $r_{2d}$
+  exceeds that of its sibling $r_{2d+1}$.
 \end{theorem}
 
 \begin{proof}
-Let $r^-, r^+$ be the children formed at depth $d-1$, with absolute errors
-$x = |e^- - \theta o^-|$ and $y = |e^+ - \theta o^+|$ and $o^- < o^+$.
+Let $r^-_{d-1}, r^+_{d-1}$ be the children formed at depth $d-1$, with absolute scaled errors
+$x = |e^-_{d-1} - \theta o^-_{d-1}|$ and $y = |e^+_{d-1} - \theta o^+_{d-1}|$ and $o^-_{d-1} < o^+_{d-1}$.
+By convention, $r_{2d}$ is the worse child (larger $|\varepsilon|$)
+and $r_{2d+1}$ is the better child.
 
 \medskip
 \noindent$(\Leftarrow)$
-Suppose $w_{2d} > w_{2d+1}$, so $r_{2d} = r^+$ is the crossing (worse) child.
-Then $x/o^- < y/o^+$.  Since $o^- < o^+$, this gives $x < y$.
+Suppose $w_{2d} > w_{2d+1}$, so this is a gender-changing generation and
+$r_{2d} = r^+_{d-1}$ is the older sibling (worse estimate).
+Then $x/o^-_{d-1} < y/o^+_{d-1}$, and since $o^-_{d-1} < o^+_{d-1}$ we get $x < y$.
 
-Since $(r^-, r^+)$ is a bounded pair (Theorem~\ref{thm:mediant-convergence}),
-the pair brackets $\theta$: their signed errors $e^- - \theta o^-$ and
-$e^+ - \theta o^+$ have opposite signs.  Write them as $-x$ and $+y$
-respectively (i.e.\ $r^-$ is the underestimate and $r^+$ the overestimate;
+Since $(r^-_{d-1}, r^+_{d-1})$ is a bounded pair (Corollary~\ref{cor:children-bounded-pair}),
+their signed errors $e^-_{d-1} - \theta o^-_{d-1}$ and $e^+_{d-1} - \theta o^+_{d-1}$ have opposite signs.
+Write them as $-x$ and $+y$ (i.e.\ $r^-_{d-1}$ underestimates and $r^+_{d-1}$ overestimates;
 the argument is symmetric if the signs are reversed).
-The signed error of the unweighted mediant $r^- \oplus r^+$ is then
+The signed error of the unweighted mediant $r^-_{d-1} \oplus r^+_{d-1}$ is then
 \[
-  (e^- + e^+) - \theta(o^- + o^+) = (-x) + y = y - x > 0,
+  (e^-_{d-1} + e^+_{d-1}) - \theta(o^-_{d-1} + o^+_{d-1}) = (-x) + y = y - x > 0,
 \]
-which has the same sign as the error of $r^+$.
-Hence $\theta$ still lies on the $r^-$ side of $r^- \oplus r^+$, so the
-SB path continues toward $r^+$: the crossing has not yet occurred,
-and $r^+$ is not the last node of its run.  Hence $r_{2d}$ is a semi-convergent.
+which has the same sign as the error of $r^+_{d-1}$.
+Hence $\theta$ still lies on the $r^-_{d-1}$ side of $r^-_{d-1} \oplus r^+_{d-1}$, so the
+SB path continues beyond $r^+_{d-1}$: $r^+_{d-1}$ is not the last node of its run.
+Hence $r_{2d} = r^+_{d-1}$ is a semi-convergent.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.95\textwidth]{fig-sb-path-semiconvergent.pdf}
+  \caption{Geometry of the $(\Leftarrow)$ direction of Theorem~\ref{thm:semi-r0},
+    illustrated for $\theta = \pi$ at depth $d = 1$ (weight $w^+_0 = 7$).
+    The depth-0 generation is gender-changing: $r^-_0 = 22/7$ is the younger
+    sibling and $r^+_0 = 25/8$ the older; $r^+_0$ lies on the opposite side of
+    $\theta$ from $r_{2d-2}$.  The worse child $r^+_0 = 25/8 = r_{2d}$ underestimates
+    $\theta$, and the unweighted mediant $r^-_0 \oplus r^+_0 = 47/15$ also
+    underestimates $\theta$ (mediant error $= x - y < 0$, same side as $r^+_0$).
+    Since the next SB-path node has not yet crossed $\theta$, the run continues
+    beyond $r^+_0$, so $r^+_0 = r_{2d}$ is a semi-convergent rather than a convergent.
+    By contrast, $r^-_0 = 22/7 = r_{2d+1}$ \emph{is} a convergent of $\pi$: it is
+    the last node before the SB-path crosses $\theta$, which is exactly the
+    definition of a convergent.
+    This is consistent with Theorem~\ref{thm:semi-r1}: since $w^+_1 = 15 \ge 2$,
+    $r_{2d+1} = r^-_0 = 22/7$ is a convergent, not a semi-convergent.}
+  \label{fig:sb-path-semiconvergent}
+\end{figure}
 
 \medskip
 \noindent$(\Rightarrow)$
-Suppose $w_{2d} \le w_{2d+1}$, so $r_{2d} = r^-$ is the non-crossing child,
-i.e.\ $r^- = r_{2d-2} + (w^+_{d-1} - 1)\,r_{2d-1}$.
+We proceed by induction on $d \ge 1$.
+
+\textbf{Base case $d = 1$.}
+$r_2$ is a child of the depth-$0$ pair, formed at weight $w^+_0 - 1$ or $w^+_0$.
+By the $d = 0$ case of Theorem~\ref{thm:semi-r1}, $w^+_0 \ge 2$ always.
+If $w_{2} \le w_{3}$, then this is a gender-preserving generation and
+$r_2 = r^-_0$ is the older sibling at weight $w = w^+_0 - 1 \ge 1$.
+By the block structure of Theorem~\ref{thm:sb-path}, $r_2$ is the last same-side node
+at stage $0$, hence a convergent.
+($w^-_0 = 0$ would force $w^+_0 = 1$, contradicting $w^+_0 \ge 2$, so this sub-case
+cannot arise at $d = 1$.)
+
+\textbf{Inductive step.}
+Suppose $(\Rightarrow)$ holds at all depths $< d$.
+Suppose $w_{2d} \le w_{2d+1}$, so this is a gender-preserving generation
+and $r_{2d} = r^-_{d-1}$ is the older sibling,
+i.e.\ $r^-_{d-1} = r_{2d-2} + (w^+_{d-1} - 1)\,r_{2d-1}$.
 \begin{itemize}
   \item If $w^-_{d-1} \ge 1$: by the block structure established in the proof of
   Theorem~\ref{thm:sb-path}, the SB path visits the nodes
   $r_{2d-2} + w\,r_{2d-1}$ for $w = 1, \ldots, w^+_{d-1}$ in order within
   stage $d-1$.  All nodes with $w < w^+_{d-1}$ lie on the same side of $\theta$
-  as $r_{2d-2}$; the node at $w = w^+_{d-1}$ (namely $r_{2d-2} + w^+_{d-1}\,r_{2d-1} = r_{2d+1}$) lies on the
-  other side.  Since $r^- = r_{2d-2} + (w^+_{d-1}-1)\,r_{2d-1}$ is the node at
-  $w = w^+_{d-1} - 1 \ge 1$, it is the last same-side node before the path
-  crosses to $r^+$.  Hence $r^-$ is the last node of its run, i.e.\ a convergent.
-  \item If $w^-_{d-1} = 0$: then $r_{2d} = r_{2d-2}$ and $w^+_{d-1} = 1$.
-  By the induction hypothesis $(\Rightarrow)$ at depth $d-1$: since
-  $w_{2d-2} \le w_{2d-1}$ (as $r_{2d-2}$ is the non-crossing child at depth
-  $d-1$), $r_{2d-2}$ is a convergent.
-  Hence $r_{2d} = r_{2d-2}$ is a convergent.
-  (The base case $d = 1$: $w^+_0 \ge 2$ always, so $w^-_0 = 0$ forces
-  $w^+_0 = 1$, a contradiction; this case cannot occur.)
+  as $r_{2d-2}$; the node at $w = w^+_{d-1}$ (namely $r^+_{d-1}$) lies on the
+  other side.  Since $r^-_{d-1} = r_{2d-2} + (w^+_{d-1}-1)\,r_{2d-1}$ is the node at
+  $w = w^+_{d-1} - 1 \ge 1$, it is the last same-side node before the crossing.
+  Hence $r_{2d} = r^-_{d-1}$ is a convergent.
+  \item If $w^-_{d-1} = 0$: then $w^+_{d-1} = 1$ and $r_{2d} = r_{2d-2}$
+  (the coarser bound is carried forward unchanged).
+  Since $d \ge 2$ (the case $d = 1$ is handled above), the gender-changing
+  case of Theorem~\ref{thm:semi-r1} shows that $r_{2d-1} = r^-_{d-2}$ would imply
+  $|A_{d-1}| > |B_{d-1}|$ and hence $w^+_{d-1} \ge 2$; by contraposition, $w^+_{d-1} = 1$
+  forces $r_{2d-1} = r^+_{d-2}$, so the generation at depth $d-2$ is gender-preserving
+  with $r_{2d-2} = r^-_{d-2}$ as older sibling.
+  Therefore $w_{2d-2} \le w_{2d-1}$, and by the induction hypothesis $(\Rightarrow)$
+  at depth $d-1$, $r_{2d-2}$ is a convergent.  Hence $r_{2d} = r_{2d-2}$ is a convergent.
 \end{itemize}
+In both sub-cases $r_{2d}$ is a convergent, completing the induction.
 \end{proof}
-
-\begin{remark}
-\label{rem:d0-leaves}
-  $\lfloor\theta\rfloor/1 = p_0/q_0$ is always a convergent.
-  $\lceil\theta\rceil/1$ is a convergent ($= p_1/q_1$) iff $a_1 = 1$, and otherwise
-  a semi-convergent.
-  If $\lceil\theta\rceil/1$ is the better leaf, then $\{\theta\} > 1/2$, so $a_1 = 1$;
-  hence $r_1$ is always a convergent, and $r_0$ is a semi-convergent iff
-  $r_0 = \lceil\theta\rceil/1$ and $a_1 > 1$.
-  Leaves carry no weight, so the weight condition does not apply at $d = 0$.
-\end{remark}
 
 All steps in both proofs are argued by hand.
 
-\begin{theorem}[Linear depth bound]
-\label{conj:linear-depth}
-Let $\theta > 1$ be irrational.  For every depth~$d$ and both members $e_d/o_d$
-of the depth-$d$ pair,
+\subsection*{Denominator growth and the depth bound}
+\label{sec:denominator-growth}
+
+The two lemmas below are the analytical engine behind the $O(\log N)$ depth bound
+(Theorem~\ref{thm:linear-depth}): the first gives a lower bound on weight values,
+the second converts that into exponential denominator growth.
+
+\begin{lemma}[No two consecutive unit weights]
+\label{lem:no-consecutive-unit-weights}
+$w^+_0 \geq 2$ always (the depth-$0$ weight is at least $2$), and for no $d$
+does $w^+_d = w^+_{d+1} = 1$ hold simultaneously.
+\end{lemma}
+
+\begin{proof}
+Write $A_d, B_d$ for the signed errors at depth $d$, with $r_{2d+1}$ finer
+(smaller relative error $|B_d|/o_{2d+1} < |A_d|/o_{2d}$).
+The weight is $w^+_d = \lfloor|A_d|/|B_d|\rfloor + 1$, so $w^+_d = 1$ iff
+$|A_d| < |B_d|$.
+
+\emph{Base case.}
+At $d = 0$, the initialisation sets $o_0 = o_1 = 1$ and $r_1$ is chosen as
+the finer estimate, so $|B_0| < |A_0|$.  Hence $|A_0|/|B_0| > 1$, giving
+$w^+_0 \geq 2$, and $\mathcal{I}(0)$ holds vacuously.
+
+\emph{Invariant.}
+Define $\mathcal{I}(d)$: if $|A_d| < |B_d|$ then $|B_d| < 2|A_d|$.
+We show $\mathcal{I}(d) \Rightarrow \mathcal{I}(d+1)$ for all $d \geq 0$.
+
+The two child candidates produced from depth $d$ are
+\begin{align*}
+r^- &= \mathrm{Mediant}(r_{2d},\, r_{2d+1},\, w^+_d - 1),
+  & \text{error } A^-_d &= A_d + (w^+_d-1)B_d,
+  \quad o^-_d = o_{2d} + (w^+_d-1)\,o_{2d+1},\\
+r^+ &= \mathrm{Mediant}(r_{2d},\, r_{2d+1},\, w^+_d),
+  & \text{error } B^+_d &= A_d + w^+_d B_d,
+  \quad o^+_d = o_{2d} + w^+_d\,o_{2d+1}.
+\end{align*}
+The depth-$(d+1)$ pair assigns $r_{2(d+1)+1}$ to whichever child has the
+smaller relative error (finer), and $r_{2(d+1)}$ to the other (coarser).
+
+\textit{Case~A ($w^+_d = 1$).}
+Then $w^-_d = 0$, so $r^- = r_{2d}$ is carried forward unchanged:
+$A^-_d = A_d$ and $o^-_d = o_{2d}$.  For $r^+$: $B^+_d = A_d + B_d$ and
+$|B^+_d| = |B_d| - |A_d|$ (since $A_d$ and $B_d$ have opposite signs and
+$|A_d| < |B_d|$).  The relative errors satisfy
 \[
-  d \;\leq\; 2\log_2(e_d + o_d) + 1.
+  \frac{|B^+_d|}{o^+_d}
+  = \frac{|B_d|-|A_d|}{o_{2d}+o_{2d+1}}
+  < \frac{|B_d|}{o_{2d+1}}
+  < \frac{|A_d|}{o_{2d}}
+  = \frac{|A^-_d|}{o^-_d},
 \]
-In particular, the depth grows at most logarithmically in $e_d + o_d$, so
-$O(\log N)$ iterations of the mediant-tree algorithm suffice to produce an
-approximant of size $N = e_d + o_d$.
+so $r^+$ is strictly finer.  The assignment is therefore unambiguous:
+$A_{d+1} = A^-_d = A_d$ and $B_{d+1} = B^+_d = A_d + B_d$.
+Thus $|A_{d+1}| = |A_d|$ and $|B_{d+1}| = |B_d| - |A_d|$.
+By $\mathcal{I}(d)$, since $|A_d| < |B_d|$, we have $|B_d| < 2|A_d|$,
+so $|B_{d+1}| = |B_d| - |A_d| < |A_d| = |A_{d+1}|$.
+Hence $w^+_{d+1} \geq 2$ and $\mathcal{I}(d+1)$ holds vacuously.
+
+\textit{Case~B ($w^+_d = k \geq 2$, i.e.\ $|A_d| > |B_d|$).}
+Let $\delta = \mathrm{frac}(|A_d|/|B_d|) \in [0,1)$ be the fractional part of
+$|A_d|/|B_d|$.
+If $\delta = 0$ (i.e.\ $-A_d/B_d \in \mathbb{Z}$) the step is exact and depth $d+1$
+is terminal, so there is nothing to prove.
+If $\delta = 1/2$ then $|A^-_d| = |B^+_d|$, and $r^+$ is finer since
+$o^+_d > o^-_d$; hence $|A_{d+1}| = |B_{d+1}|$ and $\mathcal{I}(d+1)$ holds
+vacuously (depth $d+1$ is then an exact step with $\wminus = 1$).
+Otherwise $\delta \in (0,1) \setminus \{1/2\}$.
+Thus $|A^-_d| = \delta|B_d|$ and $|B^+_d| = (1-\delta)|B_d|$,
+with $|A^-_d| + |B^+_d| = |B_d|$ and $|A^-_d| \neq |B^+_d|$.
+If the ordering at depth $d+1$ gives $|A_{d+1}| \geq |B_{d+1}|$, then
+$w^+_{d+1} \geq 2$ and $\mathcal{I}(d+1)$ holds vacuously; done.
+
+Assume therefore $|A_{d+1}| < |B_{d+1}|$, so
+$|A_{d+1}| = \min(|A^-_d|,|B^+_d|)$ and $|B_{d+1}| = \max(|A^-_d|,|B^+_d|)$.
+We must show $|B_{d+1}| < 2|A_{d+1}|$.
+
+\emph{Subcase $\delta < 1/2$}: then $|A^-_d| < |B^+_d|$, so
+$|A_{d+1}| = \delta|B_d|$.  For this assignment, $r^+$ must be finer than $r^-$,
+i.e.\ $|B^+_d|/o^+_d < |A^-_d|/o^-_d$.  Since $k \geq 2$ and $o_{2d} \geq 1$,
+we have $o^-_d = o_{2d} + (k-1)o_{2d+1} \geq o_{2d} + o_{2d+1} > o_{2d+1}$,
+so this gives $(1-\delta)o^-_d < \delta\,o^-_d + \delta\,o_{2d+1}$,
+hence $(1-2\delta)o^-_d < \delta\,o_{2d+1} < \delta\,o^-_d$,
+so $1 - 2\delta < \delta$, i.e.\ $\delta > 1/3$.
+Then $|B_{d+1}| = (1-\delta)|B_d| < \tfrac{2}{3}|B_d| < 2\delta|B_d| = 2|A_{d+1}|$.
+
+\emph{Subcase $\delta > 1/2$}: then $|B^+_d| < |A^-_d|$.
+If $\delta \geq 2/3$, then $|A^-_d| = \delta|B_d| \geq \tfrac{2}{3}|B_d|$
+and $|B^+_d| = (1-\delta)|B_d| \leq \tfrac{1}{3}|B_d|$, so $|A^-_d|/o^-_d > |B^+_d|/o^+_d$
+(the denominator $o^+_d > o^-_d$ only reinforces this), forcing $r^+$ to be finer.
+The assignment then gives $A_{d+1} = A^-_d$ and $B_{d+1} = B^+_d$, so
+$|A_{d+1}| = \delta|B_d| > |B_{d+1}| = (1-\delta)|B_d|$, contradicting
+$|A_{d+1}| < |B_{d+1}|$.  Hence $\delta < 2/3$, and then
+$|B_{d+1}| = \delta|B_d| < \tfrac{2}{3}|B_d| < 2(1-\delta)|B_d| = 2|A_{d+1}|$.
+
+In all sub-cases $\mathcal{I}(d+1)$ holds, completing the induction.
+Since Case~A gives $w^+_{d+1} \geq 2$ whenever $w^+_d = 1$, two consecutive
+unit weights are impossible.
+\end{proof}
+
+\begin{lemma}[Younger-sibling weight]
+\label{lem:younger-sibling-weight}
+For every depth $d \geq 1$, the younger sibling $r_{2d+1}$ inherits weight
+$w_{2d+1} \geq 1$.
+\end{lemma}
+
+\begin{proof}
+The inherited weights of the depth-$d$ pair are $\{w_{2d}, w_{2d+1}\} = \{w^+_{d-1}-1,\, w^+_{d-1}\}$.
+The younger sibling $r_{2d+1}$ is the better (smaller relative error) child.
+
+In a \emph{gender-preserving} generation $r^+$ is the better child, so
+$w_{2d+1} = w^+_{d-1} \geq 1$.
+
+In a \emph{gender-changing} generation $r^-$ is the better child, so
+$w_{2d+1} = w^+_{d-1} - 1$.
+By Lemma~\ref{lem:no-consecutive-unit-weights} (Case~A), $w^+_{d-1} = 1$ implies
+gender-preserving, so a gender-changing generation must have $w^+_{d-1} \geq 2$,
+giving $w_{2d+1} \geq 1$.
+\end{proof}
+
+\begin{corollary}[Older-sibling weight]
+\label{cor:older-sibling-weight}
+For every depth $d \geq 1$, the older sibling $r_{2d}$ inherits weight $w_{2d} \geq 0$.
+\end{corollary}
+
+\begin{proof}
+$w_{2d} = w^+_{d-1} - 1 \geq 0$ since $w^+_{d-1} \geq 1$ by definition.
+\end{proof}
+
+\begin{lemma}[Pair-sum invariant]
+\label{lem:pair-sum-invariant}
+For every depth $d \geq 0$,
+\[
+  o_{2d} \;<\; 2\,o_{2d+1}.
+\]
+\end{lemma}
+
+\begin{proof}
+At $d = 0$: $o_0 = o_1 = 1$, so $1 < 2$.
+
+For $d \geq 1$ the flat-sequence recurrences give
+\[
+  o_{2d} = o_{2d-2} + w_{2d}\,o_{2d-1}, \qquad
+  o_{2d+1} = o_{2d-2} + w_{2d+1}\,o_{2d-1},
+\]
+where $\{w_{2d},\, w_{2d+1}\} = \{w^+_{d-1}-1,\, w^+_{d-1}\}$, so the two
+weights differ by exactly $1$.
+By Lemma~\ref{lem:younger-sibling-weight}, $w_{2d+1} \geq 1$.  Hence
+\[
+  2\,o_{2d+1} - o_{2d}
+  \;=\; o_{2d-2} + (2w_{2d+1} - w_{2d})\,o_{2d-1}.
+\]
+\textit{Case~A ($w_{2d} = w_{2d+1} + 1$):}
+$2\,o_{2d+1} - o_{2d} = o_{2d-2} + (w_{2d+1}-1)\,o_{2d-1} \geq o_{2d-2} \geq 1 > 0$.
+
+\textit{Case~B ($w_{2d} = w_{2d+1} - 1$):}
+$2\,o_{2d+1} - o_{2d} = o_{2d-2} + (w_{2d+1}+1)\,o_{2d-1} \geq o_{2d-2} + 2\,o_{2d-1} \geq 3 > 0$.
+
+In both cases $2\,o_{2d+1} > o_{2d}$.
+\end{proof}
+
+\begin{lemma}[Mirror invariant]
+\label{lem:mirror-invariant}
+If $w^+_d = 1$, then $o_{2d+1} < 2\,o_{2d}$ (equivalently, $3\,o_{2d} > S_d$).
+\end{lemma}
+
+\begin{proof}
+At $d = 0$: $o_0 = o_1 = 1$, so $o_1 = 1 \leq 2 = 2\,o_0$.
+
+For $d \geq 1$: since $w^+_d = 1$,
+Lemma~\ref{lem:no-consecutive-unit-weights} (Case~A) forces $w^+_{d-1} \geq 2$.
+The flat-sequence recurrences give
+\[
+  o_{2d} = o_{2d-2} + w_{2d}\,o_{2d-1}, \qquad
+  o_{2d+1} = o_{2d-2} + w_{2d+1}\,o_{2d-1},
+\]
+where $\{w_{2d},\, w_{2d+1}\} = \{w^+_{d-1}-1,\, w^+_{d-1}\}$.  Subtracting twice the first
+equation from the second:
+\[
+  o_{2d+1} - 2\,o_{2d}
+  = (o_{2d-2} + w_{2d+1}\,o_{2d-1}) - 2(o_{2d-2} + w_{2d}\,o_{2d-1})
+  = -o_{2d-2} + (w_{2d+1} - 2w_{2d})\,o_{2d-1}.
+\]
+Since $d \geq 1$ the depth-$(d-1)$ pair exists and $o_{2d-2} \geq 1$.
+
+\textit{Case~A ($w_{2d} = w^+_{d-1}$, $w_{2d+1} = w^+_{d-1}-1$):}
+$o_{2d+1} - 2\,o_{2d} = -o_{2d-2} - (w^+_{d-1}+1)\,o_{2d-1} < 0$.
+
+\textit{Case~B ($w_{2d} = w^+_{d-1}-1$, $w_{2d+1} = w^+_{d-1}$):}
+$o_{2d+1} - 2\,o_{2d} = -o_{2d-2} + (2 - w^+_{d-1})\,o_{2d-1}$.
+Since $w^+_{d-1} \geq 2$, the second term is $\leq 0$, so the whole expression
+$\leq -o_{2d-2} \leq -1 < 0$.
+
+In both cases $o_{2d+1} - 2\,o_{2d} < 0$.
+\end{proof}
+
+\begin{lemma}[Denominator growth]
+\label{lem:denominator-growth}
+For every depth $d \geq 0$, both denominators of the depth-$d$ pair satisfy
+\[
+  o_{2d},\, o_{2d+1} \;\geq\; \tfrac{2}{3}\cdot 3^{\lfloor d/2\rfloor} \;\geq\; 2^{\lfloor d/2\rfloor}.
+\]
+\end{lemma}
+
+\begin{proof}
+Let $S_d = o_{2d} + o_{2d+1}$.
+
+\emph{Base cases.}
+At $d = 0$: $o_0 = o_1 = 1$, so $S_0 = 2$ and both $\geq 2^0 = 1$.
+At $d = 1$: since $w^+_0 \geq 2$, the child denominators are
+$o_2 = o_0 + (w^+_0 - 1)o_1 \geq 1 + 1 = 2$ and $o_3 = o_0 + w^+_0 o_1 \geq 3$,
+so both $\geq 2^1 = 2$.
+
+\emph{Recurrence $S_{d+2} \geq 3S_d$.}
+We split on which of $w^+_d, w^+_{d+1}$ is $\geq 2$
+(Lemma~\ref{lem:no-consecutive-unit-weights} guarantees at least one).
+
+\textit{Case~1 ($w^+_d \geq 2$).}
+The two depth-$(d+1)$ denominators are
+$o^-_d \geq o_{2d} + o_{2d+1} = S_d$ and $o^+_d \geq o_{2d} + 2o_{2d+1} > S_d$.
+At depth $d+2$, each member's denominator is at least the sum of its two
+depth-$(d+1)$ parents' denominators (for any weight $\geq 1$), so both are
+$\geq o^-_d + o^+_d \cdot 1 \geq S_d$.  More precisely, one member at $d+2$ has
+denominator $\geq o^-_d + w^+_{d+1} o^+_d \geq S_d + S_d = 2S_d$ and the other
+$\geq o^-_d \geq S_d$, giving $S_{d+2} \geq 3S_d$.
+
+\textit{Case~2 ($w^+_d = 1$, forcing $w^+_{d+1} \geq 2$).}
+At depth $d+1$: $o^-_d = o_{2d}$ (the coarser parent is carried) and $o^+_d = S_d$.
+With $w^+_{d+1} \geq 2$, the depth-$(d+2)$ denominators satisfy
+$o^-_{d+1} \geq o_{2d} + S_d$ and $o^+_{d+1} \geq o_{2d} + 2S_d$, so
+$S_{d+2} \geq (o_{2d} + S_d) + (o_{2d} + 2S_d) = 2o_{2d} + 3S_d > 3S_d$.
+
+In both cases $S_{d+2} \geq 3S_d$, so by induction $S_d \geq 2 \cdot 3^{\lfloor d/2 \rfloor}$.
+
+\emph{Individual bounds.}
+For $d \leq 1$: at $d=0$ both $o_0=o_1=1 \geq \frac{2}{3}\cdot 1$; at $d=1$
+we showed $o_2 \geq 2$ and $o_3 \geq 3$, both $\geq \frac{2}{3}\cdot 3^0 = \frac{2}{3}$.
+For $d \geq 2$, every member at depth $d$ is a child produced at a step
+where the weight was $\geq 2$ (by Lemma~\ref{lem:no-consecutive-unit-weights}
+applied at depth $d-1$ or $d-2$),
+so its denominator is at least the sum $S_{d-2}$ of both depth-$(d-2)$
+denominators.  Setting $k = \lfloor d/2 \rfloor \geq 1$:
+\[
+  \min(o_{2d},\, o_{2d+1}) \;\geq\; S_{d-2} \;\geq\; 2 \cdot 3^{k-1}
+  \;=\; \tfrac{2}{3}\cdot 3^k \;=\; \tfrac{2}{3}\cdot 3^{\lfloor d/2\rfloor}.
+\]
+Since $(3/2)^{k-1} \geq 1$ for $k \geq 1$, we also have
+$\tfrac{2}{3}\cdot 3^k = 2^k \cdot (3/2)^{k-1} \geq 2^k = 2^{\lfloor d/2\rfloor}$.
+Hence both $o_{2d}, o_{2d+1} \geq \tfrac{2}{3}\cdot 3^{\lfloor d/2\rfloor} \geq 2^{\lfloor d/2\rfloor}$.
+\end{proof}
+
+\begin{theorem}[Linear depth bound]
+\label{thm:linear-depth}
+Let $\theta > 1$ be irrational.  For every depth~$d$ and both members
+$e/o \in \{r_{2d}, r_{2d+1}\}$ of the depth-$d$ pair,
+\[
+  d \;\leq\; \frac{2}{\log_2 3}\,\log_2(e + o) + 2,
+  \qquad \frac{2}{\log_2 3} \approx 1.262.
+\]
+The depth grows at most logarithmically in $e + o$, so $O(\log N)$ iterations
+of the mediant-tree algorithm suffice to produce an approximant of size $N = e + o$.
 \end{theorem}
 
 \begin{proof}
-We establish two lemmas and then combine them.
-
-\smallskip
-\noindent\textbf{Lemma A (no two consecutive unit weights).}
-$w^+_0 \geq 2$ always (the depth-$0$ weight is at least $2$), and for no $d$
-does $w^+_d = w^+_{d+1} = 1$ hold simultaneously.
-
-\emph{Proof of Lemma A.}
-Let $A = e_0 - \theta o_0$ and $B = e_1 - \theta o_1$ be the signed errors of
-the two current estimates, with $|B| < |A|$ (so the better estimate is $e_1/o_1$).
-The weight $w^+_d = \lfloor{-A/B}\rfloor + 1$; in particular $w^+_d = 1$ iff
-$|A| < 2|B|$.  Since $|B|/o_1 \leq |A|/o_0$ (the better estimate has smaller
-error per denominator), $w^+_0 \geq 2$ at $d=0$.
-
-Suppose $w^+_d = k \geq 2$, so the two children have errors
-$s = |A| - (k-1)|B|$ and $t = k|B| - |A|$ with denominators
-$o^- = o_0 + (k-1)o_1 < o^+ = o_0 + k o_1$.
-If the worse child $r^-$ becomes the new coarse bound, then $s/o^- < t/o^+$,
-giving $s < t$, so $w^+_{d+1} \geq 2$.
-If the better child $r^+$ becomes the new coarse bound, $w^+_{d+1} = 1$ means
-$s < t$.  For $w^+_{d+2} = 1$ we would then need $2s < t$.  But
-$t < s \cdot o^+/o^- \leq 2s$ because $o^+ \leq 2o^-$ whenever $k \geq 2$.
-Hence $w^+_{d+2} \geq 2$.  In either case two consecutive unit weights are
-impossible. \hfill$\square_A$
-
-\smallskip
-\noindent\textbf{Lemma B (denominator growth).}
-For every depth $d$, both denominators $o_d$ satisfy $o_d \geq 2^{\lfloor d/2 \rfloor}$.
-
-\emph{Proof of Lemma B.}
-By induction.  The base cases $d = 0,1$ hold since $o_0, o_1 \geq 1$.
-For the inductive step, every child denominator is at least $o_0$ (it is
-$o_0 + w o_1 \geq o_0$).  When $w^+_d \geq 2$, both children have denominator
-$\geq o_0 + o_1$.  By Lemma~A, among any two consecutive depths at least one has
-weight $\geq 2$, so every pair of consecutive denominators satisfies
-$o_{d+1} \geq o_d + o_{d-1} \geq 2\min(o_d, o_{d-1})$.
-Unrolling the induction gives $o_d \geq 2^{\lfloor d/2 \rfloor}$. \hfill$\square_B$
-
-\smallskip
-\noindent\textbf{Conclusion.}
-From Lemma~B, $o_d \geq 2^{\lfloor d/2\rfloor}$, so
-$\lfloor d/2 \rfloor \leq \log_2 o_d \leq \log_2(e_d + o_d)$.
-Hence $d \leq 2\log_2(e_d + o_d) + 1$.
+We combine Lemmas~\ref{lem:no-consecutive-unit-weights}
+and~\ref{lem:denominator-growth}.
+Let $e/o$ be either member of the depth-$d$ pair.
+From Lemma~\ref{lem:denominator-growth}, $o \geq \tfrac{2}{3}\cdot 3^{\lfloor d/2\rfloor}$, so
+$3^{\lfloor d/2\rfloor} \leq \tfrac{3}{2}\,o \leq \tfrac{3}{2}(e+o)$.
+Taking logarithms base~$3$:
+\[
+  \lfloor d/2\rfloor
+  \;\leq\; \log_3\!\bigl(\tfrac{3}{2}(e+o)\bigr)
+  \;=\; \frac{\log_2(e+o) + \log_2(3/2)}{\log_2 3}.
+\]
+Hence $d \leq 2\lfloor d/2\rfloor + 1 \leq \tfrac{2}{\log_2 3}\log_2(e+o) +
+\tfrac{2\log_2(3/2)}{\log_2 3} + 1$.
+Since $\tfrac{2\log_2(3/2)}{\log_2 3} + 1 < 2$, this gives
+$d \leq \tfrac{2}{\log_2 3}\log_2(e+o) + 2$.
 \end{proof}
 
-The constants $(m_\theta, b_\theta) = (2, 1)$ are universal.  The optimal
-per-target slope $m_\theta$ depends on $\theta$ through the average size of
-partial quotients: large partial quotients drive faster denominator growth and
-hence a smaller $m_\theta$.  For $\theta = \phi$ (all partial quotients equal to
-$1$), the asymptotic slope is $1/(2\log_2\phi) \approx 0.72$; for $\theta = \log_2 3$
-the empirical slope is approximately $0.45$.
+The optimal per-target slope $m^*_\theta$ depends on $\theta$ through the average
+size of partial quotients: large partial quotients drive faster denominator
+growth and hence a smaller $m^*_\theta$.  For $\theta = \phi$ (all partial
+quotients equal to $1$), the asymptotic slope is $1/(2\log_2\phi) \approx 0.72$;
+for $\theta = \log_2 3$ the empirical slope is approximately $0.45$.
 
-\begin{conjecture}[Sub-universal bound]
-\label{conj:universal-bound}
-For each irrational $\theta > 1$ let $m^*_\theta$ denote the infimum of slopes
-$m$ for which there exists $b$ with $d \leq m \log_2(e_d + o_d) + b$ for all
-$d \geq 0$.  The supremum $m^* = \sup_\theta m^*_\theta$ satisfies $m^* < 2$;
-that is, the universal constants $(2, 1)$ of Theorem~\ref{conj:linear-depth}
-are not tight.
-\end{conjecture}
+\begin{remark}
+\label{rem:universal-bound}
+Defining $m^*_\theta$ as the infimum of slopes $m$ for which there exists $b$
+with $d \leq m \log_2(e + o) + b$ for all $d \geq 0$ and both members $e/o$
+of the depth-$d$ pair,
+Theorem~\ref{thm:linear-depth} gives $d \leq \frac{2}{\log_2 3}\log_2(e+o)+2$
+for every irrational $\theta > 1$, and hence $m^* = \sup_\theta m^*_\theta \leq 2/\log_2 3 < 2$.
+\end{remark}
 
-\begin{conjecture}[Worst case at $\phi$]
-\label{conj:worst-case-phi}
-The supremum $m^*$ of Conjecture~\ref{conj:universal-bound} is attained at
-$\theta = \phi$, with
+\begin{conjecture}[Two-step pair-sum growth]
+\label{conj:two-step-growth}
+For every irrational $\theta > 1$ and every depth $d \geq 0$,
 \[
-  m^*_\phi \;=\; \frac{1}{2\log_2\phi} \;\approx\; 0.72.
+  S_{d+2} \;\geq\; \tfrac{10}{3}\,S_d,
 \]
-Equivalently, $\phi$ has the steepest asymptotic depth-vs-size curve among all
-irrationals $\theta > 1$.
+where $S_d = o_{2d} + o_{2d+1}$ is the pair-sum of denominators at depth $d$.
+Consequently, for every depth $d \geq 0$ and both members $e/o \in \{r_{2d}, r_{2d+1}\}$,
+\[
+  d \;\leq\; \frac{2}{\log_2(10/3)}\,\log_2(e+o) + 3,
+  \qquad \frac{2}{\log_2(10/3)} \approx 1.151,
+\]
+and hence $m^* \leq 2/\log_2(10/3) < 2/\log_2 3$.
 \end{conjecture}
+
+\begin{remark}
+\label{rem:two-step-deferred}
+A proof of Conjecture~\ref{conj:two-step-growth} has been provided by the
+reviewer (Aristotle, A-43), including a Lean formalisation
+(\texttt{pair\_sum\_growth\_ten\_thirds}).  Inclusion of the proof is deferred
+to a later revision so that the current review round can focus on clearing the
+remaining open items in the manuscript.
+\end{remark}
 
 Figure~\ref{fig:oracle-conjecture} shows that slope varies with partial-quotient
-size.  Irrationals with small partial quotients ($\phi$, $\sqrt{2}$) converge
-slowly, requiring more bits per depth step and producing steeper curves.
-Those with large partial quotients ($\pi$, $\log_3 8$) converge quickly and
-produce shallower curves.
-The universal bound $d \leq 2\log_2(e_d+o_d)+1$ of
-Theorem~\ref{conj:linear-depth} applies to every curve.
+size.  Irrationals whose partial quotients are predominantly small (such as $\phi$
+and $\sqrt{2}$) tend to produce steeper curves (more depth per bit of $\log_2(e+o)$),
+while those with predominantly large partial quotients (such as $\pi$ and $\log_3 8$)
+tend to produce shallower curves.  This is a qualitative tendency, not a monotone
+relationship: the slope $m^*_\theta$ is not a monotone function of partial-quotient
+size.
+The proved bound $d \leq (2/\log_2 3)\log_2(e+o)+2$ of Theorem~\ref{thm:linear-depth}
+and the conjectured tighter bound of Conjecture~\ref{conj:two-step-growth}
+both apply to every curve.
 Figure~\ref{fig:oracle-illustration} illustrates the per-target $(m_\theta,
-b_\theta)$ pairs for $\log_2 3$ and $\phi$, alongside the universal bound.
+b_\theta)$ pairs for $\log_2 3$ and $\phi$, alongside both bounds.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{fig-oracle-conjecture.pdf}
-\caption{Depth~$d$ vs.\ $\log_2(e_d+o_d)$ for the better
+\caption{Depth~$d$ vs.\ $\log_2(e+o)$ for the better
 mediant-tree estimate at each depth, across seven irrationals.
 Each curve is approximately linear, consistent with
-Theorem~\ref{conj:linear-depth}.
-The solid black line is the universal proved bound $d \leq 2\log_2(e_d+o_d)+1$.
+Theorem~\ref{thm:linear-depth}.
+The solid black line is the proved bound
+$d \leq \tfrac{2}{\log_2 3}\log_2(e+o)+2$
+(Theorem~\ref{thm:linear-depth}, slope $\approx 1.262$);
+the dashed black line is the conjectured tighter bound
+$d \leq \tfrac{2}{\log_2(10/3)}\log_2(e+o)+3$
+(Conjecture~\ref{conj:two-step-growth}, slope $\approx 1.151$).
 The slope of each curve reflects partial-quotient size: irrationals with small
 partial quotients (e.g.\ $\phi$, $\sqrt{2}$) converge slowly and have steeper
 curves; those with large partial quotients (e.g.\ $\pi$, $\log_3 8$) converge
@@ -1447,38 +2148,47 @@ quickly and have shallower curves.}
 \centering
 \includegraphics[width=0.75\textwidth]{fig-oracle-illustration.pdf}
 \caption{Per-target $(m_\theta, b_\theta)$ bounds for $\theta = \log_2 3$ and
-$\theta = \phi$, together with the universal proved bound
-$d \leq 2\log_2(e_d+o_d)+1$ (Theorem~\ref{conj:linear-depth}, solid black line).
-Each dashed line is an empirical upper bound fitted to its own curve only;
+$\theta = \phi$, together with the proved upper bound
+$d \leq \tfrac{2}{\log_2 3}\log_2(e+o)+2$ of
+Theorem~\ref{thm:linear-depth} (solid black line, slope $\approx 1.262$)
+and the conjectured tighter bound
+$d \leq \tfrac{2}{\log_2(10/3)}\log_2(e+o)+3$ of
+Conjecture~\ref{conj:two-step-growth} (dashed black line, slope $\approx 1.151$).
+Each coloured dashed line is an empirical upper bound fitted to its own curve only;
 the slopes $m_{\log_2 3} \approx 0.45$ and $m_\phi \approx 0.72$ are both well
-below the universal ceiling $m = 2$.}
+below the proved ceiling $m = 2/\log_2 3$.}
 \label{fig:oracle-illustration}
 \end{figure}
 
 %------------------------------------------------------------
 %------------------------------------------------------------
-\section{Examples and Computational Results}
-\label{sec:examples}
-%------------------------------------------------------------
-
-Extended tables illustrating the algorithm on $\theta = \log_2 3$ and $\theta = \pi$
-are given in Appendix~\ref{app:examples}.
-
-
-%------------------------------------------------------------
-\section{Relationship to Sturmian Sequences}
+\section{Relationship to Sturmian Words}
 \label{sec:sturmian}
 %------------------------------------------------------------
 
-A \emph{Sturmian word} over $\{\OO, \EE\}$ with slope $\alpha \in (0,1)$ is defined
-by
+\textbf{Standing notation for this section.}
+Throughout, $\theta > 1$ is real and
 \[
-  s_n = \lfloor (n+1)\alpha \rfloor - \lfloor n\alpha \rfloor, \qquad n \geq 0,
+  \alpha = \frac{1}{1+\theta}
 \]
-encoding the sequence as $\OO$ when $s_n = 1$ and $\EE$ when $s_n = 0$
-(see also Section~\ref{sec:background-sturmian}).
-Since $\alpha < 1$, we have $s_0 = \lfloor\alpha\rfloor = 0$, so the Sturmian word
-always begins with $\EE$.
+is the Sturmian slope; $s$ denotes the Sturmian word with slope $\alpha$.
+For any approximant $r = (e, o)$ produced by the mediant tree, set $N = e + o$
+(the length of the mediant word $\pi(r)$).
+For a non-terminal bounded pair $(r_{2d}, r_{2d+1})$ at depth $d$
+(i.e.\ $\Kval \neq 0$, so neither estimate equals $\theta$ exactly),
+set $n_i = e_i + o_i$ for $i \in \{2d, 2d+1\}$, and define
+\[
+  \hat{\alpha}_i \;=\; \frac{1}{1+r_i} \;=\; \frac{o_i}{e_i+o_i} \;=\; \frac{o_i}{n_i}.
+\]
+Since $x \mapsto 1/(1+x)$ is order-reversing and $r_{2d}$, $r_{2d+1}$ strictly bracket $\theta$
+(both conditions hold at non-terminal depths),
+the values $\hat{\alpha}_{2d}$ and $\hat{\alpha}_{2d+1}$ strictly bracket $\alpha$:
+\[
+  \min(\hat{\alpha}_{2d},\, \hat{\alpha}_{2d+1}) \;<\; \alpha \;<\; \max(\hat{\alpha}_{2d},\, \hat{\alpha}_{2d+1}).
+\]
+Since $r_{2d}$ and $r_{2d+1}$ are Farey-adjacent (Definition~\ref{def:bounded-pair}),
+Lemma~\ref{lem:farey-image} gives that $\hat{\alpha}_{2d}$ and $\hat{\alpha}_{2d+1}$
+are also Farey adjacent.
 
 \subsection{Structural properties of mediant words}
 
@@ -1496,35 +2206,44 @@ By structural induction on the mediant tree.
 
 \emph{Base case.} $\pi(e/1) = \EE^e\OO$, which ends in $\OO$.
 
-\emph{Inductive step.} Assume $\pi(r_0)$ and $\pi(r_1)$ both end in $\OO$.
-If $\Delta > 0$ then $\pi(r_{\mathrm{new}}) = \pi(r_1)^w \cdot \pi(r_0)$,
-whose last symbol is the last symbol of $\pi(r_0)$, which is $\OO$ by hypothesis.
-If $\Delta < 0$ then $\pi(r_{\mathrm{new}}) = \pi(r_0) \cdot \pi(r_1)^w$,
-whose last symbol is the last symbol of the final copy of $\pi(r_1)$, again $\OO$.
+\emph{Inductive step.} Let $(r_{2d}, r_{2d+1})$ be the parent bounded pair and
+assume $\pi(r_{2d})$ and $\pi(r_{2d+1})$ both end in $\OO$.
+For each $w^\dagger \in \{\wminus, \wplus\}$, set
+$r^\dagger = \mathrm{Mediant}(r_{2d}, r_{2d+1}, w^\dagger)$.
+Write $u = \pi(r_{2d})$ and $v = \pi(r_{2d+1})$.
+By Definition~\ref{def:parity-sequence}: if $\Dval > 0$ then
+$\pi(r^\dagger) = v^{w^\dagger} \cdot u$, which ends in $u$; if $\Dval < 0$ and
+$w^\dagger \geq 1$ then $\pi(r^\dagger) = u \cdot v^{w^\dagger}$, which ends in $v$;
+and if $\Dval < 0$ and $w^\dagger = 0$ (which occurs when $\wplus = 1$) then
+$\pi(r^\dagger) = u$.
+In every case $\pi(r^\dagger)$ ends in $u$ or $v$, both of which end in $\OO$
+by the inductive hypothesis.
 \end{proof}
 
 \begin{theorem}[Overestimate criterion]
 \label{thm:last-sturmian}
-Let $\theta > 1$ be irrational, let $r = (e, o)$ be a good estimate of $\theta$
-(Definition~\ref{def:good-estimate}), and set $L = e + o$.
-Let $s$ be the Sturmian word with slope $\alpha = 1/(1+\theta)$.
+Let $r = (e, o)$ be an approximant produced by the mediant tree.
 
-\textup{(1)} The Sturmian symbol $s_{L-1}$ satisfies
+\textup{(1)} If $e \neq \theta o$ (i.e.\ $r \neq \theta$ exactly), the Sturmian symbol
+$s_{N-1}$ satisfies
 \[
-  s_{L-1} = \begin{cases} \OO & \text{if } e > \theta o \text{ ($r$ an overestimate),} \\
+  s_{N-1} = \begin{cases} \OO & \text{if } e > \theta o \text{ ($r$ an overestimate),} \\
                            \EE & \text{if } e < \theta o \text{ ($r$ an underestimate).} \end{cases}
 \]
 
-\textup{(2)} If moreover $r$ is produced by the mediant tree, then
-$\pi(r)[-1] = \OO$ (Theorem~\ref{thm:parity-ends-O}), and therefore
-$\pi(r)[-1] = s_{L-1}$ if and only if $r$ is an overestimate.
+\textup{(2)} If $e \neq \theta o$, since $\pi(r)[-1] = \OO$
+(Theorem~\ref{thm:parity-ends-O}), $\pi(r)[-1] = s_{N-1}$ if and only if $r$ is an
+overestimate.
+
+\textup{(3)} If $e = \theta o$ (so $\theta$ is rational and $r = \theta$), then
+$s_{N-1} = \OO = \pi(r)[-1]$.
 \end{theorem}
 
 \begin{proof}
-\textbf{Part (1).}
+\textbf{Parts (1) and (2).}
 The Sturmian word satisfies $s_j = \OO$ iff the fractional part
 $f_j := \{(j+1)\alpha\}$ lies in $[0, \alpha)$.
-So $s_{L-1} = \OO$ iff $\{(e+o)\alpha\} \in [0,\alpha)$.
+So $s_{N-1} = \OO$ iff $\{(e+o)\alpha\} \in [0,\alpha)$.
 
 Set $\Kval = o(e - \theta o)$, so $e = \theta o + \Kval/o$.
 Since $\alpha = 1/(1+\theta)$:
@@ -1532,27 +2251,33 @@ Since $\alpha = 1/(1+\theta)$:
   (e+o)\alpha = o + \frac{\Kval\alpha}{o}.
 \]
 Since $o$ is a positive integer, $\{(e+o)\alpha\} = \{\Kval\alpha/o\}$.
-Since $r$ is a good estimate, $|\Kval|/o < 1$; with $\alpha < 1/2$ we have
+Since $r$ is a good estimate (Lemma~\ref{lem:tree-good-estimate}), $|\Kval|/o < 1$; with $\alpha < 1/2$ we have
 $|\Kval\alpha/o| < \alpha < 1/2$, so:
 \begin{itemize}
-  \item $\Kval > 0$: $\{\Kval\alpha/o\} = \Kval\alpha/o \in (0,\alpha)$, so $s_{L-1} = \OO$.
+  \item $\Kval > 0$: $\{\Kval\alpha/o\} = \Kval\alpha/o \in (0,\alpha)$, so $s_{N-1} = \OO$.
   \item $\Kval < 0$: $\{\Kval\alpha/o\} = 1 + \Kval\alpha/o \in (1-\alpha,1) \subset (\alpha,1)$,
-        so $s_{L-1} = \EE$.
+        so $s_{N-1} = \EE$.
 \end{itemize}
-
-\textbf{Part (2).}
 For a tree estimate, $\pi(r)[-1] = \OO$ by Theorem~\ref{thm:parity-ends-O}.
-Combined with Part~(1), $\pi(r)[-1] = s_{L-1}$ iff both equal $\OO$, i.e.\ iff $r$ is an overestimate.
+Combined with Part~(1), $\pi(r)[-1] = s_{N-1}$ iff both equal $\OO$, i.e.\ iff $r$ is an overestimate.
+
+\textbf{Part (3).}
+If $e = \theta o$ then $(e+o)\alpha = (\theta o + o)/(1+\theta) = o \in \mathbb{Z}$,
+so $\{(e+o)\alpha\} = 0 \in [0,\alpha)$, giving $s_{N-1} = \OO$.
+Since $r = \theta$ is produced as $r^- = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$ at
+the exact step, it is a mediant tree approximant, so $\pi(r)[-1] = \OO$ by
+Theorem~\ref{thm:parity-ends-O}.
 \end{proof}
 
 \begin{remark}
 When $r = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wplus)$ is the child at the bracketing weight,
 the overestimate condition $e > \theta o$ is equivalent to $\Dval(r_{2d}, r_{2d+1}) > 0$: since
 $\wplus$ is the bracketing weight, $\operatorname{sgn}(e - \theta o) = \operatorname{sgn}(f(\wplus)) = \operatorname{sgn}(B) = \operatorname{sgn}(\Dval)$
-(where $f(t) = A + tB$ as in the proof of Theorem~\ref{thm:optimal-w}, and $\Dval = \Dval(r_{2d}, r_{2d+1})$
+(where $f(w) = A + wB$ as in Section~\ref{sec:optimal-w}, and $\Dval = \Dval(r_{2d}, r_{2d+1})$
 is the determinant of the \emph{parent pair}).
 For the companion child $r = \mathrm{Mediant}(r_{2d}, r_{2d+1}, \wminus)$
-(when $\wplus = 1$, the companion is $r_{2d}$ itself), the relationship is reversed.
+(when $\wplus = 1$, the companion is $r_{2d}$ itself), the relationship is reversed,
+provided $r \neq \theta$ (i.e.\ $-A/B \notin \mathbb{Z}$).
 The sign of $\Dval$ of the parent pair is therefore not a uniform criterion for a general good estimate;
 the sign of $\Kval = o(e - \theta o)$ is.
 \end{remark}
@@ -1579,23 +2304,21 @@ Hence $\pi(r)[0{:}2] = \EE\EE$.
 
 \begin{theorem}[Palindrome invariant]
 \label{prop:palindrome}
-For every estimate $r$ produced by the mediant tree with $L = |\pi(r)| \geq 2$,
-the interior slice $\pi(r)[1{:}L{-}1]$ is a palindrome.
+For every estimate $r$ produced by the mediant tree with $N \geq 2$,
+the interior slice $\pi(r)[1{:}N{-}1]$ is a palindrome.
 \end{theorem}
 
 \begin{proof}
-By Lemma~\ref{lem:branch-standard-pair}, $\pi(r) = \mathrm{Ch}^-(e, o)$ with $L = e+o$.
+By Lemma~\ref{lem:branch-standard-pair}, $\pi(r) = \mathrm{Ch}^-(e, o)$.
 By Definition~\ref{def:christoffel}, $\mathrm{Ch}^-(e,o) = \EE \cdot U \cdot \OO$ where
 $U$ is the palindromic interior (Berstel~\cite{berstel2009}, Chapter~1).
-Therefore $\pi(r)[1{:}L{-}1] = U$ is a palindrome.
+Therefore $\pi(r)[1{:}N{-}1] = U$ is a palindrome.
 \end{proof}
 
 \begin{theorem}[Sturmian identity]
 \label{prop:sturmian}
-Let $\theta > 1$ be irrational, $\alpha = 1/(\theta+1)$, and let $s$ be the Sturmian
-sequence with slope $\alpha$.
-For every estimate $r$ produced by the mediant tree, with mediant word $\pi(r)$ of
-length $N$,
+Assume $\theta$ is irrational.
+For every estimate $r$ produced by the mediant tree,
 \[
   \pi(r)[i] = s_i \qquad \text{for all } 0 \leq i \leq N-2.
 \]
@@ -1605,53 +2328,53 @@ the Sturmian emits $\OO$ if $r$ is an overestimate and $\EE$ if $r$ is an undere
 \end{theorem}
 
 \begin{proof}
-By Lemma~\ref{lem:branch-standard-pair}, $\pi(r) = \mathrm{Ch}^-(e, o)$ with $L = e+o$.
+By Lemma~\ref{lem:branch-standard-pair}, $\pi(r) = \mathrm{Ch}^-(e, o)$.
 By Definition~\ref{def:christoffel}, $\mathrm{Ch}^-(e,o)[i] = \OO$ iff
-$\lfloor(i+1)o/L\rfloor > \lfloor i \cdot o/L\rfloor$, and the Sturmian word
+$\lfloor(i+1)o/N\rfloor > \lfloor i \cdot o/N\rfloor$, and the Sturmian word
 satisfies $s_i = \OO$ iff $\lfloor(i+1)\alpha\rfloor > \lfloor i\alpha\rfloor$.
-It suffices to show $\lfloor n \cdot o/L \rfloor = \lfloor n\alpha \rfloor$ for
-all $1 \leq n \leq L-1$.
+It suffices to show $\lfloor j \cdot o/N \rfloor = \lfloor j\alpha \rfloor$ for
+all $1 \leq j \leq N-1$.
 
 The estimate $r = e/o$ belongs to a bounded pair $(r_{2d}, r_{2d+1})$ at some depth $d$,
-with the two fractions $\alpha_0 = o_0/L_0$ and $\alpha_1 = o_1/L_1$ (where $L_k = e_k + o_k$)
-satisfying $\alpha_0 < \alpha < \alpha_1$ and the Farey adjacency condition
-$o_1 L_0 - o_0 L_1 = \pm 1$.
-In particular $o/L$ is one of $\alpha_0$ or $\alpha_1$, and $L = L_k$ for the appropriate $k$.
+so $r = r_i$ for some $i \in \{2d, 2d+1\}$, giving $o/N = \hat{\alpha}_i$ and $N = n_i$.
 
 \textbf{Key lemma (Farey gap).}
-For $1 \leq n \leq L-1$, no fraction with denominator $< L$ lies strictly between
-$\alpha$ and $o/L$.
-\emph{Proof:} Suppose $m/n$ with $0 < n < L$ lies strictly between $\alpha$ and $o/L$.
-Then $m/n$ lies strictly between $\alpha_0$ and $\alpha_1$.
-By the Farey mediant property, any fraction strictly between two Farey-adjacent
-fractions $\alpha_0 = o_0/L_0$ and $\alpha_1 = o_1/L_1$ (with $|o_1 L_0 - o_0 L_1| = 1$)
-has denominator at least $L_0 + L_1 > L$, contradicting $n < L$.
+No fraction $m/j$ with $0 < j < N$ lies strictly between $\alpha$ and $o/N$.
+\emph{Proof:} Suppose $m/j$ with $0 < j < N$ lies strictly between $\alpha$ and $o/N$.
+Since $o/N = \hat{\alpha}_i$ is one endpoint of the interval
+$[\min(\hat{\alpha}_{2d}, \hat{\alpha}_{2d+1}),\, \max(\hat{\alpha}_{2d}, \hat{\alpha}_{2d+1})]$
+and $\alpha$ lies strictly in its interior, $m/j$ lies strictly between
+$\hat{\alpha}_{2d}$ and $\hat{\alpha}_{2d+1}$.
+By the Farey mediant property (Definition~\ref{def:farey-adjacency},
+Section~\ref{sec:background-farey}), any fraction strictly between two Farey-adjacent
+fractions has denominator at least $n_{2d} + n_{2d+1} > N$, contradicting $j < N$.
 
 \textbf{Agreement.}
-Fix $1 \leq n \leq L-1$ and suppose for contradiction that
-$\lfloor n\alpha \rfloor \neq \lfloor n \cdot o/L \rfloor$.
-Then there exists an integer $m$ with $n\alpha < m \leq n \cdot o/L$ or
-$n \cdot o/L < m \leq n\alpha$ (the two cases are symmetric).
-In either case $m/n$ has denominator $n < L$.
-Note that $m/n = o/L$ is impossible since $\gcd(o, L) = 1$ and $0 < n < L$,
-and $m/n = \alpha$ is impossible since $\alpha$ is irrational.
-Hence $m/n$ lies \emph{strictly} between $\alpha$ and $o/L$,
+Fix $1 \leq j \leq N-1$ and suppose for contradiction that
+$\lfloor j\alpha \rfloor \neq \lfloor j \cdot o/N \rfloor$.
+Then there exists an integer $m$ with $j\alpha < m \leq j \cdot o/N$ or
+$j \cdot o/N < m \leq j\alpha$ (the two cases are symmetric).
+In either case $m/j$ has denominator $j < N$.
+Note that $m/j = o/N$ is impossible since $\gcd(o, N) = 1$ and $0 < j < N$,
+and $m/j = \alpha$ is impossible since $\alpha$ is irrational.
+Hence $m/j$ lies \emph{strictly} between $\alpha$ and $o/N$,
 contradicting the Key lemma.
-Hence $\lfloor n\alpha \rfloor = \lfloor n \cdot o/L \rfloor$ for all $1 \leq n \leq L-1$,
-and therefore $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq L-2$.
+Hence $\lfloor j\alpha \rfloor = \lfloor j \cdot o/N \rfloor$ for all $1 \leq j \leq N-1$,
+and therefore $\mathrm{Ch}^-(e,o)[i] = s_i$ for $0 \leq i \leq N-2$.
 
 \paragraph{Terminal position.}
-The exclusion of $i = L-1$ follows from Theorems~\ref{thm:parity-ends-O}
-and~\ref{thm:last-sturmian}: $\pi(r)$ ends in $\OO$, while $s_{L-1} = \OO$ iff
+The exclusion of $i = N-1$ follows from Theorems~\ref{thm:parity-ends-O}
+and~\ref{thm:last-sturmian}: $\pi(r)$ ends in $\OO$, while $s_{N-1} = \OO$ iff
 $r$ is an overestimate ($e/o > \theta$).
 \end{proof}
 
 \begin{corollary}[Mismatch characterisation]
 \label{cor:mismatch}
-The mediant word $\pi(r)$ and the Sturmian prefix $s[0{:}L]$ are identical
+Assume $\theta$ is irrational.
+The mediant word $\pi(r)$ and the Sturmian prefix $s[0{:}N]$ are identical
 if and only if $r$ is an overestimate ($e/o > \theta$).
 When $r$ is an underestimate ($e/o < \theta$), they agree at every position except
-$i = L-1$, where the mediant emits $\OO$ and the Sturmian emits $\EE$.
+$i = N-1$, where the mediant emits $\OO$ and the Sturmian emits $\EE$.
 \end{corollary}
 
 The single terminal discrepancy is an artefact of truncation, not a genuine
@@ -1713,9 +2436,9 @@ positions, requiring $O(N)$ real-arithmetic operations.
 
 The mediant algorithm instead builds a compressed representation of the same prefix.
 Each iteration requires a constant number of real-arithmetic operations to compute
-the next bounded pair and weight; after $k$ iterations the tree encodes a Sturmian
+the next bounded pair and weight; after $d$ iterations the tree encodes a Sturmian
 prefix of length $N = e_{2d+1} + o_{2d+1}$.
-$N$ grows exponentially with $k$ (Theorem~\ref{conj:linear-depth}), so $O(\log N)$ iterations suffice to encode
+$N$ grows exponentially with $d$ (Theorem~\ref{thm:linear-depth}), so $O(\log N)$ iterations suffice to encode
 a prefix of length $N$, each requiring $O(1)$ oracle evaluations.
 
 Once the tree is built, enumerating the $N$ symbols requires \emph{no real
@@ -1744,6 +2467,35 @@ Conversely, small weights correspond to small partial quotients, and the mediant
 word advances by only a short block at each such step.
 \end{remark}
 
+\subsection*{Connection to continued fractions}
+\label{sec:cf-connection}
+
+The connection between the mediant algorithm and continued fractions is a direct
+consequence of the Sturmian identity (Theorem~\ref{prop:sturmian}).
+In combinatorics on words, the standard sequence for a Sturmian word with slope
+$\alpha = 1/(1+\theta)$ is generated by the recurrence $s_n = s_{n-1}^{b_n} \cdot s_{n-2}$,
+where the weights $b_n$ are precisely the partial quotients of the continued-fraction
+expansion of $\alpha$ (Lothaire~\cite{lothaire2002}, Ch.~2; Widmer~\cite{widmer2010},
+Proposition~2.4.6); here $b_1 = a_0$ and $b_n = a_{n-1}$ for $n \geq 2$, with
+$\alpha = 1/(1+\theta) = [0;\, a_0+1,\, a_1,\, a_2,\, \ldots]$.
+The mediant word sequence agrees with this standard sequence at all interior positions
+(Theorem~\ref{prop:sturmian}).
+This does \emph{not} imply that the algorithm's weights $\wplus$ equal the partial quotients
+$b_k$: the Sturmian identity constrains only interior positions of the words, not which
+weights the algorithm selects.
+What does follow is that the two children at weights $\wminus$ and $\wplus$ always have
+denominators $o_{2d} + \wminus \cdot o_{2d+1}$ and $o_{2d} + \wplus \cdot o_{2d+1}$
+(one even-indexed, one odd-indexed depending on which is the better estimate),
+mirroring the structure of the classical recurrence $q_{k+1} = b_k q_k + q_{k-1}$.
+Exponential denominator growth is established in Section~\ref{sec:convergence} (Theorem~\ref{thm:linear-depth}).
+
+The MT fractions are not in general the same as the CF convergents.
+The standard CF recurrence jumps by the full partial quotient $a_k$ at each step,
+landing on a convergent $p_k/q_k$.
+The MT algorithm picks the optimal bracketing weight $\wplus$, which need not
+equal any partial quotient.
+
+\FloatBarrier
 %------------------------------------------------------------
 \section{Extension to $\theta \leq 1$}
 \label{sec:extension}
@@ -1810,6 +2562,14 @@ so it is $\OO\OO$-free and its Sturmian slope is $1 - \theta$.
 The sequence encodes $\theta'$; the rational approximant $e/(e+o)$ to $\theta$ is read
 off from the $\EE$- and $\OO$-counts of that sequence.
 
+\subsection{Case $\theta \in \mathbb{Z}$}
+
+For integer $\theta = n$, the seed itself is the answer: $r_0 = r_1 = n/1$ and
+depth~$0$ is an exact step (as noted in Section~\ref{sec:parity-leaf}).
+No algorithm iterations are needed; the mediant word is $\EE^n\OO$.
+(The reductions above may produce an integer $\theta'$; this subsection covers
+those cases too.)
+
 \subsection{Case $\theta < 0$}
 
 For $\theta < 0$, set
@@ -1846,6 +2606,7 @@ $0 < \theta < \tfrac{1}{2}$ & $\theta' = (1-\theta)/\theta$       & $o/(e+o)$   
 $\tfrac{1}{2} < \theta < 1$ & $\theta' = \theta/(1-\theta)$       & $e/(e+o)$   & $1-\theta < \tfrac{1}{2}$ \\
 $\theta < 0$                & $\theta' = -\theta$ (or above)      & negate      & --- \\
 \midrule
+$\theta \in \mathbb{Z}$     & exact seed: $r_0=r_1=\theta/1$       & $\theta/1$  & $1/(1+\theta)$ \\
 $\theta = 0$                & trivial: word $\EE^\infty$           & $0/1$       & $0$ \\
 $\theta = \tfrac{1}{2}$     & trivial: word $(\EE\OO)^\infty$      & $1/2$       & $\tfrac{1}{2}$ \\
 $\theta = 1$                & trivial: word $(\EE\OO)^\infty$      & $1/1$       & $\tfrac{1}{2}$ \\
@@ -1885,31 +2646,49 @@ The core algorithm applies to $\theta > 1$; all other real numbers are handled b
 algebraic reduction (Section~\ref{sec:extension}).
 
 \paragraph{What is new.}
-The weighted mediant step is the classical Stern--Brocot step; the novelty is
-Theorem~\ref{thm:optimal-w}, which identifies the \emph{unique optimal weight}
-$\wplus$ via a sign-change bracket on the linear error function, giving a closed-form
-formula; that each iterate lies on the Stern--Brocot path of $\theta$ is a
-consequence of the weighted-mediant Farey structure (Theorem~\ref{thm:sb-path}).
-Lemma~\ref{lem:branch-standard-pair} (every mediant word is a lower Christoffel word)
-follows from the standard Christoffel concatenation theorem (Berstel et
-al.~\cite{berstel2009}); the contribution is the identification that the mediant
-algorithm \emph{naturally} produces lower Christoffel words, without any explicit
-reference to the Christoffel tree.
-The Sturmian identity (Theorem~\ref{prop:sturmian}) and the palindrome invariant
-(Theorem~\ref{prop:palindrome}) are consequences of the Christoffel word theory
+The weighted mediant step is the classical Stern--Brocot step.
+The first novelty is Theorem~\ref{thm:optimal-w} (Section~\ref{sec:optimal-w}):
+the unique optimal weight $\wplus$ is identified via a sign-change bracket on the
+linear error function, giving a closed-form formula.
+That each iterate (except, for rational $\theta$, the final companion $r^+$ of the
+exact step) lies on the Stern--Brocot path of $\theta$ follows from the
+weighted-mediant Farey structure (Theorem~\ref{thm:sb-path}).
+
+At the next logical level, the denominator growth lemmas
+(Lemma~\ref{lem:denominator-growth} and Lemma~\ref{lem:no-consecutive-unit-weights},
+Section~\ref{sec:denominator-growth}) establish that denominators grow geometrically,
+bounding the depth by $O(\log N)$.
+Lemma~\ref{lem:branch-standard-pair} (every mediant word is a lower Christoffel word,
+Section~\ref{sec:parity}) follows from the standard Christoffel concatenation theorem
+(Berstel et al.~\cite{berstel2009}); the contribution is the identification that the
+mediant algorithm \emph{naturally} produces lower Christoffel words, without any
+explicit reference to the Christoffel tree.
+
+Building on these, Lemma~\ref{lem:exact-step} (Section~\ref{sec:optimal-w}) gives
+the exact characterisation of the unique rational terminal depth in eight parts;
+it is the analytic pivot on which the terminal invariants rest.
+
+The terminal invariants follow: the Sturmian identity
+(Theorem~\ref{prop:sturmian}), the palindrome invariant (Theorem~\ref{prop:palindrome}),
+the MT-never-skips property (Theorem~\ref{thm:never-skips}), and the
+semi-convergent characterisations (Theorems~\ref{thm:semi-r0} and~\ref{thm:semi-r1}).
+The Sturmian identity and palindrome are consequences of the Christoffel word theory
 (Lothaire~\cite{lothaire2002}, Berstel et al.~\cite{berstel2009}); the contribution
 is a direct proof via the mediant construction, together with the last-letter criterion
 (Theorems~\ref{thm:parity-ends-O} and~\ref{thm:last-sturmian}) which is new.
 The mediant tree taken as a whole is a \emph{compressed transducer}: it encodes the
 construction history of a length-$N$ Sturmian prefix in $O(\log N)$ iterations
-(Conjecture~\ref{conj:linear-depth}; Section~\ref{sec:convergence}),
-each requiring $O(1)$ oracle evaluations,
+(Theorem~\ref{thm:linear-depth}), each requiring $O(1)$ oracle evaluations,
 after which the symbols are enumerated by a purely integer recursive traversal.
 
 \paragraph{Open problems.}
+The following items are genuinely open.
 \begin{enumerate}
   \item \textbf{Characterisation of the MT fractions.}
-    Every MT fraction is a convergent or semi-convergent of $\theta$; the MT visits
+    Every MT fraction is a convergent or semi-convergent of $\theta$ (except, for
+    rational $\theta$, the final companion $r^+$ of the exact step, which lies on
+    the same side of $\theta$ as $r_{2d+1}$ and is not a convergent or
+    semi-convergent); the MT visits
     the subsequence of those whose consecutive mediants straddle $\theta$.
     Characterise this subsequence in terms of the continued-fraction expansion of
     $\theta$, and determine when an MT fraction equals a CF convergent.
@@ -1918,8 +2697,22 @@ after which the symbols are enumerated by a purely integer recursive traversal.
     likewise but visits different fractions.
     Give a precise comparison of the approximation quality per step between the two
     algorithms.
-  \item \textbf{Linear depth bound.}
-    See Conjecture~\ref{conj:linear-depth} in Section~\ref{sec:convergence}.
+  \item \textbf{Tighter depth-bound constants.}
+    Theorem~\ref{thm:linear-depth} proves $d \le (2/\log_2 3)\log_2(e+o)+2$
+    with universal constants.
+    The exact value of $m^* = \sup_\theta m^*_\theta \le 2/\log_2 3$
+    (Remark~\ref{rem:universal-bound}) is unknown; in particular
+    $\phi$ has been shown not to attain the supremum.
+\end{enumerate}
+\noindent
+The following item has a proof that was deferred from this paper.
+\begin{enumerate}
+  \setcounter{enumi}{3}
+  \item \textbf{Two-step growth conjecture.}
+    Conjecture~\ref{conj:two-step-growth} proposes the tighter bound
+    $d \le (2/\log_2(10/3))\log_2(e+o)+3$ (slope $\approx 1.151$).
+    A proof exists but its inclusion would substantially increase the length of
+    this paper; it is deferred to a future work.
 \end{enumerate}
 
 \begin{thebibliography}{9}
@@ -1969,65 +2762,6 @@ after which the symbols are enumerated by a purely integer recursive traversal.
 %============================================================
 \appendix
 %============================================================
-
-%------------------------------------------------------------
-\section{Proof of Theorem~\ref{thm:optimal-w}}
-\label{app:optimal-w}
-%------------------------------------------------------------
-
-We prove the closed-form formula $\wplus = \lfloor -A/B \rfloor + 1$ directly from
-the bracketing condition, using only a linear sign argument.
-
-We have a bounded pair $(r_{2d}, r_{2d+1})$ bracketing $\theta$, with
-\[
-  A = e_{2d} - \theta\,o_{2d}, \qquad B = e_{2d+1} - \theta\,o_{2d+1}.
-\]
-Since $r_{2d}$ and $r_{2d+1}$ are on opposite sides of $\theta$ we have $\operatorname{sgn}(A) = -\operatorname{sgn}(B)$,
-so $A/B < 0$ and $c := -A/B > 0$.
-The two weighted mediants are
-\[
-  \rminus = \frac{e_{2d} + (w-1)\,e_{2d+1}}{o_{2d} + (w-1)\,o_{2d+1}}, \qquad
-  \rplus = \frac{e_{2d} + w\,e_{2d+1}}{o_{2d} + w\,o_{2d+1}},
-\]
-with signed errors (numerators of $\epsminus$, $\epsplus$ up to positive denominators)
-\[
-  A + (w-1)B \qquad \text{and} \qquad A + wB.
-\]
-
-\paragraph{Bracketing condition.}
-
-The pair $(\rminus, \rplus)$ brackets $\theta$ iff $\epsminus$ and $\epsplus$ have opposite signs,
-i.e.\ $(A + (w-1)B)(A + wB) < 0$.
-Writing $c = -A/B$, this product equals $B^2\,(w - 1 - c)(w - c)$, which is negative
-iff $w - 1 - c$ and $w - c$ have opposite signs, i.e.\
-\[
-  w - 1 < c < w,
-\]
-and since $c \notin \mathbb{Z}$ (as $\theta$ is irrational, $A + nB \neq 0$ for all integers $n$)
-this is equivalent to $w - 1 = \lfloor c \rfloor$, i.e.\ $w = \lfloor c \rfloor + 1$.
-Since $c$ is never an integer, exactly one integer $w$ satisfies the condition, namely
-\[
-  \wplus = \lfloor -A/B \rfloor + 1.
-\]
-We also write $\wminus = \wplus - 1 = \lfloor -A/B \rfloor$ for the companion weight.
-
-\paragraph{Expression in terms of $\Dval$ and $\Kval$.}
-
-Recall $\Kval = o_{2d+1}B$ and $A\,o_{2d+1} - B\,o_{2d} = -\Dval$, giving
-$A = (Bo_{2d} - \Dval)/o_{2d+1}$, so
-\[
-  \frac{-A}{B} = \frac{\Dval}{o_{2d+1}B} - \frac{o_{2d}}{o_{2d+1}}
-               = \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}},
-\]
-and therefore
-\[
-  \wplus = \left\lfloor \frac{\Dval}{\Kval} - \frac{o_{2d}}{o_{2d+1}} \right\rfloor + 1,
-\]
-completing the proof of Theorem~\ref{thm:optimal-w}.
-
-\paragraph{Termination.}
-When $\Kval = 0$, $r_{2d+1}$ is an exact rational representation of $\theta$;
-no further improvement is possible and the algorithm terminates.
 
 %------------------------------------------------------------
 \section{Examples and Computational Results}
@@ -2243,7 +2977,7 @@ involved, not merely automated checking.
 On several occasions, Aristotle (the code name used for the AI reviewer in
 this project's review workflow) did not merely flag a conjecture as unproven
 but supplied the proof that elevated it to a theorem.
-Theorem~\ref{conj:semi-r1} and Theorem~\ref{conj:semi-r0} are examples where
+Theorem~\ref{thm:semi-r1} and Theorem~\ref{thm:semi-r0} are examples where
 the final rigorous proofs emerged from this collaborative process.
 Claude also drafted proofs and theorem statements at various points in the
 development; in some cases these drafts were adopted with revision, in others
@@ -2285,259 +3019,7 @@ future work.
 \label{sec:reviewers-comments}
 %------------------------------------------------------------
 
-The following items identify open proof obligations, gaps, and vulnerabilities
-in this manuscript.  Each item records its source, the manuscript version in
-which it was raised, and its current status.
-\textbf{Raised} items are newly identified and unaddressed.
-\textbf{Pending} items are scheduled for the next revision.
-\textbf{Deferred} items have been noted but action intentionally postponed.
-Reviewers should not expect Deferred items to be actioned in the next revision;
-raising new comments solely about the content of Deferred items is unproductive.
-\textbf{Resolved} items are addressed and awaiting reviewer confirmation.
-\textbf{Rejected} items have had their proposed resolution rejected and must
-return to \textbf{Pending} or \textbf{Raised} before the next review.
-\textbf{Dismissed} items are those for which the author has determined no
-further action is warranted.
-\textbf{Closed} items are fully accepted by all parties.
-Only \textbf{Dismissed} and \textbf{Closed} items are candidates for removal
-from future versions.
 
-\medskip
-\noindent
-\begin{tabular}{@{}lll@{}}
-\toprule
-ID & Title & Status \\
-\midrule
-RC-1  & Thm.\,\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated       & Resolved \\
-RC-2  & Thm.\,\ref{conj:semi-r0} $(\Leftarrow)$: $x<y$ to crossing gap            & Closed \\
-RC-3  & Thm.\,\ref{conj:semi-r1}: $d=0$ base case incomplete                      & Resolved \\
-RC-4  & Thm.\,\ref{prop:sturmian}: ``Agreement'' step unproved                    & Resolved \\
-RC-5  & Lean~4 scope boundary ambiguous                                            & Closed \\
-RC-6  & $O(\log N)$ conflates iteration count with bit-op cost                    & Closed \\
-RC-13 & Weight propagation bound slackness uncharacterised                         & Deferred \\
-RC-14 & Base-specific structural dependencies limit generality                     & Deferred \\
-RC-15 & High notation density may impede referee comprehension                     & Deferred \\
-RC-16 & Inter-paper circular coupling: Paper~76 errors propagate to Paper~77       & Deferred \\
-RC-21 & Conj.~\ref{conj:linear-depth} promoted to Theorem~\ref{conj:linear-depth} with hand proof & Resolved \\
-RC-22 & Conj.~10.10 (bound via $e$) refuted; replaced by Conj.~\ref{conj:universal-bound} and~\ref{conj:worst-case-phi} & Deferred \\
-N1    & ``Proved in \S10'' cited but no proof present; now Theorem~\ref{conj:linear-depth} & Resolved \\
-N2    & Figure~2 caption: misleading description of dashed line and curve ordering  & Resolved \\
-N3    & Thm.~\ref{conj:semi-r1} $d=0$: ``vacuously'' is wrong (= RC-3)            & Raised \\
-N4    & Thm.~\ref{conj:semi-r0} $(\Rightarrow)$: wrong direction cited (= RC-1)   & Raised \\
-N5    & Thm.~\ref{prop:sturmian} Agreement: boundary $m/n = o/L$ not excluded (= RC-4) & Raised \\
-N13   & Thm.~5.2 stated for $w\ge1$ but used with $w^-=0$; extended to $w\ge0$     & Resolved \\
-N14   & RC-13--RC-16 refer to content not in the manuscript; noted and deferred          & Resolved \\
-N15   & Def.~9.2 / Lemma~9.3 / Thm.~10.7: four notation slips                    & Resolved \\
-N16   & \S1 ``$O(\log N)$ iterations'' missing ``real-arithmetic'' qualifier       & Resolved \\
-N17   & Ticket uses ``Thm~10.8'' and ``Figure~10.1'' but PDF has Thm~10.7 / Fig.~2 & Deferred \\
-N18   & Def.~6.3: mediant defined as 3-tuple ``treated as a ratio''                & Resolved \\
-N19   & \texttt{lakefile.toml}: Round12/13 not default targets; Round8 double-listed & Resolved \\
-\bottomrule
-\end{tabular}
-
-\bigskip
-
-\paragraph{RC-1. Theorem~\ref{conj:semi-r0} $(\Rightarrow)$: nested induction unstated.}
-\textit{Source: claude | Since: v0.14 | Status: Resolved}
-
-The $w^-_{d-1} \ge 1$ bullet now cites Theorem~\ref{thm:sb-path}, but the
-$w^-_{d-1} = 0$ bullet is still unrepaired.  It argues: ``if $r_{2d-2}$ were a
-semi-convergent, then by $(\Leftarrow)$ at depth $d-1$ it would be the crossing
-child''.  That invokes the \emph{converse} of $(\Leftarrow)$.  The needed
-direction is ``semi-convergent $\Rightarrow$ crossing child'', which is the
-contrapositive of $(\Rightarrow)$ at depth $d-1$, i.e.\ the induction
-hypothesis.  Fix: structure the proof as explicit induction on $d$, cite
-$(\Rightarrow)$ at depth $d-1$, then use $o_{2d-1} < o_{2d-2}$ and $r_{2d-1}$
-better to conclude $w^+_{d-1} \ge 2$.
-
-\paragraph{RC-2. Theorem~\ref{conj:semi-r0} $(\Leftarrow)$: inference from $x < y$ to crossing.}
-\textit{Source: claude | Since: v0.14 | Status: Closed}
-
-The $(\Leftarrow)$ direction now explicitly invokes the bounded-pair bracketing
-property (Theorem~\ref{thm:mediant-convergence}) to establish that the signed
-errors of $r^-$ and $r^+$ have opposite signs, then computes the signed error of
-the unweighted mediant $r^- \oplus r^+$ as $y - x > 0$, making the continuation
-of the SB path toward $r^+$ a direct consequence rather than an assertion.
-
-\paragraph{RC-3. Theorem~\ref{conj:semi-r1}: $d = 0$ base case incomplete.}
-\textit{Source: claude | Since: v0.14 | Status: Resolved}
-
-The ratio computation giving $w^+_0 \ge 2$ is now complete.  However, the
-conclusion ``the statement holds vacuously at $d=0$'' is wrong: with
-$w^+_0 \ne 1$ the biconditional requires $r_1$ \emph{not} to be a
-semi-convergent, and that requires an argument (Remark~10.8: if $\lceil\theta\rceil$
-is the better leaf then $\{\theta\} > \tfrac12$, so $a_1 = 1$ and
-$\lceil\theta\rceil = p_1/q_1$ is the first convergent).  Fix: move or inline
-Remark~10.8 before Theorem~\ref{conj:semi-r1}, or supply the argument directly.
-Also, $|A| = |\varepsilon_{r_0}|$ conflates absolute error with relative error;
-they differ by $\theta$, which is harmless for the ratio but should be noted.
-
-\paragraph{RC-4. Theorem~\ref{prop:sturmian}: ``Agreement'' step unproved.}
-\textit{Source: claude | Since: v0.14 | Status: Resolved}
-
-The Key lemma is now invoked, but the boundary case is not excluded.  The
-integer $m$ with $n\alpha < m \le n \cdot o/L$ may satisfy $m = n \cdot o/L$,
-in which case $m/n = o/L$ is \emph{not} strictly between $\alpha$ and $o/L$.
-Fix: add ``$m/n = o/L$ is impossible since $\gcd(o,L)=1$ and $0 < n < L$;
-and $m = n\alpha$ is impossible since $\alpha$ is irrational''.
-
-\paragraph{RC-5. Lean~4 scope boundary ambiguous.}
-\textit{Source: gemini | Since: v0.14 | Status: Resolved}
-
-All Lean~4 citations have been removed from the paper.  The paper makes
-no claim of machine-checked or formally verified status.  Every result
-stands solely on the hand-argued proofs in the text.  A full Lean
-development is not published at this stage and is left for future work.
-
-\paragraph{RC-6. $O(\log N)$ iteration count conflates steps with oracle cost.}
-\textit{Source: gemini | Since: v0.14 | Status: Resolved}
-
-The paper now claims only that $O(\log N)$ real-arithmetic iterations suffice to
-reach an approximant of size $N$, which is what the convergence theorem
-(Section~\ref{sec:convergence}) and Conjecture~\ref{conj:linear-depth} assert.
-No claim is made about bit-operation cost per oracle call; that is a separate
-question outside the scope of this paper.
-
-\paragraph{RC-13. Weight propagation bound slackness uncharacterised.}
-\textit{Source: gemini | Since: v0.14 | Status: Deferred}
-
-Note (N14): the phrase ``trajectory spikes'' does not correspond to any
-concept in the manuscript.  The paper makes no asymptotic claims that depend
-on weight-propagation slackness; the relevant complexity bound is now
-Theorem~\ref{conj:linear-depth}.
-
-\paragraph{RC-14. Base-specific structural dependencies limit generality.}
-\textit{Source: gemini | Since: v0.14 | Status: Deferred}
-
-Note (N14): the paper does not employ 2-adic or 3-adic valuations, nor
-does it treat generalised Collatz variants.  These concepts are not present
-in the manuscript; the comment appears to be directed at a different paper.
-
-\paragraph{RC-15. High notation density may impede referee comprehension.}
-\textit{Source: gemini | Since: v0.14 | Status: Deferred}
-
-Note (N14): the phrase ``stream-tagging frameworks'' does not appear in
-the manuscript.  The density concern may be legitimate in principle but the
-specific evidence cited is not drawn from this paper.
-
-\paragraph{RC-16. Inter-paper circular coupling: Paper~76 errors propagate to Paper~77.}
-\textit{Source: gemini | Since: v0.14 | Status: Deferred}
-
-Note (N14): this comment rests on the hallucinated content of RC-13--RC-15.
-The cross-paper dependency between Papers~76 and~77 is real and acknowledged,
-but no ``circular coupling'' exists: Paper~77 uses definitions from Paper~76
-unidirectionally, and the errors identified in the review process were
-independent in both papers.
-
-\paragraph{RC-21. Conjecture~\ref{conj:linear-depth} proved; universal constants.}
-\textit{Source: author | Since: v0.14 | Status: Resolved}
-
-Conjecture~\ref{conj:linear-depth} has been promoted to
-Theorem~\ref{conj:linear-depth} with a hand proof (Lemma~A: no two consecutive
-unit weights; Lemma~B: every denominator at depth $d$ is at least
-$2^{\lfloor d/2\rfloor}$; conclusion: $d \le 2\log_2(e_d+o_d)+1$).
-The constants $m=2$, $b=1$ are universal and independent of $\theta$.
-All forward references in the Abstract, \S1, and \S12 now cite
-Theorem~\ref{conj:linear-depth} directly.
-
-\paragraph{RC-22. Original Conjecture~10.10 (universal bound via $e$) refuted; replaced.}
-\textit{Source: gemini | Since: v0.14 | Status: Deferred}
-
-The original conjecture that the constants $(m_e, b_e)$ for $\theta = e$ serve
-as universal bounds is false and ill-posed.  Aristotle
-(\texttt{golden\_violates\_small\_slope}) proves that for $\theta = \phi$ no
-line $m\cdot\log_2(e_d+o_d) + b$ with $m \le 0.7$ bounds the depth for all
-$d$, regardless of $b$.  The crossover is not at extreme depth: at $d = 5$ the
-pair for $\phi$ is $233/144$ and $0.43\cdot\log_2 377 + 1.19 < 5$ already
-(\texttt{golden\_depth5\_crossover}).  Furthermore $e$ is asymptotically
-\emph{near the bottom} of the family, not the top, because its weights grow
-without bound.
-The original conjecture has been replaced by
-Conjectures~\ref{conj:universal-bound} and~\ref{conj:worst-case-phi}, which
-separate the existence of a sub-universal bound from the identification of
-$\phi$ as the worst case.  Pending: resolve both new conjectures.
-
-\paragraph{N1. ``Proved in \S10'' cited but no such proof present.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-Resolved by RC-21.  Conjecture~\ref{conj:linear-depth} is now
-Theorem~\ref{conj:linear-depth} with a complete hand proof in
-\S\ref{sec:convergence}.  All forward references in the Abstract, \S1, and
-\S12 now point to Theorem~\ref{conj:linear-depth} directly.
-
-\paragraph{N2. Figure caption: misleading description of the dashed line and curve ordering.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-The caption contained three errors that could mislead a reader into thinking the
-dashed line was a universal bound and that $\phi$ lay below $e$:
-(a) it said $\phi$ ``sits between $e$ and the logarithmic targets'', whereas
-$\phi$ and $\sqrt{2}$ both lie \emph{above} $e$ in the plotted range;
-(b) it said ``Slope varies: $\pi$ and $\log_3 8$ grow fastest'' --- the opposite
-of what the figure shows: $\pi$ and $\log_3 8$ have the \emph{shallowest} slopes
-(fastest denominator growth due to large partial quotients);
-(c) by saying $e$ is consistent with the (then-stated) universal bound conjecture
-immediately after describing the dashed line, it implied the dashed line was
-meant to bound all curves.
-The caption has been rewritten to state explicitly that the dashed line bounds
-$\log_2 3$ only, and to correctly describe the ordering of the curves.
-
-\paragraph{N13. Theorem~5.2 stated for $w \ge 1$ but used with $w^- = 0$.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-Theorem~5.2 (mediant convergence) has been extended to $w \ge 0$.
-The $w = 0$ case ($r^- = r_{2d}$, the parent) is trivial and noted explicitly
-in the statement; the error bounds hold with equality on the left.
-
-\paragraph{N14. RC-13--RC-16 refer to content not present in the manuscript.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-RC-13--RC-16 remain Deferred; each cites concepts not present in the manuscript.  Each cites concepts not present in this
-manuscript: ``trajectory spikes'' (RC-13), ``2-adic and 3-adic valuations''
-and generalised Collatz variants (RC-14), ``stream-tagging frameworks''
-(RC-15).  RC-16's ``circular coupling'' claim rests on these hallucinated
-items.  The comments appear to have been generated against a different paper
-or a conflated description of multiple papers.
-
-\paragraph{N15. Definition~9.2 / Lemma~9.3 / Theorem~10.7: notation slips.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-All four slips fixed:
-(a) Definition~9.2 now says ``propagated optimal weight of the parent pair'';
-(b) the closing paragraph of Lemma~9.3 now explicitly states $u = \pi(r_{2d})$,
-$v = \pi(r_{2d+1})$ at depth $d$, consistent with the $w^\pm_d$ indexing;
-(c) Definition~9.2 now notes that $\Delta$ is the determinant of the parent pair;
-(d) Theorem~10.7 no longer uses $r^+_{d-1}$; replaced by the explicit expression
-$r_{2d-2} + w^+_{d-1}\,r_{2d-1} = r_{2d+1}$.
-
-\paragraph{N16. \S1 missing ``real-arithmetic'' qualifier on $O(\log N)$.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-Resolved. Section~1 item~4 now reads ``$O(\log N)$ real-arithmetic iterations'',
-consistent with the qualifier applied throughout the rest of the paper in
-response to RC-6.
-
-\paragraph{N17. Ticket numbering mismatches the PDF.}
-\textit{Source: aristotle | Since: v0.14 | Status: Deferred}
-
-The Round~14 review ticket refers to ``Thm~10.8'' (the PDF has Thm~10.7;
-10.8 is a Remark), ``Figure~10.1'' (the PDF has Figure~2), and quotes the
-bounding-line parameters as $0.454/1.92$ while the PDF prints $0.45/1.9$.
-This is an organisational issue with how future review tickets are generated,
-not a defect in the paper itself. Deferred to the review-process workflow.
-
-\paragraph{N18. Definition~6.3: mediant defined as a 3-tuple ``treated as a ratio''.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-Resolved. Definition~6.3 now defines $\mathrm{Mediant}(r, r', w) = (e + we', o + wo')$
-directly as a ratio, dropping the awkward ``3-tuple treated as a ratio'' language.
-
-\paragraph{N19. \texttt{lakefile.toml}: inconsistent default targets.}
-\textit{Source: aristotle | Since: v0.14 | Status: Resolved}
-
-Resolved. The proposed \texttt{lakefile.toml} (delivered in Round~14 as
-\texttt{lakefile.proposed.toml}) has been applied: each library now owns
-exactly one module; \texttt{Round12\_MT}, \texttt{Round12\_76}, and
-\texttt{Round13\_76} are now listed as default targets; the duplicate
-\texttt{Round8\_76}/\texttt{Round8\_77} glob entries are removed.
+\input{issues/rc-appendix.tex}
 
 \end{document}
