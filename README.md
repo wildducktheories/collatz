@@ -176,6 +176,17 @@ Derives the path identity $2^e x_n - 3^o x_0 = k$ and a recurrence relation for 
 
 ## Apps
 
+### Rational Approximants — Mediant Tree Visualiser
+[Launch](https://wildducktheories.github.io/collatz/apps/rational-approximants/dist/) | [Source](apps/rational-approximants/)
+
+Interactive 3D visualisation of the mediant tree of rational approximants for quadratic irrationals
+θ = √(n² + k). Each approximant e/o at depth d is plotted in polar coordinates: angle = (k/n)π,
+radius = log₂(o), height = log₂(e). Points are coloured by type (r0/r1) and depth parity, revealing
+the norm pattern (1, −k, 1, −k, …) for the k|2n family. Controls for n and k ranges, depth, and
+an optional norm z-axis (signed norm e² − o²θ²). Companion to Paper 76.
+
+---
+
 ### Mediant Parity Sequences
 [Launch](https://wildducktheories.github.io/collatz/apps/mediant-parity/dist/) | [Source](apps/mediant-parity/)
 
